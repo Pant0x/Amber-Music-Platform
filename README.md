@@ -1,5 +1,7 @@
 # Pantooty Music Player
 
+> 🔗 **Live Demo**: [pantooty-music-player.vercel.app](https://pantooty-music-player.vercel.app/)
+
 Pantooty is a premium, high-fidelity hybrid music player built with Next.js, Zustand, and Tailwind CSS. It merges the Spotify search ecosystem and the YouTube Music database to deliver a beautiful, seamless desktop streaming experience.
 
 ---
