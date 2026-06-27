@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# scraper debug dumps
+yt-browse-artist.json
+yt-search-sicko.json
+ytmusic-html.txt
+ytmusic-raw.json
