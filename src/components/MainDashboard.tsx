@@ -1802,7 +1802,7 @@ export const MainDashboard: React.FC = () => {
                   if (albumFilter === 'Albums') {
                     filtered = allPlaylists.filter((a: any) => a.releaseType === 'Album');
                   } else if (albumFilter === 'Singles & EPs') {
-                    filtered = allPlaylists.filter((a: any) => a.releaseType === 'Single' || a.releaseType === 'EP');
+                    filtered = allPlaylists.filter((a: any) => a.releaseType === 'Single' || a.releaseType === 'EP' || a.releaseType === 'Single/EP');
                   }
                   if (filtered.length === 0) return <div className="py-20 text-center text-sm text-zinc-500">No items found for this filter.</div>;
                   return (
