@@ -1621,7 +1621,8 @@ export const MainDashboard: React.FC = () => {
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
                           </div>
                           <h4 className="text-sm text-white truncate">{album.title}</h4>
-                          <p className="text-sm text-zinc-400 mt-0.5 flex items-center gap-1">
+                          <p className="text-[11px] text-zinc-400 truncate mt-0.5" title={album.channelTitle}>{cleanVisualName(album.channelTitle)}</p>
+                          <p className="text-[11px] text-zinc-500 mt-0.5 flex items-center gap-1">
                             <Disc className="w-3 h-3 flex-shrink-0" />
                             {album.publishedAt ? new Date(album.publishedAt).getFullYear() : ''}
                           </p>
@@ -1651,7 +1652,8 @@ export const MainDashboard: React.FC = () => {
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
                           </div>
                           <h4 className="text-sm text-white truncate">{album.title}</h4>
-                          <p className="text-sm text-zinc-400 mt-0.5 flex items-center gap-1">
+                          <p className="text-[11px] text-zinc-400 truncate mt-0.5" title={album.channelTitle}>{cleanVisualName(album.channelTitle)}</p>
+                          <p className="text-[11px] text-zinc-500 mt-0.5 flex items-center gap-1">
                             <Disc className="w-3 h-3 flex-shrink-0" />
                             {album.publishedAt ? new Date(album.publishedAt).getFullYear() : ''}
                           </p>
@@ -1869,7 +1871,8 @@ export const MainDashboard: React.FC = () => {
                             <img src={album.thumbnailUrl  || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                           </div>
                           <h4 className="text-sm text-white truncate">{album.title}</h4>
-                          <p className="text-sm text-zinc-400 mt-0.5 flex items-center gap-1">
+                          <p className="text-xs text-zinc-400 truncate mt-0.5" title={album.channelTitle}>{cleanVisualName(album.channelTitle)}</p>
+                          <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-1">
                             <Disc className="w-3 h-3 flex-shrink-0" />
                             <span>{(() => {
                               const label = album.releaseType || 'Album';
