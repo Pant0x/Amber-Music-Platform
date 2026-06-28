@@ -290,7 +290,7 @@ export async function GET(request: Request) {
     const [artistRes, topTracksRes, albumsRes, relatedRes] = await Promise.all([
       spotifyApi.getArtist(artistId),
       spotifyApi.getArtistTopTracks(artistId, 'US'),
-      spotifyApi.getArtistAlbums(artistId, { limit: 50, country: 'US' }),
+      spotifyApi.getArtistAlbums(artistId, { limit: 50, country: 'US', include_groups: 'album,single' }),
       spotifyApi.getArtistRelatedArtists(artistId)
     ]);
 
