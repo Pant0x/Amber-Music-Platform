@@ -2,22 +2,41 @@ import { NextResponse } from 'next/server';
 import { getSpotifyApi } from '@/lib/spotify';
 import { ytMusicSearch, ytMusicBrowse, ytMusicArtistDiscography, cleanArtistName, upgradeThumbnailUrl, parseSubscriberCount, cleanTopicGlobally } from '@/lib/youtubei';
 
-const sortReleasesNewestToOldest = (releases: any[]) => {
-  return [...releases].sort((a, b) => {
-    const getYear = (val: string) => {
-      if (!val) return 0;
-      const match = val.match(/\b(19|20)\d{2}\b/);
-      if (match) {
-        return parseInt(match[0], 10);
-      }
-      return 0;
-    };
-    const yearA = getYear(a.publishedAt);
-    const yearB = getYear(b.publishedAt);
-    if (yearA !== yearB) {
-      return yearB - yearA;
+const sortReleasesNewestToOldest = (items: any[]) => {
+  const getReleaseTime = (dateStr: string) => {
+    if (!dateStr) return 0;
+    const date = new Date(dateStr);
+    if (!isNaN(date.getTime())) {
+      return date.getTime();
     }
-    return (b.publishedAt || '').localeCompare(a.publishedAt || '');
+    const match = dateStr.match(/\b(19|20)\d{2}\b/);
+    if (match) {
+      const year = parseInt(match[0], 10);
+      return new Date(`${year}-01-01T00:00:00Z`).getTime();
+    }
+    return 0;
+  };
+
+  const getReleasePriority = (item: any) => {
+    const type = (item.releaseType || 'Album').toLowerCase();
+    if (type.includes('album')) return 3;
+    if (type.includes('ep')) return 2;
+    if (type.includes('single')) return 1;
+    return 0;
+  };
+
+  return [...items].sort((a, b) => {
+    const timeA = getReleaseTime(a.publishedAt);
+    const timeB = getReleaseTime(b.publishedAt);
+    if (timeA !== timeB) {
+      return timeB - timeA;
+    }
+    const prioA = getReleasePriority(a);
+    const prioB = getReleasePriority(b);
+    if (prioA !== prioB) {
+      return prioB - prioA;
+    }
+    return (a.title || '').localeCompare(b.title || '');
   });
 };
 
