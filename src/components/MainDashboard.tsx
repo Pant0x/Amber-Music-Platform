@@ -1208,12 +1208,11 @@ export const MainDashboard: React.FC = () => {
                   {ytPlaylistDetails.metadata?.title}
                 </h1>
                 <div className="text-xs text-zinc-400 font-semibold flex items-center gap-1.5 flex-wrap">
-                  <span 
-                    onClick={() => viewChannel(ytPlaylistDetails.metadata.channelTitle, ytPlaylistDetails.metadata.channelId)}
-                    className="hover:underline cursor-pointer text-white font-bold"
-                  >
-                    {cleanVisualName(ytPlaylistDetails.metadata?.channelTitle || '')}
-                  </span>
+                  {renderArtistLinks(
+                    ytPlaylistDetails.metadata?.channelTitle || '',
+                    ytPlaylistDetails.metadata?.channelId,
+                    "text-white font-bold inline-flex flex-wrap text-xs"
+                  )}
                   <span>•</span>
                   <span>{ytPlaylistDetails.tracks?.length || 0} songs</span>
                   {ytPlaylistDetails.metadata?.description && (
