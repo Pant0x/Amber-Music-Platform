@@ -305,11 +305,13 @@ export async function GET(request: Request) {
 
     console.log(`[Artist API] Fetching details for artist ID: ${artistId}`);
 
-    // Fetch artist profile, top tracks, and albums/singles in parallel
-    const [artistRes, topTracksRes, albumsRes, relatedRes] = await Promise.all([
+    // Fetch artist profile, top tracks, and albums/singles/features separately in parallel
+    const [artistRes, topTracksRes, albumsRes, singlesRes, appearsOnRes, relatedRes] = await Promise.all([
       spotifyApi.getArtist(artistId),
       spotifyApi.getArtistTopTracks(artistId, 'US'),
-      spotifyApi.getArtistAlbums(artistId, { limit: 50, country: 'US', include_groups: 'album,single,appears_on' }),
+      spotifyApi.getArtistAlbums(artistId, { limit: 50, country: 'US', include_groups: 'album' }),
+      spotifyApi.getArtistAlbums(artistId, { limit: 50, country: 'US', include_groups: 'single' }),
+      spotifyApi.getArtistAlbums(artistId, { limit: 50, country: 'US', include_groups: 'appears_on' }),
       spotifyApi.getArtistRelatedArtists(artistId)
     ]);
 
@@ -349,7 +351,11 @@ export async function GET(request: Request) {
     });
 
     // Map albums and singles with chronological sorting
-    const allItems = albumsRes.body.items || [];
+    const allItems = [
+      ...(albumsRes.body?.items || []),
+      ...(singlesRes.body?.items || []),
+      ...(appearsOnRes.body?.items || [])
+    ];
     
     const getSpotifyReleaseType = (item: any): 'Album' | 'Single' | 'EP' => {
       const totalTracks = item.total_tracks || 1;
