@@ -1,13 +1,28 @@
+'use client';
+
 import React from 'react';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { MainDashboard } from '@/components/MainDashboard';
-// MediaDeck is now mounted in the root layout to remain persistent across routes
-// import { MediaDeck } from '@/components/MediaDeck';
 import { QueuePanel } from '@/components/QueuePanel';
 import { NowPlayingView } from '@/components/NowPlayingView';
+import { usePlayerStore } from '@/store/usePlayerStore';
+import { Home as HomeIcon, Compass, Library } from 'lucide-react';
 
 export default function Home() {
+  const {
+    activeTab,
+    setActiveTab,
+    setCurrentPlaylistId,
+    setCurrentChannelId
+  } = usePlayerStore();
+
+  const navigateToTab = (tab: 'home' | 'explore' | 'library') => {
+    setActiveTab(tab);
+    setCurrentPlaylistId(null);
+    setCurrentChannelId(null);
+  };
+
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
 
@@ -30,7 +45,37 @@ export default function Home() {
         <QueuePanel />
       </div>
 
-      {/* 3. Persistent Bottom Media Controls with edge progress bar are mounted in layout.tsx */}
+      {/* Mobile Bottom Navigation Bar (YouTube Music style) */}
+      <div className="md:hidden h-14 bg-[#070707] border-t border-white/5 flex items-center justify-around z-20 flex-shrink-0 text-zinc-400 font-semibold text-[10px]">
+        <button
+          onClick={() => navigateToTab('home')}
+          className={`flex flex-col items-center justify-center gap-1 w-20 py-1 transition-colors ${
+            activeTab === 'home' ? 'text-white font-bold' : 'hover:text-zinc-200'
+          }`}
+        >
+          <HomeIcon className="w-5.5 h-5.5" />
+          <span>Home</span>
+        </button>
+        <button
+          onClick={() => navigateToTab('explore')}
+          className={`flex flex-col items-center justify-center gap-1 w-20 py-1 transition-colors ${
+            activeTab === 'explore' ? 'text-white font-bold' : 'hover:text-zinc-200'
+          }`}
+        >
+          <Compass className="w-5.5 h-5.5" />
+          <span>Explore</span>
+        </button>
+        <button
+          onClick={() => navigateToTab('library')}
+          className={`flex flex-col items-center justify-center gap-1 w-20 py-1 transition-colors ${
+            activeTab === 'library' ? 'text-white font-bold' : 'hover:text-zinc-200'
+          }`}
+        >
+          <Library className="w-5.5 h-5.5" />
+          <span>Library</span>
+        </button>
+      </div>
+
     </div>
   );
 }

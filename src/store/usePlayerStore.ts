@@ -190,7 +190,7 @@ export const usePlayerStore = create<PlayerState>()(
       playbackMode: 'song',
       nowPlayingTab: 'upnext',
       isMinimized: false,
-      setShowNowPlaying: (showNowPlaying) => set({ showNowPlaying }),
+      setShowNowPlaying: (showNowPlaying) => set((state) => ({ showNowPlaying, isMinimized: showNowPlaying ? false : state.isMinimized })),
       toggleNowPlaying: () => set((state) => ({ showNowPlaying: !state.showNowPlaying })),
       setIsMinimized: (isMinimized: boolean) => set({ isMinimized }),
       toggleMinimized: () => set((state) => ({ isMinimized: !state.isMinimized })),

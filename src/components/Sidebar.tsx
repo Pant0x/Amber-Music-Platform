@@ -30,7 +30,7 @@ export const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="w-[240px] bg-[#030303] flex flex-col gap-4 select-none h-full flex-shrink-0 text-zinc-400 font-semibold p-4 border-r border-white/5">
+    <aside className="hidden md:flex w-[240px] bg-[#030303] flex flex-col gap-4 select-none h-full flex-shrink-0 text-zinc-400 font-semibold p-4 border-r border-white/5">
       
       {/* 1. Main Navigation Items */}
       <nav className="flex flex-col gap-1">
