@@ -456,9 +456,9 @@ export const usePlayerStore = create<PlayerState>()(
         if (state) {
           state.setHasHydrated(true)
           try {
-            if (typeof state.playedSeconds === 'number' && state.playedSeconds > 0) {
-              state.setSeekTrigger(state.playedSeconds)
-            }
+            state.setPlaying(false);
+            state.setPlayedSeconds(0);
+            state.setSeekTrigger(0);
           } catch (e) {
             console.warn('Rehydrate error', e)
           }
