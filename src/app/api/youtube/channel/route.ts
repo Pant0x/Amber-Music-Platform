@@ -194,10 +194,23 @@ const runYoutubeChannelFallback = async (artistId: string | null, name: string |
     // Fetch collaborative search albums/singles and songs to catch features
     try {
       console.log(`[Artist API Fallback] Searching YouTube Music for collaborative releases and songs for: "${profile.title}"`);
-      const searchRes = await ytMusicSearch(profile.title);
+      const [searchRes, searchSongsRes] = await Promise.all([
+        ytMusicSearch(profile.title),
+        ytMusicSearch(`${profile.title} songs`)
+      ]);
+
+      // Merge results
+      const searchSongs = [
+        ...(searchRes.songs || []),
+        ...(searchSongsRes.songs || [])
+      ];
       
+      const searchAlbums = [
+        ...(searchRes.albums || []),
+        ...(searchSongsRes.albums || [])
+      ];
+
       // 1. Process search songs
-      const searchSongs = searchRes.songs || [];
       for (const song of searchSongs) {
         // Add to topSongs if not seen
         if (song.id && !seenSongIds.has(song.id)) {
@@ -230,7 +243,6 @@ const runYoutubeChannelFallback = async (artistId: string | null, name: string |
       }
 
       // 2. Process search albums
-      const searchAlbums = searchRes.albums || [];
       for (const sa of searchAlbums) {
         const isSingleOrEp = sa.releaseType?.toLowerCase() === 'single' || sa.releaseType?.toLowerCase() === 'ep';
         if (isSingleOrEp) {
