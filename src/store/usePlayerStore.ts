@@ -434,7 +434,11 @@ export const usePlayerStore = create<PlayerState>()(
     }),
     {
       name: 'yt-music-storage-v1',
-      storage: createJSONStorage(() => (typeof window !== 'undefined' ? sessionStorage : undefined)),
+      storage: createJSONStorage(() => (typeof window !== 'undefined' ? sessionStorage : {
+        getItem: () => null,
+        setItem: () => {},
+        removeItem: () => {}
+      } as any)),
       partialize: (state) => ({
         currentTrack: state.currentTrack,
         isPlaying: state.isPlaying,

@@ -52,6 +52,7 @@ export const Header: React.FC = () => {
             onClick={() => router.back()}
             className="p-1.5 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
             title="Back"
+            aria-label="Back"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -59,6 +60,7 @@ export const Header: React.FC = () => {
             onClick={() => router.forward()}
             className="p-1.5 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
             title="Forward"
+            aria-label="Forward"
           >
             <ChevronRight className="w-4 h-4" />
           </button>

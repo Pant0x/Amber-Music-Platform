@@ -9,7 +9,7 @@ import { NowPlayingView } from '@/components/NowPlayingView';
 
 export default function Home() {
   return (
-    <div className="h-screen w-screen bg-[#030303] flex flex-col text-zinc-300 font-sans select-none overflow-hidden">
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
 
       {/* 1. YouTube Music Sticky Top Header */}
       <Header />
