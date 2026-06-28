@@ -8,7 +8,7 @@ async function getYtMusicClient() {
     // dynamic import so bundlers don't include this in client builds
     const mod = await import('node-youtube-music');
     // module may export default or named functions
-    return (mod && (mod.default || mod));
+    return (mod && ((mod as any).default || mod));
   } catch (err) {
     console.warn('node-youtube-music not available:', err);
     return null;
