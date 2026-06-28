@@ -450,14 +450,31 @@ export const MediaDeck: React.FC = () => {
                 </>
               );
             })()}
-            <p 
-              onClick={(e) => {
-                e.stopPropagation();
-                viewChannel(currentTrack.channelTitle, currentTrack.channelId);
-              }}
-              className="text-[11px] text-zinc-400 truncate mt-0.5 hover:text-white hover:underline cursor-pointer"
-            >
-              {cleanVisualName(currentTrack.channelTitle)}
+            <p className="text-[11px] text-zinc-400 truncate mt-0.5 font-medium">
+              {(() => {
+                const artistNames = currentTrack.channelTitle
+                  ? currentTrack.channelTitle.split(/,|\s+&\s+|\s+and\s+/i).map((n: string) => n.trim()).filter(Boolean)
+                  : [];
+                if (artistNames.length === 0) return 'Unknown Artist';
+                return artistNames.map((name: string, idx: number) => {
+                  const cleanName = cleanVisualName(name);
+                  return (
+                    <React.Fragment key={name}>
+                      {idx > 0 && <span className="text-zinc-500">, </span>}
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const artistId = idx === 0 ? currentTrack.channelId || currentTrack.artistId : undefined;
+                          viewChannel(cleanName, artistId);
+                        }}
+                        className="hover:underline hover:text-white cursor-pointer"
+                      >
+                        {cleanName}
+                      </span>
+                    </React.Fragment>
+                  );
+                });
+              })()}
             </p>
           </div>
         </div>

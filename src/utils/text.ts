@@ -15,7 +15,7 @@ export interface ParsedTitle {
 
 export function parseFeaturedArtists(title: string): ParsedTitle {
   if (!title) return { title: '', featured: [] };
-  const featRegex = /\s*[([{-]?(?:feat|featuring|ft)\.?\s+([^)\]}]+)[)\]}]?/i;
+  const featRegex = /\s*[([{-]?(?:feat|featuring|ft|with|w\/)\.?\s+([^)\]}]+)[)\]}]?/i;
   const match = title.match(featRegex);
   if (match) {
     const featString = match[1].trim();

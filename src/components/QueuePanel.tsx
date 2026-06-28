@@ -111,11 +111,31 @@ export const QueuePanel: React.FC = () => {
                     </>
                   );
                 })()}
-                <p 
-                  onClick={() => viewChannel(currentTrack.channelTitle, currentTrack.channelId)}
-                  className="text-xs text-zinc-400 truncate mt-0.5 hover:underline hover:text-white cursor-pointer"
-                >
-                  {cleanVisualName(currentTrack.channelTitle)}
+                <p className="text-xs text-zinc-400 truncate mt-0.5 font-medium">
+                  {(() => {
+                    const artistNames = currentTrack.channelTitle
+                      ? currentTrack.channelTitle.split(/,|\s+&\s+|\s+and\s+/i).map((n: string) => n.trim()).filter(Boolean)
+                      : [];
+                    if (artistNames.length === 0) return 'Unknown Artist';
+                    return artistNames.map((name: string, idx: number) => {
+                      const cleanName = cleanVisualName(name);
+                      return (
+                        <React.Fragment key={name}>
+                          {idx > 0 && <span className="text-zinc-500">, </span>}
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const artistId = idx === 0 ? currentTrack.channelId || currentTrack.artistId : undefined;
+                              viewChannel(cleanName, artistId);
+                            }}
+                            className="hover:underline hover:text-white cursor-pointer"
+                          >
+                            {cleanName}
+                          </span>
+                        </React.Fragment>
+                      );
+                    });
+                  })()}
                 </p>
               </div>
             </div>
@@ -193,14 +213,31 @@ export const QueuePanel: React.FC = () => {
                           </>
                         );
                       })()}
-                      <p 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          viewChannel(track.channelTitle, track.channelId);
-                        }}
-                        className="text-xs text-zinc-400 truncate mt-0.5 hover:underline hover:text-white cursor-pointer"
-                      >
-                        {cleanVisualName(track.channelTitle)}
+                      <p className="text-xs text-zinc-400 truncate mt-0.5 font-medium">
+                        {(() => {
+                          const artistNames = track.channelTitle
+                            ? track.channelTitle.split(/,|\s+&\s+|\s+and\s+/i).map((n: string) => n.trim()).filter(Boolean)
+                            : [];
+                          if (artistNames.length === 0) return 'Unknown Artist';
+                          return artistNames.map((name: string, idx: number) => {
+                            const cleanName = cleanVisualName(name);
+                            return (
+                              <React.Fragment key={name}>
+                                {idx > 0 && <span className="text-zinc-500">, </span>}
+                                <span
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const artistId = idx === 0 ? track.channelId || track.artistId : undefined;
+                                    viewChannel(cleanName, artistId);
+                                  }}
+                                  className="hover:underline hover:text-white cursor-pointer"
+                                >
+                                  {cleanName}
+                                </span>
+                              </React.Fragment>
+                            );
+                          });
+                        })()}
                       </p>
                     </div>
                   </div>
@@ -274,14 +311,31 @@ export const QueuePanel: React.FC = () => {
                           </>
                         );
                       })()}
-                      <p 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          viewChannel(track.channelTitle, track.channelId);
-                        }}
-                        className="text-xs text-zinc-400 truncate mt-0.5 hover:underline hover:text-white cursor-pointer"
-                      >
-                        {cleanVisualName(track.channelTitle)}
+                      <p className="text-xs text-zinc-400 truncate mt-0.5 font-medium">
+                        {(() => {
+                          const artistNames = track.channelTitle
+                            ? track.channelTitle.split(/,|\s+&\s+|\s+and\s+/i).map((n: string) => n.trim()).filter(Boolean)
+                            : [];
+                          if (artistNames.length === 0) return 'Unknown Artist';
+                          return artistNames.map((name: string, idx: number) => {
+                            const cleanName = cleanVisualName(name);
+                            return (
+                              <React.Fragment key={name}>
+                                {idx > 0 && <span className="text-zinc-500">, </span>}
+                                <span
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const artistId = idx === 0 ? track.channelId || track.artistId : undefined;
+                                    viewChannel(cleanName, artistId);
+                                  }}
+                                  className="hover:underline hover:text-white cursor-pointer"
+                                >
+                                  {cleanName}
+                                </span>
+                              </React.Fragment>
+                            );
+                          });
+                        })()}
                       </p>
                     </div>
                   </div>
