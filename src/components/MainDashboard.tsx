@@ -1661,6 +1661,32 @@ export const MainDashboard: React.FC = () => {
                     </Carousel>
                   </div>
                 )}
+                {/* Featured In */}
+                {currentChannelDetails.featuredPlaylists?.length > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-2xl font-bold text-white">Featured In</h2>
+                    </div>
+                    <Carousel className="gap-6">
+                      {currentChannelDetails.featuredPlaylists.map((album: any) => (
+                        <div key={`ov-featured-${album.id}`}
+                          onClick={() => { setCurrentPlaylistId(album.id); setActiveTab('playlist'); }}
+                          className="group flex-shrink-0 w-[180px] cursor-pointer">
+                          <div className="relative aspect-square w-full rounded-sm overflow-hidden mb-2 bg-[#1f1f1f]">
+                            <img src={album.thumbnailUrl || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                          </div>
+                          <h4 className="text-sm text-white truncate">{album.title}</h4>
+                          <p className="text-[11px] text-zinc-400 truncate mt-0.5" title={album.channelTitle}>{cleanVisualName(album.channelTitle)}</p>
+                          <p className="text-[11px] text-zinc-500 mt-0.5 flex items-center gap-1">
+                            <Disc className="w-3 h-3 flex-shrink-0" />
+                            Playlist
+                          </p>
+                        </div>
+                      ))}
+                    </Carousel>
+                  </div>
+                )}
 
                 {/* Videos */}
                 {currentChannelDetails.videos?.length > 0 && (

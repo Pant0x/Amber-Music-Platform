@@ -191,6 +191,15 @@ const runYoutubeChannelFallback = async (artistId: string | null, name: string |
       }));
     const singles = sortReleasesNewestToOldest(singlesRaw);
 
+    const featuredPlaylists = (discography.featuredPlaylists || [])
+      .map((item: any) => ({
+        ...item,
+        title: cleanArtistName(item.title),
+        channelTitle: cleanArtistName(item.channelTitle),
+        thumbnailUrl: upgradeThumbnailUrl(item.thumbnailUrl),
+        releaseType: 'Playlist'
+      }));
+
     // Deduplicate, merge and sort albums + singles for allPlaylists newest-to-oldest
     const seenIds = new Set<string>();
     const allPlaylists = sortReleasesNewestToOldest(
@@ -262,6 +271,7 @@ const runYoutubeChannelFallback = async (artistId: string | null, name: string |
       albums,
       singles,
       allPlaylists,
+      featuredPlaylists,
       relatedArtists
     }));
   } catch (error) {
@@ -435,6 +445,7 @@ export async function GET(request: Request) {
       albums,
       singles,
       allPlaylists,
+      featuredPlaylists: [],
       relatedArtists
     }));
   } catch (error) {

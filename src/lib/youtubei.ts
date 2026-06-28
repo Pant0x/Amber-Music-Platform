@@ -364,6 +364,7 @@ export async function ytMusicArtistDiscography(artistId: string) {
   const topSongs: any[] = [];
   const albums: any[] = [];
   const singles: any[] = [];
+  const featuredPlaylists: any[] = [];
   
   const extractThumbnail = (item: any) => {
     const thumbs = item?.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails || item?.thumbnailRenderer?.musicThumbnailRenderer?.thumbnail?.thumbnails;
@@ -398,7 +399,9 @@ export async function ytMusicArtistDiscography(artistId: string) {
         
         const lowerTitle = title.toLowerCase();
         let releaseType = 'Album';
-        if (lowerTitle.includes('(single)') || lowerTitle.includes(' - single')) {
+        if (artistName.toLowerCase() === 'youtube music' || artistName.toLowerCase() === 'youtube') {
+          releaseType = 'Playlist';
+        } else if (lowerTitle.includes('(single)') || lowerTitle.includes(' - single')) {
           releaseType = 'Single';
         } else if (lowerTitle.includes('(ep)') || lowerTitle.includes(' - ep')) {
           releaseType = 'EP';
@@ -416,7 +419,9 @@ export async function ytMusicArtistDiscography(artistId: string) {
         // Dynamically route items to correct list based on parsed releaseType
         let destinationArray = targetArray;
         if (type === 'playlist') {
-          if (releaseType === 'Single' || releaseType === 'EP') {
+          if (releaseType === 'Playlist') {
+            destinationArray = featuredPlaylists;
+          } else if (releaseType === 'Single' || releaseType === 'EP') {
             destinationArray = singles;
           } else {
             destinationArray = albums;
@@ -641,7 +646,7 @@ export async function ytMusicArtistDiscography(artistId: string) {
     }
   }
 
-  return { topSongs, albums, singles };
+  return { topSongs, albums, singles, featuredPlaylists };
 }
 
 export async function getYTMusicLyricsBrowseId(videoId: string): Promise<string | null> {
