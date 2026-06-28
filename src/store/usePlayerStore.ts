@@ -87,6 +87,10 @@ interface PlayerState {
   setSeekTrigger: (seconds: number | null) => void;
   setYoutubeIdForCurrentTrack: (youtubeId: string) => void;
   
+  isMinimized: boolean;
+  setIsMinimized: (isMinimized: boolean) => void;
+  toggleMinimized: () => void;
+  
   // Hydration state
   _hasHydrated: boolean;
   setHasHydrated: (state: boolean) => void;
