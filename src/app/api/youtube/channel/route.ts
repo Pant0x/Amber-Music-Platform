@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSpotifyApi } from '@/lib/spotify';
 import { ytMusicSearch, ytMusicBrowse, ytMusicArtistDiscography, cleanArtistName, upgradeThumbnailUrl, parseSubscriberCount, cleanTopicGlobally } from '@/lib/youtubei';
+import createSupabaseServerClient from '@/lib/supabase-server';
 
 const sortReleasesNewestToOldest = (items: any[]) => {
   const getReleaseTime = (dateStr: string) => {
@@ -303,6 +304,72 @@ const runYoutubeChannelFallback = async (artistId: string | null, name: string |
       }
     } catch (searchErr) {
       console.error('[Artist API Fallback] Failed fetching search releases fallback:', searchErr);
+    }
+
+    // Fetch user's local database history matched collaborative songs
+    try {
+      const supabase = createSupabaseServerClient();
+      if (supabase) {
+        console.log(`[Artist API Fallback] Fetching local database listen history for artist: "${profile.title}"`);
+        const { data: matchedRows, error: dbErr } = await supabase
+          .from('listen_history')
+          .select('metadata')
+          .not('metadata', 'is', null);
+
+        if (!dbErr && matchedRows) {
+          const artistNameLower = profile.title.toLowerCase();
+          const artistRegex = new RegExp(`\\b${artistNameLower.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
+
+          for (const row of matchedRows) {
+            const track = row.metadata;
+            if (!track || !track.title) continue;
+
+            const songTitleLower = track.title.toLowerCase();
+            const songArtists = (track.channelTitle || '')
+              .split(/,|\s+&\s+|\s+and\s+/i)
+              .map((n: string) => n.trim().toLowerCase())
+              .filter(Boolean);
+
+            const isActuallyArtist = 
+              songArtists.some((a: string) => a === artistNameLower) ||
+              artistRegex.test(track.channelTitle || '') ||
+              artistRegex.test(songTitleLower);
+
+            if (isActuallyArtist && track.id && !seenSongIds.has(track.id)) {
+              seenSongIds.add(track.id);
+              topSongs.push({
+                id: track.id,
+                title: cleanArtistName(track.title),
+                channelTitle: track.channelTitle && track.channelTitle !== 'Unknown Artist'
+                  ? cleanArtistName(track.channelTitle)
+                  : profile.title,
+                thumbnailUrl: upgradeThumbnailUrl(track.thumbnailUrl || ''),
+                duration: track.duration || '3:00',
+                isExplicit: track.isExplicit || false,
+                albumId: track.albumId || null,
+                albumName: track.albumName || null
+              });
+
+              // If the track from history has an albumId, add it to albumsRaw
+              if (track.albumId && track.albumName && !seenAlbumIds.has(track.albumId)) {
+                seenAlbumIds.add(track.albumId);
+                albumsRaw.push({
+                  id: track.albumId,
+                  title: cleanArtistName(track.albumName),
+                  channelTitle: track.channelTitle && track.channelTitle !== 'Unknown Artist'
+                    ? cleanArtistName(track.channelTitle)
+                    : profile.title,
+                  thumbnailUrl: upgradeThumbnailUrl(track.thumbnailUrl || ''),
+                  releaseType: 'Album',
+                  origin: 'youtube'
+                });
+              }
+            }
+          }
+        }
+      }
+    } catch (dbErr) {
+      console.warn('[Artist API Fallback] Supabase history resolution failed (Supabase might not be fully configured):', dbErr);
     }
 
     // Dynamic Single-release fallback for songs without parent albums
