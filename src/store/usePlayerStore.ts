@@ -74,11 +74,11 @@ interface PlayerState {
   // Now Playing Panel State
   showNowPlaying: boolean;
   playbackMode: 'song' | 'video';
-  nowPlayingTab: 'upnext' | 'lyrics' | 'related';
+  nowPlayingTab: 'player' | 'upnext' | 'lyrics' | 'related';
   setShowNowPlaying: (show: boolean) => void;
   toggleNowPlaying: () => void;
   setPlaybackMode: (mode: 'song' | 'video') => void;
-  setNowPlayingTab: (tab: 'upnext' | 'lyrics' | 'related') => void;
+  setNowPlayingTab: (tab: 'player' | 'upnext' | 'lyrics' | 'related') => void;
   playedSeconds: number;
   duration: number;
   setPlayedSeconds: (seconds: number) => void;
@@ -188,7 +188,7 @@ export const usePlayerStore = create<PlayerState>()(
       // Now Playing Initial State
       showNowPlaying: false,
       playbackMode: 'song',
-      nowPlayingTab: 'upnext',
+      nowPlayingTab: 'player',
       isMinimized: false,
       setShowNowPlaying: (showNowPlaying) => set((state) => ({ showNowPlaying, isMinimized: showNowPlaying ? false : state.isMinimized })),
       toggleNowPlaying: () => set((state) => ({ showNowPlaying: !state.showNowPlaying })),

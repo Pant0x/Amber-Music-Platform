@@ -274,10 +274,12 @@ export const NowPlayingView: React.FC = () => {
       </header>
 
       {/* Main content grid */}
-      <div className="flex-1 flex flex-col lg:flex-row gap-8 p-6 lg:p-8 overflow-hidden z-10">
+      <div className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-8 p-4 lg:p-8 overflow-hidden z-10">
         
         {/* Left Side: Interactive Canvas */}
-        <div className="flex-[7] flex flex-col items-center justify-center min-w-0 h-full relative">
+        <div className={`flex-[7] flex flex-col items-center justify-center min-w-0 h-full relative ${
+          nowPlayingTab === 'player' ? 'flex' : 'hidden lg:flex'
+        }`}>
           
           {playbackMode === 'song' ? (
             /* Song Mode Cover Art Canvas */
@@ -447,13 +449,28 @@ export const NowPlayingView: React.FC = () => {
         </div>
 
         {/* Right Side: Glassmorphic Tabs Details Panel */}
-        <div className="flex-[5] flex flex-col bg-zinc-950/45 border border-white/10 rounded-2xl h-full overflow-hidden backdrop-blur-xl shadow-2xl relative">
+        <div className={`flex-[5] flex flex-col bg-zinc-950/45 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-xl shadow-2xl relative transition-all duration-300 ${
+          nowPlayingTab !== 'player' ? 'flex-1 h-full' : 'h-14 lg:h-full lg:flex-[5] flex'
+        }`}>
           
           {/* Tab Header Selector */}
-          <div className="flex border-b border-white/5 bg-black/20 text-xs font-bold tracking-wider select-none">
-            {(['upnext', 'lyrics', 'related'] as const).map((tab) => {
+          <div className="flex border-b border-white/5 bg-black/20 text-xs font-bold tracking-wider select-none flex-shrink-0">
+            {(['player', 'upnext', 'lyrics', 'related'] as const).map((tab) => {
+              if (tab === 'player') {
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setNowPlayingTab(tab)}
+                    className={`lg:hidden flex-1 py-4 text-center border-b-2 hover:text-white transition-all duration-200 cursor-pointer ${
+                      nowPlayingTab === tab ? 'border-[#ff0000] text-white' : 'border-transparent text-zinc-400'
+                    }`}
+                  >
+                    PLAYER
+                  </button>
+                );
+              }
               const label = tab === 'upnext' ? 'UP NEXT' : tab === 'lyrics' ? 'LYRICS' : 'RELATED';
-              const active = nowPlayingTab === tab;
+              const active = nowPlayingTab === tab || (tab === 'upnext' && nowPlayingTab === 'player');
               return (
                 <button
                   key={tab}

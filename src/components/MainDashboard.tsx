@@ -23,7 +23,8 @@ import {
   User,
   Check,
   Radio,
-  Shuffle
+  Shuffle,
+  Search
 } from 'lucide-react';
 
 const MOOD_CHIPS = [
@@ -636,8 +637,35 @@ export const MainDashboard: React.FC = () => {
       {activeTab === 'search' && (
         <div className="animate-fade-in space-y-6">
           {/* Search Header */}
-          <div className="flex items-center gap-3">
-            {loading && <Disc className="w-5 h-5 text-zinc-500 animate-spin" />}
+          <div className="flex flex-col md:flex-row md:items-center gap-4">
+            {/* Mobile Search Input */}
+            <div className="relative w-full max-w-md md:hidden">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-zinc-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchQuery.trim()) {
+                    addSearchQueryToHistory(searchQuery);
+                  }
+                }}
+                placeholder="Search songs, albums, artists..."
+                className="w-full bg-[#1f1f1f] text-white text-sm pl-11 pr-10 py-2.5 rounded-full outline-none placeholder-zinc-500 border border-white/5 focus:border-zinc-800 transition-all font-medium"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {loading && <Disc className="w-5 h-5 text-zinc-500 animate-spin" />}
+            </div>
           </div>
 
           {/* Filter Chips */}
