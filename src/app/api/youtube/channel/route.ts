@@ -171,7 +171,6 @@ const runYoutubeChannelFallback = async (artistId: string | null, name: string |
         thumbnailUrl: upgradeThumbnailUrl(album.thumbnailUrl),
         releaseType: 'Album'
       }));
-    const albums = sortReleasesNewestToOldest(albumsRaw);
 
     const seenSingleIds = new Set<string>();
     const singlesRaw = (discography.singles || [])
@@ -189,6 +188,47 @@ const runYoutubeChannelFallback = async (artistId: string | null, name: string |
         thumbnailUrl: upgradeThumbnailUrl(single.thumbnailUrl),
         releaseType: 'Single/EP'
       }));
+
+    // Fetch collaborative search albums/singles to catch features
+    try {
+      console.log(`[Artist API Fallback] Searching YouTube Music for collaborative releases for: "${profile.title}"`);
+      const searchRes = await ytMusicSearch(profile.title);
+      const searchAlbums = searchRes.albums || [];
+      for (const sa of searchAlbums) {
+        const isSingleOrEp = sa.releaseType?.toLowerCase() === 'single' || sa.releaseType?.toLowerCase() === 'ep';
+        if (isSingleOrEp) {
+          if (sa.id && !seenSingleIds.has(sa.id)) {
+            seenSingleIds.add(sa.id);
+            singlesRaw.push({
+              ...sa,
+              title: cleanArtistName(sa.title),
+              channelTitle: sa.channelTitle && sa.channelTitle !== 'Unknown Artist'
+                ? cleanArtistName(sa.channelTitle)
+                : profile.title,
+              thumbnailUrl: upgradeThumbnailUrl(sa.thumbnailUrl),
+              releaseType: sa.releaseType || 'Single/EP'
+            });
+          }
+        } else {
+          if (sa.id && !seenAlbumIds.has(sa.id)) {
+            seenAlbumIds.add(sa.id);
+            albumsRaw.push({
+              ...sa,
+              title: cleanArtistName(sa.title),
+              channelTitle: sa.channelTitle && sa.channelTitle !== 'Unknown Artist'
+                ? cleanArtistName(sa.channelTitle)
+                : profile.title,
+              thumbnailUrl: upgradeThumbnailUrl(sa.thumbnailUrl),
+              releaseType: sa.releaseType || 'Album'
+            });
+          }
+        }
+      }
+    } catch (searchErr) {
+      console.error('[Artist API Fallback] Failed fetching search releases fallback:', searchErr);
+    }
+
+    const albums = sortReleasesNewestToOldest(albumsRaw);
     const singles = sortReleasesNewestToOldest(singlesRaw);
 
     const featuredPlaylists = (discography.featuredPlaylists || [])
