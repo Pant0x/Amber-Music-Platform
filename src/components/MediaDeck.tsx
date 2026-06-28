@@ -344,7 +344,7 @@ export const MediaDeck: React.FC = () => {
       
       {/* Persistent ReactPlayer Engine */}
       <div 
-        className="fixed z-50 rounded-2xl overflow-hidden pointer-events-none transition-all duration-300"
+        className="fixed z-50 rounded-2xl overflow-hidden pointer-events-none"
         style={videoRect ? {
           left: `${videoRect.left}px`,
           top: `${videoRect.top}px`,
