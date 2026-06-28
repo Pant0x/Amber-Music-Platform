@@ -277,6 +277,33 @@ const runYoutubeChannelFallback = async (artistId: string | null, name: string |
       console.error('[Artist API Fallback] Failed fetching search releases fallback:', searchErr);
     }
 
+    // Dynamic Single-release fallback for songs without parent albums
+    for (const song of topSongs) {
+      const cleanedSongTitle = cleanArtistName(song.title);
+      const lowerSongTitle = cleanedSongTitle.toLowerCase();
+      
+      const isAlreadyRelease = 
+        albumsRaw.some((a: any) => a.title.toLowerCase() === lowerSongTitle) ||
+        singlesRaw.some((s: any) => s.title.toLowerCase() === lowerSongTitle);
+        
+      if (!isAlreadyRelease) {
+        if (song.id && !seenSingleIds.has(song.id)) {
+          seenSingleIds.add(song.id);
+          singlesRaw.push({
+            id: song.id,
+            title: cleanedSongTitle,
+            channelTitle: song.channelTitle || profile.title,
+            thumbnailUrl: song.thumbnailUrl,
+            releaseType: 'Single',
+            origin: 'youtube',
+            type: 'music',
+            duration: song.duration || '3:00',
+            isExplicit: song.isExplicit || false
+          });
+        }
+      }
+    }
+
     const albums = sortReleasesNewestToOldest(albumsRaw);
     const singles = sortReleasesNewestToOldest(singlesRaw);
 

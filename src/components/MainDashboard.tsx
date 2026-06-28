@@ -1613,7 +1613,14 @@ export const MainDashboard: React.FC = () => {
                     <Carousel className="gap-6">
                       {currentChannelDetails.albums.map((album: any) => (
                         <div key={`ov-album-${album.id}`}
-                          onClick={() => { setCurrentPlaylistId(album.id); setActiveTab('playlist'); }}
+                          onClick={() => {
+                            if (album.type === 'music') {
+                              handlePlayAction(album, [album]);
+                            } else {
+                              setCurrentPlaylistId(album.id);
+                              setActiveTab('playlist');
+                            }
+                          }}
                           className="group flex-shrink-0 w-[180px] cursor-pointer">
                           <div className="relative aspect-square w-full rounded-sm overflow-hidden mb-2 bg-[#1f1f1f]">
                             <img src={album.thumbnailUrl   || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -1644,7 +1651,14 @@ export const MainDashboard: React.FC = () => {
                     <Carousel className="gap-6">
                       {currentChannelDetails.singles.map((album: any) => (
                         <div key={`ov-single-${album.id}`}
-                          onClick={() => { setCurrentPlaylistId(album.id); setActiveTab('playlist'); }}
+                          onClick={() => {
+                            if (album.type === 'music') {
+                              handlePlayAction(album, [album]);
+                            } else {
+                              setCurrentPlaylistId(album.id);
+                              setActiveTab('playlist');
+                            }
+                          }}
                           className="group flex-shrink-0 w-[180px] cursor-pointer">
                           <div className="relative aspect-square w-full rounded-sm overflow-hidden mb-2 bg-[#1f1f1f]">
                             <img src={album.thumbnailUrl   || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -1890,7 +1904,14 @@ export const MainDashboard: React.FC = () => {
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-6 gap-y-8">
                       {filtered.map((album: any) => (
                         <div key={`tab-album-${album.id}`}
-                          onClick={() => { setCurrentPlaylistId(album.id); setActiveTab('playlist'); }}
+                          onClick={() => {
+                            if (album.type === 'music') {
+                              handlePlayAction(album, [album]);
+                            } else {
+                              setCurrentPlaylistId(album.id);
+                              setActiveTab('playlist');
+                            }
+                          }}
                           className="group cursor-pointer">
                           <div className="relative aspect-square w-full rounded-sm overflow-hidden mb-2 bg-[#1f1f1f]">
                             <img src={album.thumbnailUrl  || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
