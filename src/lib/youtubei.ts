@@ -250,6 +250,14 @@ export async function ytMusicSearch(query: string) {
           const { artistName, artistId: subArtistId } = parseTrackSubtitle(subtitleRuns);
           const durationRun = subtitleRuns.find((r: any) => r?.text && /^\d+:\d{1,2}$/.test(r.text.trim()));
           const durationStr = durationRun ? durationRun.text.trim() : '3:00';
+          
+          const albumRun = subtitleRuns.find((r: any) => {
+            const bId = r.navigationEndpoint?.browseEndpoint?.browseId || '';
+            return bId.startsWith('MPRE') || bId.startsWith('FEmusic_release');
+          });
+          const albumName = albumRun ? albumRun.text : null;
+          const albumId = albumRun ? albumRun.navigationEndpoint?.browseEndpoint?.browseId : null;
+
           songs.push({
             id: id || browseId,
             title: cleanArtistName(title),
@@ -260,7 +268,9 @@ export async function ytMusicSearch(query: string) {
             origin: 'youtube',
             channelId: subArtistId || '',
             duration: durationStr,
-            isExplicit
+            isExplicit,
+            albumName,
+            albumId
           });
         } else if (typeText === 'video') {
           const { artistName, artistId: subArtistId } = parseTrackSubtitle(subtitleRuns);

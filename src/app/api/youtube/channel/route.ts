@@ -189,10 +189,47 @@ const runYoutubeChannelFallback = async (artistId: string | null, name: string |
         releaseType: 'Single/EP'
       }));
 
-    // Fetch collaborative search albums/singles to catch features
+    const seenSongIds = new Set<string>(topSongs.map((s: any) => s.id));
+
+    // Fetch collaborative search albums/singles and songs to catch features
     try {
-      console.log(`[Artist API Fallback] Searching YouTube Music for collaborative releases for: "${profile.title}"`);
+      console.log(`[Artist API Fallback] Searching YouTube Music for collaborative releases and songs for: "${profile.title}"`);
       const searchRes = await ytMusicSearch(profile.title);
+      
+      // 1. Process search songs
+      const searchSongs = searchRes.songs || [];
+      for (const song of searchSongs) {
+        // Add to topSongs if not seen
+        if (song.id && !seenSongIds.has(song.id)) {
+          seenSongIds.add(song.id);
+          topSongs.push({
+            ...song,
+            title: cleanArtistName(song.title),
+            channelTitle: song.channelTitle && song.channelTitle !== 'Unknown Artist'
+              ? cleanArtistName(song.channelTitle)
+              : profile.title,
+            thumbnailUrl: upgradeThumbnailUrl(song.thumbnailUrl)
+          });
+        }
+        // Add the song's album to albumsRaw/singlesRaw if found
+        if (song.albumId && song.albumName) {
+          if (!seenAlbumIds.has(song.albumId)) {
+            seenAlbumIds.add(song.albumId);
+            albumsRaw.push({
+              id: song.albumId,
+              title: cleanArtistName(song.albumName),
+              channelTitle: song.channelTitle && song.channelTitle !== 'Unknown Artist'
+                ? cleanArtistName(song.channelTitle)
+                : profile.title,
+              thumbnailUrl: upgradeThumbnailUrl(song.thumbnailUrl),
+              releaseType: 'Album',
+              origin: 'youtube'
+            });
+          }
+        }
+      }
+
+      // 2. Process search albums
       const searchAlbums = searchRes.albums || [];
       for (const sa of searchAlbums) {
         const isSingleOrEp = sa.releaseType?.toLowerCase() === 'single' || sa.releaseType?.toLowerCase() === 'ep';
