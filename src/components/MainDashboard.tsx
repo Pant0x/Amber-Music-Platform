@@ -168,6 +168,36 @@ export const MainDashboard: React.FC = () => {
   // Artist view sub-tab
   const [artistSubTab, setArtistSubTab] = useState<'overview' | 'songs' | 'albums' | 'videos' | 'about'>('overview');
 
+  const renderArtistLinks = (channelTitle: string, channelId?: string, extraClass = "") => {
+    const artistNames = channelTitle
+      ? channelTitle.split(/,|\s+&\s+|\s+and\s+/i).map((n: string) => n.trim()).filter(Boolean)
+      : [];
+    if (artistNames.length === 0) return <span className="text-zinc-500">Unknown Artist</span>;
+
+    return (
+      <span className={`inline-block truncate ${extraClass}`}>
+        {artistNames.map((name: string, idx: number) => {
+          const cleanName = cleanVisualName(name);
+          return (
+            <React.Fragment key={name}>
+              {idx > 0 && <span className="text-zinc-500">, </span>}
+              <span
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const artistId = idx === 0 ? channelId : undefined;
+                  viewChannel(cleanName, artistId);
+                }}
+                className="hover:underline hover:text-white cursor-pointer"
+              >
+                {cleanName}
+              </span>
+            </React.Fragment>
+          );
+        })}
+      </span>
+    );
+  };
+
   // YouTube Playlist state
   const [ytPlaylistDetails, setYtPlaylistDetails] = useState<any>(null);
   const [ytPlaylistLoading, setYtPlaylistLoading] = useState(false);
@@ -928,7 +958,7 @@ export const MainDashboard: React.FC = () => {
                       <p className={`text-sm font-semibold truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
                         {track.title}{track.isExplicit && <ExplicitBadge />}
                       </p>
-                      <p onClick={(e) => { e.stopPropagation(); viewChannel(track.channelTitle, track.channelId); }} className="text-xs text-zinc-400 truncate hover:text-white hover:underline cursor-pointer">{cleanVisualName(track.channelTitle)}</p>
+                      <p className="text-xs text-zinc-400 truncate mt-0.5">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <button onClick={() => toggleLikeTrack(track)} className={`p-1 transition-colors opacity-0 group-hover/row:opacity-100 ${likedTracks.some(t => t.id === track.id) ? 'opacity-100 text-[#ff0000]' : 'text-zinc-400 hover:text-white'}`}><Heart className="w-4 h-4 fill-current" /></button>

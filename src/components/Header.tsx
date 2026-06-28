@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, User, X, Play, Compass, Home, Library, ChevronLeft, ChevronRight } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useRouter } from 'next/navigation';
@@ -20,6 +20,11 @@ export const Header: React.FC = () => {
     navigateBack,
     navigateForward
   } = usePlayerStore();
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleLogoClick = () => {
     setActiveTab('home');
@@ -54,9 +59,9 @@ export const Header: React.FC = () => {
         <div className="flex items-center gap-1.5 bg-white/5 border border-white/5 p-1 rounded-full">
           <button
             onClick={navigateBack}
-            disabled={navHistory.length === 0}
+            disabled={!mounted || navHistory.length === 0}
             className={`p-1.5 rounded-full transition-colors ${
-              navHistory.length === 0 
+              !mounted || navHistory.length === 0 
                 ? 'opacity-30 cursor-not-allowed text-zinc-600' 
                 : 'hover:bg-white/10 text-zinc-400 hover:text-white'
             }`}
@@ -67,9 +72,9 @@ export const Header: React.FC = () => {
           </button>
           <button
             onClick={navigateForward}
-            disabled={navForward.length === 0}
+            disabled={!mounted || navForward.length === 0}
             className={`p-1.5 rounded-full transition-colors ${
-              navForward.length === 0 
+              !mounted || navForward.length === 0 
                 ? 'opacity-30 cursor-not-allowed text-zinc-600' 
                 : 'hover:bg-white/10 text-zinc-400 hover:text-white'
             }`}
