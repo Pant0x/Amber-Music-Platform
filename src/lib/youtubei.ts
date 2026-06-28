@@ -77,7 +77,7 @@ export function cleanTopicGlobally<T>(obj: T): T {
   return obj;
 }
 
-export function parseTrackSubtitle(subtitleRuns: any[]) {
+export function parseTrackSubtitle(subtitleRuns: any[], itemTitle?: string) {
   let artistName = 'Unknown Artist';
   let artistId = '';
   
@@ -127,6 +127,32 @@ export function parseTrackSubtitle(subtitleRuns: any[]) {
   if (collectedArtists.length > 0) {
     artistName = collectedArtists.join(', ');
     artistId = primaryArtistId;
+  }
+
+  // Pull features from the item title if provided, and merge them!
+  if (itemTitle) {
+    const featRegex = /\s*[([{-]?(?:feat|featuring|ft|with|w\/)\.?\s+([^)\]}]+)[)\]}]?/i;
+    const match = itemTitle.match(featRegex);
+    if (match) {
+      const featString = match[1].trim();
+      const titleFeatArtists = featString
+        .split(/,|\s+&\s+|\s+and\s+/i)
+        .map(name => name.trim())
+        .filter(Boolean);
+        
+      const existingArtists = artistName
+        .split(/,|\s+&\s+|\s+and\s+/i)
+        .map(name => name.trim().toLowerCase());
+        
+      const newFeats = titleFeatArtists.filter(fa => !existingArtists.includes(fa.toLowerCase()));
+      if (newFeats.length > 0) {
+        if (artistName === 'Unknown Artist') {
+          artistName = newFeats.join(', ');
+        } else {
+          artistName = artistName + ', ' + newFeats.join(', ');
+        }
+      }
+    }
   }
 
   return { 
@@ -247,7 +273,7 @@ export async function ytMusicSearch(query: string) {
 
       if (title) {
         if (typeText === 'song') {
-          const { artistName, artistId: subArtistId } = parseTrackSubtitle(subtitleRuns);
+          const { artistName, artistId: subArtistId } = parseTrackSubtitle(subtitleRuns, title);
           const durationRun = subtitleRuns.find((r: any) => r?.text && /^\d+:\d{1,2}$/.test(r.text.trim()));
           const durationStr = durationRun ? durationRun.text.trim() : '3:00';
           
@@ -273,7 +299,7 @@ export async function ytMusicSearch(query: string) {
             albumId
           });
         } else if (typeText === 'video') {
-          const { artistName, artistId: subArtistId } = parseTrackSubtitle(subtitleRuns);
+          const { artistName, artistId: subArtistId } = parseTrackSubtitle(subtitleRuns, title);
           const durationRun = subtitleRuns.find((r: any) => r?.text && /^\d+:\d{1,2}$/.test(r.text.trim()));
           const durationStr = durationRun ? durationRun.text.trim() : '3:00';
           
@@ -316,7 +342,7 @@ export async function ytMusicSearch(query: string) {
             channelId: browseId
           });
         } else if (typeText === 'album' || typeText === 'ep' || typeText === 'single') {
-          const { artistName, artistId: subArtistId } = parseTrackSubtitle(subtitleRuns);
+          const { artistName, artistId: subArtistId } = parseTrackSubtitle(subtitleRuns, title);
           albums.push({
             id: browseId,
             title: cleanArtistName(title),
@@ -330,7 +356,7 @@ export async function ytMusicSearch(query: string) {
             isExplicit
           });
         } else if (typeText === 'playlist') {
-          const { artistName, artistId: subArtistId } = parseTrackSubtitle(subtitleRuns);
+          const { artistName, artistId: subArtistId } = parseTrackSubtitle(subtitleRuns, title);
           communityPlaylists.push({
             id: browseId,
             title: cleanArtistName(title),
@@ -405,7 +431,7 @@ export async function ytMusicArtistDiscography(artistId: string) {
       const isExplicit = parseExplicitBadge(item.subtitleBadges || item.badges);
       
       if (title && id) {
-        const { artistName, artistId: subArtistId } = parseTrackSubtitle(subtitleRuns);
+        const { artistName, artistId: subArtistId } = parseTrackSubtitle(subtitleRuns, title);
         
         const lowerTitle = title.toLowerCase();
         let releaseType = 'Album';
