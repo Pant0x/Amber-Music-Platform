@@ -226,7 +226,16 @@ export const MediaDeck: React.FC = () => {
     let interval: number | undefined;
     if (isPlaying && currentTrack) {
       interval = window.setInterval(() => {
-        recordListen({ track_id: currentTrack.id, youtube_id: currentTrack.youtubeId || null, played_seconds: Math.floor(progress.playedSeconds), duration_seconds: Math.floor(duration), metadata: { origin: currentTrack.origin, partial: true } });
+        recordListen({ 
+          track_id: currentTrack.id, 
+          youtube_id: currentTrack.youtubeId || null, 
+          played_seconds: Math.floor(progress.playedSeconds), 
+          duration_seconds: Math.floor(duration), 
+          metadata: { 
+            ...currentTrack, 
+            partial: true 
+          } 
+        });
       }, 30000);
     }
     return () => {
@@ -335,7 +344,15 @@ export const MediaDeck: React.FC = () => {
     } else {
       // Finalize listen on end (best-effort)
       if (currentTrack) {
-        recordListen({ track_id: currentTrack.id, youtube_id: currentTrack.youtubeId || null, played_seconds: Math.floor(duration), duration_seconds: Math.floor(duration), metadata: { origin: currentTrack.origin } });
+        recordListen({ 
+          track_id: currentTrack.id, 
+          youtube_id: currentTrack.youtubeId || null, 
+          played_seconds: Math.floor(duration), 
+          duration_seconds: Math.floor(duration), 
+          metadata: { 
+            ...currentTrack 
+          } 
+        });
       }
       nextTrack();
     }
