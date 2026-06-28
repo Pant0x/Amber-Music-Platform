@@ -60,6 +60,7 @@ export const MediaDeck: React.FC = () => {
   const setStoreDuration = usePlayerStore((s) => s.setDuration);
   const setStorePlayedSeconds = usePlayerStore((s) => s.setPlayedSeconds);
   const setYoutubeIdForCurrentTrack = usePlayerStore((s) => s.setYoutubeIdForCurrentTrack);
+  const enrichCurrentTrack = usePlayerStore((s) => s.enrichCurrentTrack);
 
   const playerRef = useRef<any>(null);
   const [progress, setProgress] = useState({ played: 0, playedSeconds: 0, loaded: 0 });
@@ -263,6 +264,36 @@ export const MediaDeck: React.FC = () => {
       resolveTrack();
     }
   }, [currentTrack?.id, currentTrack?.youtubeId, setYoutubeIdForCurrentTrack]);
+
+  // Background Spotify metadata enrichment for YouTube tracks
+  useEffect(() => {
+    if (!currentTrack || currentTrack.isEnriched) return;
+    
+    if (currentTrack.origin === 'youtube') {
+      const enrichTrack = async () => {
+        try {
+          const res = await fetch(
+            `/api/spotify/resolve?title=${encodeURIComponent(currentTrack.title)}&artist=${encodeURIComponent(currentTrack.channelTitle)}`
+          );
+          if (res.ok) {
+            const data = await res.json();
+            if (data.enriched) {
+              console.log(`[MediaDeck] Successfully enriched YouTube track with Spotify metadata: "${data.title}" by "${data.channelTitle}"`);
+              enrichCurrentTrack({
+                title: data.title,
+                channelTitle: data.channelTitle,
+                isExplicit: data.isExplicit
+              });
+            }
+          }
+        } catch (err) {
+          console.error('[MediaDeck] Error enriching YouTube track with Spotify metadata:', err);
+        }
+      };
+
+      enrichTrack();
+    }
+  }, [currentTrack?.id, currentTrack?.isEnriched, enrichCurrentTrack]);
 
   if (!mounted || !_hasHydrated) return null;
 

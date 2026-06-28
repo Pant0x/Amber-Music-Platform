@@ -14,6 +14,7 @@ export interface Track {
   views?: string;
   duration?: string;
   isExplicit?: boolean;
+  isEnriched?: boolean;
 }
 
 export interface Playlist {

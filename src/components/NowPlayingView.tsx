@@ -105,26 +105,40 @@ export const NowPlayingView: React.FC = () => {
     if (currentTrack && isLiked) toggleLikeTrack(currentTrack);
   };
 
+const lyricsCache = new Map<string, any>();
+
   // 1. Fetch Synced Lyrics
   useEffect(() => {
     if (!currentTrack) return;
     
+    const cacheKey = `${currentTrack.id}_${currentTrack.title}_${currentTrack.channelTitle}_${currentTrack.youtubeId || ''}`;
+    if (lyricsCache.has(cacheKey)) {
+      setLyricsData(lyricsCache.get(cacheKey));
+      setLyricsLoading(false);
+      setIsDisliked(false);
+      return;
+    }
+
     const fetchLyrics = async () => {
       setLyricsLoading(true);
       setLyricsData(null); // Clear previous lyrics
       try {
+        const queryVideoId = currentTrack.youtubeId || currentTrack.id;
         const res = await fetch(
-          `/api/lyrics?title=${encodeURIComponent(currentTrack.title)}&artist=${encodeURIComponent(currentTrack.channelTitle)}&duration=${encodeURIComponent(currentTrack.duration || '3:00')}&videoId=${encodeURIComponent(currentTrack.id)}`
+          `/api/lyrics?title=${encodeURIComponent(currentTrack.title)}&artist=${encodeURIComponent(currentTrack.channelTitle)}&duration=${encodeURIComponent(currentTrack.duration || '3:00')}&videoId=${encodeURIComponent(queryVideoId)}`
         );
         if (res.ok) {
           const data = await res.json();
           // Check if data is empty (no lyrics found)
           if (!data || !data.lyrics) {
+            lyricsCache.set(cacheKey, null);
             setLyricsData(null);
           } else {
+            lyricsCache.set(cacheKey, data);
             setLyricsData(data);
           }
         } else {
+          lyricsCache.set(cacheKey, null);
           setLyricsData(null);
         }
       } catch (err) {
@@ -137,7 +151,7 @@ export const NowPlayingView: React.FC = () => {
 
     fetchLyrics();
     setIsDisliked(false); // Reset dislike for new track
-  }, [currentTrack?.id]);
+  }, [currentTrack?.id, currentTrack?.title, currentTrack?.channelTitle, currentTrack?.youtubeId]);
 
   // 2. Fetch Related Content & Artist Details
   useEffect(() => {
