@@ -87,21 +87,46 @@ export function parseTrackSubtitle(subtitleRuns: any[]) {
 
   // Filter out dot dividers
   const textRuns = subtitleRuns.filter((r: any) => r?.text && r.text !== ' • ' && r.text.trim() !== '•');
-
   if (textRuns.length === 0) return { artistName, artistId };
 
-  // Check if first run is a type label
   const firstText = textRuns[0].text.toLowerCase();
   const isTypeLabel = ['song', 'video', 'album', 'single', 'ep', 'playlist'].includes(firstText);
+  const startIndex = isTypeLabel ? 1 : 0;
 
-  if (isTypeLabel) {
-    if (textRuns[1]) {
-      artistName = textRuns[1].text;
-      artistId = textRuns[1].navigationEndpoint?.browseEndpoint?.browseId || '';
+  const collectedArtists: string[] = [];
+  let primaryArtistId = '';
+
+  for (let i = startIndex; i < textRuns.length; i++) {
+    const run = textRuns[i];
+    const text = run.text.trim();
+    const lowerText = text.toLowerCase();
+    
+    // Stop if we hit views, duration, year, or release indicators
+    if (
+      lowerText.includes('views') || 
+      lowerText.includes('plays') || 
+      /^\d{4}$/.test(text) || 
+      /^\d+:\d+$/.test(text)
+    ) {
+      break;
     }
-  } else {
-    artistName = textRuns[0].text;
-    artistId = textRuns[0].navigationEndpoint?.browseEndpoint?.browseId || '';
+
+    const runBrowseId = run.navigationEndpoint?.browseEndpoint?.browseId || '';
+    if (runBrowseId.startsWith('MPRE') || runBrowseId.startsWith('FEmusic_release')) {
+      break;
+    }
+
+    if (text && text !== ',' && text !== '&' && text.toLowerCase() !== 'and') {
+      collectedArtists.push(text);
+      if (!primaryArtistId && runBrowseId) {
+        primaryArtistId = runBrowseId;
+      }
+    }
+  }
+
+  if (collectedArtists.length > 0) {
+    artistName = collectedArtists.join(', ');
+    artistId = primaryArtistId;
   }
 
   return { 
