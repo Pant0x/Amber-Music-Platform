@@ -494,6 +494,28 @@ export async function ytMusicArtistDiscography(artistId: string) {
           console.error('[Discography] Failed to load more singles:', err);
         }
       }
+    } else if (headerTitle.includes('featured on') || headerTitle.includes('appears on') || headerTitle.includes('collaboration')) {
+      processItems(carousel.contents || [], albums, 'playlist');
+      if (moreBrowseId) {
+        try {
+          const moreData = await ytMusicBrowse(moreBrowseId);
+          const listItems: any[] = [];
+          const traverseItems = (obj: any) => {
+            if (!obj || typeof obj !== 'object') return;
+            if (obj.musicTwoRowItemRenderer || obj.musicResponsiveListItemRenderer) {
+              listItems.push(obj);
+            } else {
+              for (const key of Object.keys(obj)) {
+                traverseItems(obj[key]);
+              }
+            }
+          };
+          traverseItems(moreData);
+          processItems(listItems, albums, 'playlist');
+        } catch (err) {
+          console.error('[Discography] Failed to load more featured releases:', err);
+        }
+      }
     }
   };
 
@@ -548,6 +570,28 @@ export async function ytMusicArtistDiscography(artistId: string) {
           processItems(listItems, singles, 'playlist');
         } catch (err) {
           console.error('[Discography] Failed to load more singles from shelf:', err);
+        }
+      }
+    } else if (titleText.includes('featured on') || titleText.includes('appears on') || titleText.includes('collaboration')) {
+      processItems(shelf.contents || [], albums, 'playlist');
+      if (bottomBrowseId) {
+        try {
+          const moreData = await ytMusicBrowse(bottomBrowseId);
+          const listItems: any[] = [];
+          const traverseItems = (obj: any) => {
+            if (!obj || typeof obj !== 'object') return;
+            if (obj.musicTwoRowItemRenderer || obj.musicResponsiveListItemRenderer) {
+              listItems.push(obj);
+            } else {
+              for (const key of Object.keys(obj)) {
+                traverseItems(obj[key]);
+              }
+            }
+          };
+          traverseItems(moreData);
+          processItems(listItems, albums, 'playlist');
+        } catch (err) {
+          console.error('[Discography] Failed to load more featured releases from shelf:', err);
         }
       }
     }
