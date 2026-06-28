@@ -1185,6 +1185,7 @@ export const MainDashboard: React.FC = () => {
                   <Music className="w-20 h-20 text-zinc-600" />
                 </div>
               )}
+              <div className="space-y-2 min-w-0">
                 <span className="text-xs font-bold text-[#ff0000] uppercase tracking-widest font-mono">
                   {(() => {
                     const id = currentPlaylistId || '';
