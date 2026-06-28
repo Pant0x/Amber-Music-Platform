@@ -71,6 +71,11 @@ export const MediaDeck: React.FC = () => {
   const [isDisliked, setIsDisliked] = useState(false);
   const [videoRect, setVideoRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
 
+  const progressRef = useRef(progress);
+  useEffect(() => {
+    progressRef.current = progress;
+  }, [progress]);
+
   // Avoid hydration mismatch
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -225,11 +230,23 @@ export const MediaDeck: React.FC = () => {
   useEffect(() => {
     let interval: number | undefined;
     if (isPlaying && currentTrack) {
+      // Write immediate initial log for instant catalog mapping!
+      recordListen({ 
+        track_id: currentTrack.id, 
+        youtube_id: currentTrack.youtubeId || null, 
+        played_seconds: 0, 
+        duration_seconds: Math.floor(duration) || 180, 
+        metadata: { 
+          ...currentTrack, 
+          partial: true 
+        } 
+      });
+
       interval = window.setInterval(() => {
         recordListen({ 
           track_id: currentTrack.id, 
           youtube_id: currentTrack.youtubeId || null, 
-          played_seconds: Math.floor(progress.playedSeconds), 
+          played_seconds: Math.floor(progressRef.current.playedSeconds), 
           duration_seconds: Math.floor(duration), 
           metadata: { 
             ...currentTrack, 
@@ -241,7 +258,7 @@ export const MediaDeck: React.FC = () => {
     return () => {
       if (interval) window.clearInterval(interval);
     };
-  }, [isPlaying, currentTrack, progress.playedSeconds, duration]);
+  }, [isPlaying, currentTrack?.id, duration]);
 
   useEffect(() => {
     if (!currentTrack) return;

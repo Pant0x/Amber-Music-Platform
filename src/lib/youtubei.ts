@@ -211,8 +211,8 @@ function parseExplicitBadge(badges: any[] = []): boolean {
   );
 }
 
-export async function ytMusicSearch(query: string) {
-  const data = await fetchYTMusic('search', { query });
+export async function ytMusicSearch(query: string, params?: string) {
+  const data = await fetchYTMusic('search', { query, params });
   
   let topResult: any = null;
   const songs: any[] = [];
