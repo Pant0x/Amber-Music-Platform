@@ -14,7 +14,11 @@ export const Header: React.FC = () => {
     setSearchQuery,
     addSearchQueryToHistory,
     setCurrentPlaylistId,
-    setCurrentChannelId
+    setCurrentChannelId,
+    navHistory,
+    navForward,
+    navigateBack,
+    navigateForward
   } = usePlayerStore();
 
   const handleLogoClick = () => {
@@ -49,16 +53,26 @@ export const Header: React.FC = () => {
 
         <div className="flex items-center gap-1.5 bg-white/5 border border-white/5 p-1 rounded-full">
           <button
-            onClick={() => router.back()}
-            className="p-1.5 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
+            onClick={navigateBack}
+            disabled={navHistory.length === 0}
+            className={`p-1.5 rounded-full transition-colors ${
+              navHistory.length === 0 
+                ? 'opacity-30 cursor-not-allowed text-zinc-600' 
+                : 'hover:bg-white/10 text-zinc-400 hover:text-white'
+            }`}
             title="Back"
             aria-label="Back"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <button
-            onClick={() => router.forward()}
-            className="p-1.5 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
+            onClick={navigateForward}
+            disabled={navForward.length === 0}
+            className={`p-1.5 rounded-full transition-colors ${
+              navForward.length === 0 
+                ? 'opacity-30 cursor-not-allowed text-zinc-600' 
+                : 'hover:bg-white/10 text-zinc-400 hover:text-white'
+            }`}
             title="Forward"
             aria-label="Forward"
           >
