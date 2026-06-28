@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import type { StateCreator } from 'zustand'
+import { createJSONStorage } from 'zustand/middleware'
 import { Track, Playlist } from '@/types/music-player'
 
 interface PlayerState {
@@ -183,8 +185,11 @@ export const usePlayerStore = create<PlayerState>()(
       showNowPlaying: false,
       playbackMode: 'song',
       nowPlayingTab: 'upnext',
+      isMinimized: false,
       setShowNowPlaying: (showNowPlaying) => set({ showNowPlaying }),
       toggleNowPlaying: () => set((state) => ({ showNowPlaying: !state.showNowPlaying })),
+      setIsMinimized: (isMinimized: boolean) => set({ isMinimized }),
+      toggleMinimized: () => set((state) => ({ isMinimized: !state.isMinimized })),
       setPlaybackMode: (playbackMode) => set({ playbackMode }),
       setNowPlayingTab: (nowPlayingTab) => set({ nowPlayingTab }),
       playedSeconds: 0,
@@ -326,17 +331,35 @@ export const usePlayerStore = create<PlayerState>()(
             const data = await res.json();
             const topSongs = (data.topSongs || []).slice(0, 20);
             if (topSongs.length > 0) {
-              // Fisher-Yates array shuffling
+              // Deterministic seeded Fisher-Yates shuffle based on artistIdOrName
+              const seedStr = artistIdOrName || 'default_seed';
               const shuffled = [...topSongs];
+
+              // simple hash to uint32
+              let h = 2166136261 >>> 0;
+              for (let i = 0; i < seedStr.length; i++) {
+                h ^= seedStr.charCodeAt(i);
+                h = Math.imul(h, 16777619) >>> 0;
+              }
+
+              // mulberry32 PRNG
+              const rand = () => {
+                h += 0x6D2B79F5;
+                let t = Math.imul(h ^ (h >>> 15), 1 | h);
+                t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+                return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+              };
+
               for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
+                const j = Math.floor(rand() * (i + 1));
                 const temp = shuffled[i];
                 shuffled[i] = shuffled[j];
                 shuffled[j] = temp;
               }
+
               const firstTrack = shuffled[0];
               const remaining = shuffled.slice(1);
-              
+
               set({
                 currentTrack: firstTrack,
                 isPlaying: true,
@@ -407,17 +430,31 @@ export const usePlayerStore = create<PlayerState>()(
     }),
     {
       name: 'yt-music-storage-v1',
+      storage: createJSONStorage(() => (typeof window !== 'undefined' ? sessionStorage : undefined)),
       partialize: (state) => ({
+        currentTrack: state.currentTrack,
+        isPlaying: state.isPlaying,
         volume: state.volume,
         queue: state.queue,
         history: state.history,
+        playedSeconds: state.playedSeconds,
         playlists: state.playlists,
         likedTracks: state.likedTracks,
         searchHistory: state.searchHistory,
         subscribedChannels: state.subscribedChannels
+        ,isMinimized: state.isMinimized
       }),
       onRehydrateStorage: () => (state) => {
-        if (state) state.setHasHydrated(true);
+        if (state) {
+          state.setHasHydrated(true)
+          try {
+            if (typeof state.playedSeconds === 'number' && state.playedSeconds > 0) {
+              state.setSeekTrigger(state.playedSeconds)
+            }
+          } catch (e) {
+            console.warn('Rehydrate error', e)
+          }
+        }
       }
     }
   )

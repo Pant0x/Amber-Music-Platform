@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ytMusicSearch } from '@/lib/youtubei';
+import ytAdapter from '@/lib/yt-music-adapter';
 
 export async function GET(request: Request) {
   try {
@@ -13,7 +14,17 @@ export async function GET(request: Request) {
 
     const query = `${artist} - Topic ${title}`;
     console.log(`[Resolve API] Searching YouTube Music for: "${query}"`);
-    const searchData = await ytMusicSearch(query);
+    // Try node-youtube-music adapter first (server-side). If unavailable, fallback to internal parser.
+    let searchData: any = null;
+    try {
+      const adapterRes = await ytAdapter.searchYTMusic(query);
+      if (adapterRes) {
+        searchData = adapterRes;
+      }
+    } catch (e) {
+      console.warn('Adapter search failed, falling back to internal parser', e);
+    }
+    if (!searchData) searchData = await ytMusicSearch(query);
 
     let videoId = '';
     

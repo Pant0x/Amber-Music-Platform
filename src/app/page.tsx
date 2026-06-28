@@ -2,7 +2,8 @@ import React from 'react';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { MainDashboard } from '@/components/MainDashboard';
-import { MediaDeck } from '@/components/MediaDeck';
+// MediaDeck is now mounted in the root layout to remain persistent across routes
+// import { MediaDeck } from '@/components/MediaDeck';
 import { QueuePanel } from '@/components/QueuePanel';
 import { NowPlayingView } from '@/components/NowPlayingView';
 
@@ -29,8 +30,7 @@ export default function Home() {
         <QueuePanel />
       </div>
 
-      {/* 3. Persistent Bottom Media Controls with edge progress bar */}
-      <MediaDeck />
+      {/* 3. Persistent Bottom Media Controls with edge progress bar are mounted in layout.tsx */}
     </div>
   );
 }

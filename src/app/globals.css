@@ -1,13 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #030303;
-  --foreground: #ffffff;
+  /* Stealth Black design tokens */
+  --background: #000000; /* pure black */
+  --foreground: #ffffff; /* crisp white */
   --yt-red: #ff0000;
   --yt-hover: #cc0000;
-  --card-bg: #0d0d0d;
-  --card-hover: #1f1f1f;
-  --text-secondary: #aaaaaa;
+  --card-bg: #0A0A0A; /* deep charcoal */
+  --card-hover: #121212;
+  --text-secondary: #bdbdbd;
   --text-primary: #ffffff;
   --border-subtle: rgba(255, 255, 255, 0.08);
 }
@@ -31,7 +32,8 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
-  overflow: hidden; /* Avoid window scrolling */
+  /* Prevent horizontal overflow while allowing internal scrolling */
+  overflow-x: hidden;
 }
 
 /* Scrollbar customization */
@@ -243,3 +245,25 @@ body {
 .animate-fade-in {
   animation: fade-in-up 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* Minimized MediaDeck styles (CSS-driven collapse) */
+.media-deck--minimized {
+  height: 2.5rem; /* 40px */
+  min-height: 2.5rem;
+}
+.media-deck--minimized .hide-on-minimize {
+  display: none !important;
+}
+.media-deck--minimized .left-section img {
+  width: 32px !important;
+  height: 32px !important;
+}
+.media-deck--minimized .left-section h4,
+.media-deck--minimized .left-section p {
+  font-size: 12px !important;
+  opacity: 0.95;
+}
+.media-deck--minimized .yt-deck-slider {
+  top: -1px;
+}
+

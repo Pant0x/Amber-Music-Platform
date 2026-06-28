@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { createPortal } from 'react-dom';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { cleanVisualName, parseFeaturedArtists } from '@/utils/text';
+import { recordListen } from '@/lib/recordListen';
 import {
   Play,
   Pause,
@@ -75,6 +76,8 @@ export const MediaDeck: React.FC = () => {
 
   const seekTrigger = usePlayerStore((s) => s.seekTrigger);
   const setSeekTrigger = usePlayerStore((s) => s.setSeekTrigger);
+  const isMinimized = usePlayerStore((s) => s.isMinimized);
+  const setIsMinimized = usePlayerStore((s) => s.setIsMinimized);
 
   useEffect(() => {
     if (seekTrigger !== null && playerRef.current) {
@@ -200,6 +203,19 @@ export const MediaDeck: React.FC = () => {
     }
   }, [showNowPlaying, playbackMode]);
 
+  // Background periodic listen writer (best-effort)
+  useEffect(() => {
+    let interval: number | undefined;
+    if (isPlaying && currentTrack) {
+      interval = window.setInterval(() => {
+        recordListen({ track_id: currentTrack.id, youtube_id: currentTrack.youtubeId || null, played_seconds: Math.floor(progress.playedSeconds), duration_seconds: Math.floor(duration), metadata: { origin: currentTrack.origin, partial: true } });
+      }, 30000);
+    }
+    return () => {
+      if (interval) window.clearInterval(interval);
+    };
+  }, [isPlaying, currentTrack, progress.playedSeconds, duration]);
+
   useEffect(() => {
     if (!currentTrack) return;
     
@@ -269,6 +285,10 @@ export const MediaDeck: React.FC = () => {
       setStorePlayedSeconds(0);
       setPlaying(true);
     } else {
+      // Finalize listen on end (best-effort)
+      if (currentTrack) {
+        recordListen({ track_id: currentTrack.id, youtube_id: currentTrack.youtubeId || null, played_seconds: Math.floor(duration), duration_seconds: Math.floor(duration), metadata: { origin: currentTrack.origin } });
+      }
       nextTrack();
     }
   };
@@ -302,13 +322,13 @@ export const MediaDeck: React.FC = () => {
   return (
     <footer 
       onClick={handleDeckClick}
-      className="h-20 bg-[#070707] px-6 flex items-center justify-between select-none relative z-40 flex-shrink-0 border-t border-white/5 yt-deck-slider-group cursor-pointer hover:bg-[#0f0f0f] transition-colors"
+      className={`h-20 bg-[#070707] px-6 flex items-center justify-between select-none relative z-40 flex-shrink-0 border-t border-white/5 yt-deck-slider-group cursor-pointer hover:bg-[#0f0f0f] transition-colors ${isMinimized ? 'media-deck--minimized' : ''}`}
     >
       
       {/* Hidden/Portalled ReactPlayer Engine */}
       {portalTarget ? (
         createPortal(
-          <ReactPlayer
+            <ReactPlayer
             ref={playerRef}
             url={currentTrack.youtubeId ? `https://www.youtube.com/watch?v=${currentTrack.youtubeId}` : currentTrack.origin === 'spotify' ? '' : `https://www.youtube.com/watch?v=${currentTrack.id}`}
             playing={isPlaying && (currentTrack.origin !== 'spotify' || !!currentTrack.youtubeId)}
@@ -322,12 +342,12 @@ export const MediaDeck: React.FC = () => {
             onEnded={handlePlayerEnded}
             width="100%"
             height="100%"
-            controls={true}
+            controls={false}
             config={{
               youtube: {
                 playerVars: {
                   autoplay: 1,
-                  controls: 1,
+                  controls: 0,
                   modestbranding: 1,
                   rel: 0
                 }
@@ -375,7 +395,7 @@ export const MediaDeck: React.FC = () => {
       </div>
 
       {/* 1. LEFT SIDE: Track details & Like/Dislike thumbs */}
-      <div className="flex items-center gap-4 w-1/3 min-w-0">
+      <div className="flex items-center gap-4 w-1/3 min-w-0 left-section">
         <div 
           onClick={() => setShowNowPlaying(true)}
           className="flex items-center gap-3 min-w-0 cursor-pointer group/card"
@@ -453,7 +473,7 @@ export const MediaDeck: React.FC = () => {
       </div>
 
       {/* 2. CENTER SIDE: Controls (Shuffle, Prev, Play Circle, Next, Repeat) */}
-      <div className="flex flex-col items-center w-1/3">
+      <div className="flex flex-col items-center w-1/3 center-section hide-on-minimize">
         <div className="flex items-center gap-6">
           <button
             onClick={() => setIsShuffle(!isShuffle)}
@@ -509,7 +529,7 @@ export const MediaDeck: React.FC = () => {
       </div>
 
       {/* 3. RIGHT SIDE: Utilities & Volume */}
-      <div className="flex items-center justify-end gap-5 w-1/3 text-zinc-400">
+      <div className="flex items-center justify-end gap-5 w-1/3 text-zinc-400 right-section hide-on-minimize">
         <button 
           onClick={() => {
             const nextShow = !showNowPlaying || nowPlayingTab !== 'lyrics';
@@ -567,14 +587,14 @@ export const MediaDeck: React.FC = () => {
         </div>
 
         <button 
-          onClick={() => setShowNowPlaying(!showNowPlaying)} 
-          className={`hover:text-white transition-colors p-1 ${showNowPlaying ? 'text-[#ff0000]' : ''}`} 
-          title={showNowPlaying ? "Collapse Panel" : "Expand Now Playing"}
+          onClick={() => setIsMinimized(!isMinimized)} 
+          className={`hover:text-white transition-colors p-1 ${isMinimized ? 'text-[#ff0000]' : ''}`} 
+          title={isMinimized ? "Expand player" : "Minimize player"}
         >
-          {showNowPlaying ? (
-            <Minimize2 className="w-4.5 h-4.5" />
-          ) : (
+          {isMinimized ? (
             <Maximize2 className="w-4.5 h-4.5" />
+          ) : (
+            <Minimize2 className="w-4.5 h-4.5" />
           )}
         </button>
       </div>

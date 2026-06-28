@@ -1,6 +1,8 @@
 export function cleanArtistName(name: string): string {
   if (!name) return '';
-  let cleaned = name.replace(/\s*[-–—]\s*Topic\s*$/i, '');
+  let cleaned = name.replace(/\s*[-–—]\s*(?:Album|Single|EP)\s+by\s+.+$/i, '');
+  cleaned = cleaned.replace(/\s*[-–—]\s*(?:Album|Single|EP)\s*$/i, '');
+  cleaned = cleaned.replace(/\s*[-–—]\s*Topic\s*$/i, '');
   cleaned = cleaned.replace(/VEVO\s*$/i, '');
   cleaned = cleaned.replace(/\s*VEVO\s*$/i, '');
   return cleaned.trim();
@@ -106,6 +108,27 @@ export function parseTrackSubtitle(subtitleRuns: any[]) {
     artistName: cleanArtistName(artistName), 
     artistId 
   };
+}
+
+export function isLikelyShortOrJunk(item: any): boolean {
+  if (!item) return true;
+  const title = (item.title || item.name || '').toString().toLowerCase();
+  if (title.includes('#shorts') || title.includes('shorts')) return true;
+  const duration = item.duration || item.lengthSeconds || item.durationSeconds || 0;
+  if (typeof duration === 'string' && duration.includes(':')) {
+    // convert mm:ss to seconds
+    const parts = duration.split(':').map((p: string) => parseInt(p, 10));
+    if (parts.length === 2) {
+      const secs = parts[0] * 60 + parts[1];
+      if (secs > 0 && secs < 60) return true;
+    }
+  } else if (typeof duration === 'number' && duration > 0 && duration < 60) {
+    return true;
+  }
+
+  const channel = (item.channelTitle || item.author || '').toString().toLowerCase();
+  if (channel.includes('various artists') || channel.includes('unknown artist') || channel.trim() === '') return true;
+  return false;
 }
 
 export async function fetchYTMusic(endpoint: string, body: any) {
@@ -365,7 +388,17 @@ export async function ytMusicArtistDiscography(artistId: string) {
           }
         }
 
-        targetArray.push({
+        // Dynamically route items to correct list based on parsed releaseType
+        let destinationArray = targetArray;
+        if (type === 'playlist') {
+          if (releaseType === 'Single' || releaseType === 'EP') {
+            destinationArray = singles;
+          } else {
+            destinationArray = albums;
+          }
+        }
+
+        destinationArray.push({
           id,
           title: cleanArtistName(title),
           channelTitle: artistName,

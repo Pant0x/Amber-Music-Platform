@@ -774,6 +774,22 @@ export const MainDashboard: React.FC = () => {
                         </div>
                         <h4 className="text-xs font-bold text-white truncate">{artist.title}</h4>
                         <p className="text-[10px] text-zinc-500 mt-0.5">{artist.subtitle || 'Artist'}</p>
+
+                        {artist.possibleChannels && artist.possibleChannels.length > 0 && (
+                          <div className="mt-2 flex items-center justify-center gap-2">
+                            {artist.possibleChannels.slice(0, 3).map((c: any) => (
+                              <button
+                                key={c.id || c.channelId}
+                                onClick={(e) => { e.stopPropagation(); viewChannel(c.title || c.channelTitle || c.name, c.id || c.channelId); }}
+                                className="flex items-center gap-2 px-2 py-1 bg-[#0b0b0b] hover:bg-[#141414] rounded-full border border-white/5 text-xs text-zinc-400"
+                                aria-label={`Open ${c.title || c.channelTitle || c.name}`}
+                              >
+                                <img src={c.thumbnailUrl || c.thumbnail || (c.thumbnails && c.thumbnails[0]?.url)} referrerPolicy="no-referrer" alt="" className="w-6 h-6 rounded-full object-cover" />
+                                <span className="truncate max-w-[90px]">{c.title || c.channelTitle || c.name}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -939,6 +955,22 @@ export const MainDashboard: React.FC = () => {
                   </div>
                   <h4 className="text-sm font-bold text-white truncate">{cleanVisualName(artist.title)}</h4>
                   <p className="text-[10px] text-zinc-500 mt-0.5">{artist.subtitle || 'Artist'}</p>
+
+                  {artist.possibleChannels && artist.possibleChannels.length > 0 && (
+                    <div className="mt-3 flex items-center justify-center gap-2">
+                      {artist.possibleChannels.slice(0, 4).map((c: any) => (
+                        <button
+                          key={c.id || c.channelId}
+                          onClick={(e) => { e.stopPropagation(); viewChannel(c.title || c.channelTitle || c.name, c.id || c.channelId); }}
+                          className="flex items-center gap-2 px-2 py-1 bg-[#0b0b0b] hover:bg-[#141414] rounded-full border border-white/5 text-xs text-zinc-400"
+                          aria-label={`Open ${c.title || c.channelTitle || c.name}`}
+                        >
+                          <img src={c.thumbnailUrl || c.thumbnail || (c.thumbnails && c.thumbnails[0]?.url)} referrerPolicy="no-referrer" alt="" className="w-6 h-6 rounded-full object-cover" />
+                          <span className="truncate max-w-[96px]">{c.title || c.channelTitle || c.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
               {searchArtists.length === 0 && <p className="text-sm text-zinc-500 py-10 text-center col-span-full">No artists found.</p>}
@@ -1153,8 +1185,19 @@ export const MainDashboard: React.FC = () => {
                   <Music className="w-20 h-20 text-zinc-600" />
                 </div>
               )}
-              <div className="space-y-2 min-w-0">
-                <span className="text-xs font-bold text-[#ff0000] uppercase tracking-widest font-mono">Album / Playlist</span>
+                <span className="text-xs font-bold text-[#ff0000] uppercase tracking-widest font-mono">
+                  {(() => {
+                    const id = currentPlaylistId || '';
+                    const count = ytPlaylistDetails.tracks?.length || 0;
+                    const isOfficialRelease = id.startsWith('MPRE') || (id.length === 22 && !id.startsWith('VL'));
+                    if (isOfficialRelease) {
+                      if (count === 1) return 'Single';
+                      if (count <= 6) return 'EP';
+                      return 'Album';
+                    }
+                    return 'Playlist';
+                  })()}
+                </span>
                 <h1 className="text-2xl md:text-4xl font-black text-white tracking-tight truncate">
                   {ytPlaylistDetails.metadata?.title}
                 </h1>

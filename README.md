@@ -29,6 +29,7 @@ Pantooty is a premium, high-fidelity hybrid music player built with Next.js, Zus
 - **Styling**: Tailwind CSS & Lucide Icons
 - **Media Playback**: ReactPlayer Engine
 - **Integrations**: Spotify API, YouTube Data API v3, Genius API
+ - **Integrations**: Spotify API, YouTube Music internal endpoints (node-youtube-music / music.youtube.com), Genius API
 
 ---
 
@@ -48,8 +49,8 @@ npm install
 ### 3. Setup environment variables
 Create a `.env.local` file in the root directory and add the following keys:
 ```env
-# YouTube Data API v3 Key (Fallback data handles queries if empty)
-YOUTUBE_API_KEY=your_youtube_api_key_here
+# YouTube Data API v3 Key (optional — this project prefers YouTube Music internal endpoints; leave empty if not used)
+YOUTUBE_API_KEY=
 
 # Spotify API credentials (Used for search lookup & playlists resolver)
 SPOTIFY_CLIENT_ID=your_spotify_client_id_here
@@ -83,3 +84,18 @@ Pantooty can be deployed to Vercel in a few clicks:
    - `GENIUS_CLIENT_ID`
    - `GENIUS_CLIENT_SECRET`
 4. **Deploy**: Click **Deploy**. Vercel will build and serve your app.
+
+## Supabase: `listen_history` RLS recommendation
+When using Supabase for server-side listen writes, follow least-privilege patterns. The server route uses the Supabase Service Role key to insert rows; front-end clients should NOT have this key. Recommended RLS for `listen_history`:
+
+```sql
+-- Allow authenticated users to insert their own listen records
+create policy "allow_insert_own_listen" on public.listen_history
+   for insert
+   with check ( auth.uid() = user_id );
+
+-- Allow server (service role) inserts by bypassing RLS (use server-side service key)
+-- No policy needed for service role; ensure service key is stored securely on server only
+```
+
+Make sure to set `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in your deployment secrets (service role key only on server env). The client should send the user's access token (if available) to the `/api/listen_history` endpoint for verification.

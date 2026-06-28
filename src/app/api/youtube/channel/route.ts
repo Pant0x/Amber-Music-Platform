@@ -332,36 +332,27 @@ export async function GET(request: Request) {
       return 'Album';
     };
 
+    const mappedReleases = allItems.map((item: any) => {
+      const relType = getSpotifyReleaseType(item);
+      return {
+        id: item.id,
+        title: cleanArtistName(item.name),
+        channelTitle: cleanArtistName(item.artists.map((a: any) => a.name).join(', ')),
+        thumbnailUrl: item.images?.[0]?.url || item.images?.[1]?.url || '',
+        publishedAt: item.release_date || new Date().toISOString(),
+        type: 'playlist',
+        releaseType: relType,
+        origin: 'spotify',
+        artistId: item.artists[0]?.id || ''
+      };
+    });
+
     const albums = sortReleasesNewestToOldest(
-      allItems
-        .filter((item: any) => item.album_group === 'album' || item.album_type === 'album')
-        .map((item: any) => ({
-          id: item.id,
-          title: cleanArtistName(item.name),
-          channelTitle: cleanArtistName(item.artists.map((a: any) => a.name).join(', ')),
-          thumbnailUrl: item.images?.[0]?.url || item.images?.[1]?.url || '',
-          publishedAt: item.release_date || new Date().toISOString(),
-          type: 'playlist',
-          releaseType: getSpotifyReleaseType(item),
-          origin: 'spotify',
-          artistId: item.artists[0]?.id || ''
-        }))
+      mappedReleases.filter(item => item.releaseType === 'Album')
     );
 
     const singles = sortReleasesNewestToOldest(
-      allItems
-        .filter((item: any) => item.album_group === 'single' || item.album_group === 'ep' || item.album_type === 'single')
-        .map((item: any) => ({
-          id: item.id,
-          title: cleanArtistName(item.name),
-          channelTitle: cleanArtistName(item.artists.map((a: any) => a.name).join(', ')),
-          thumbnailUrl: item.images?.[0]?.url || item.images?.[1]?.url || '',
-          publishedAt: item.release_date || new Date().toISOString(),
-          type: 'playlist',
-          releaseType: getSpotifyReleaseType(item),
-          origin: 'spotify',
-          artistId: item.artists[0]?.id || ''
-        }))
+      mappedReleases.filter(item => item.releaseType === 'Single' || item.releaseType === 'EP')
     );
 
     // Merge and deduplicate for allPlaylists, sorted newest-to-oldest

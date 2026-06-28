@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { Track } from '@/types/music-player';
 import { cleanTopicGlobally } from '@/lib/youtubei';
 
-const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
+import ytAdapter from '@/lib/yt-music-adapter';
 
 export async function POST(request: Request) {
   try {
@@ -17,32 +17,56 @@ export async function POST(request: Request) {
     // Helper to query search and add to candidate map
     const fetchAndAddCandidates = async (query: string, limit: number = 10) => {
       try {
-        const res = await fetch(
-          `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=${limit}&q=${encodeURIComponent(query)}&type=video&videoCategoryId=10&key=${YOUTUBE_API_KEY}`
-        );
-        if (res.ok) {
-          const data = await res.json();
-          (data.items || []).forEach((item: any) => {
-            const trackId = item.id?.videoId;
-            const titleLower = (item.snippet?.title || '').toLowerCase();
-            const isCinematicOrVideo = titleLower.includes('music video') || 
-                                       titleLower.includes('director') || 
-                                       titleLower.includes('official video');
-            
+        // Prefer server-side node-youtube-music adapter when available
+        const adapterRes = await ytAdapter.searchYTMusic(query).catch(() => null);
+        if (adapterRes && adapterRes?.tracks?.length) {
+          for (const item of adapterRes.tracks.slice(0, limit)) {
+            const trackId = item?.videoId || item?.id;
+            const titleLower = (item?.title || '').toLowerCase();
+            const isCinematicOrVideo = titleLower.includes('music video') || titleLower.includes('director') || titleLower.includes('official video');
             if (trackId && !candidateMap.has(trackId) && !isCinematicOrVideo) {
               candidateMap.set(trackId, {
                 id: trackId,
-                title: item.snippet?.title || '',
-                channelTitle: item.snippet?.channelTitle || '',
-                thumbnailUrl: item.snippet?.thumbnails?.maxres?.url || item.snippet?.thumbnails?.high?.url || item.snippet?.thumbnails?.default?.url || '',
-                publishedAt: item.snippet?.publishedAt || '',
+                title: item?.title || '',
+                channelTitle: item?.artist || item?.channel || item?.author || '',
+                thumbnailUrl: item?.thumbnail || '',
+                publishedAt: item?.published || '',
                 type: 'music',
                 origin: 'youtube',
-                channelId: item.snippet?.channelId
+                channelId: item?.channelId || item?.artistId || ''
               });
             }
-          });
+          }
+          return;
         }
+
+        // Fallback: use ytMusicSearch (music.youtube.com) parser defined in lib/youtubei
+        const { ytMusicSearch } = await import('@/lib/youtubei');
+        const fallback = await ytMusicSearch(query).catch(() => null);
+        if (fallback) {
+          const pool = [...(fallback.songs || []), ...(fallback.videos || [])];
+          for (const item of pool.slice(0, limit)) {
+            const trackId = item?.id;
+            const titleLower = (item?.title || '').toLowerCase();
+            const isCinematicOrVideo = titleLower.includes('music video') || titleLower.includes('director') || titleLower.includes('official video');
+            if (trackId && !candidateMap.has(trackId) && !isCinematicOrVideo) {
+              candidateMap.set(trackId, {
+                id: trackId,
+                title: item?.title || '',
+                channelTitle: item?.channelTitle || item?.channel || '',
+                thumbnailUrl: item?.thumbnailUrl || item?.thumbnail || '',
+                publishedAt: item?.publishedAt || '',
+                type: item?.type === 'video' ? 'video' : 'music',
+                origin: 'youtube',
+                channelId: item?.channelId || ''
+              });
+            }
+          }
+          return;
+        }
+
+        // Last-resort: do not call YouTube v3. If a YT key exists temporarily, avoid using it and log.
+        console.warn('No YouTube adapter available for recommendations; skipping external YouTube v3 usage.');
       } catch (err) {
         console.error(`Candidate search failed for query "${query}":`, err);
       }
@@ -84,31 +108,50 @@ export async function POST(request: Request) {
     // If our pool is small, inject popular music videos
     if (candidateMap.size < 15) {
       try {
-        const chartRes = await fetch(
-          `https://www.googleapis.com/youtube/v3/videos?part=snippet&chart=mostPopular&videoCategoryId=10&maxResults=15&key=${YOUTUBE_API_KEY}`
-        );
-        if (chartRes.ok) {
-          const chartData = await chartRes.json();
-          (chartData.items || []).forEach((item: any) => {
-            const trackId = item.id;
-            const titleLower = (item.snippet?.title || '').toLowerCase();
-            const isCinematicOrVideo = titleLower.includes('music video') || 
-                                       titleLower.includes('director') || 
-                                       titleLower.includes('official video');
-            
+        // Prefer adapter for chart/popular music when possible
+        const adapterChart = await ytAdapter.searchYTMusic('popular music charts').catch(() => null);
+        if (adapterChart && adapterChart?.tracks?.length) {
+          for (const item of adapterChart.tracks.slice(0, 15)) {
+            const trackId = item?.videoId || item?.id;
+            const titleLower = (item?.title || '').toLowerCase();
+            const isCinematicOrVideo = titleLower.includes('music video') || titleLower.includes('director') || titleLower.includes('official video');
             if (trackId && !candidateMap.has(trackId) && !isCinematicOrVideo) {
               candidateMap.set(trackId, {
                 id: trackId,
-                title: item.snippet?.title || '',
-                channelTitle: item.snippet?.channelTitle || '',
-                thumbnailUrl: item.snippet?.thumbnails?.maxres?.url || item.snippet?.thumbnails?.high?.url || item.snippet?.thumbnails?.default?.url || '',
-                publishedAt: item.snippet?.publishedAt || '',
+                title: item?.title || '',
+                channelTitle: item?.artist || item?.channel || '',
+                thumbnailUrl: item?.thumbnail || '',
+                publishedAt: item?.published || '',
                 type: 'music',
                 origin: 'youtube',
-                channelId: item.snippet?.channelId
+                channelId: item?.channelId || ''
               });
             }
-          });
+          }
+        } else {
+          // fallback to ytMusicSearch 'chart' style query
+          const { ytMusicSearch } = await import('@/lib/youtubei');
+          const fallback = await ytMusicSearch('popular music').catch(() => null);
+          if (fallback) {
+            const pool = [...(fallback.songs || []), ...(fallback.videos || [])];
+            for (const item of pool.slice(0, 15)) {
+              const trackId = item?.id;
+              const titleLower = (item?.title || '').toLowerCase();
+              const isCinematicOrVideo = titleLower.includes('music video') || titleLower.includes('director') || titleLower.includes('official video');
+              if (trackId && !candidateMap.has(trackId) && !isCinematicOrVideo) {
+                candidateMap.set(trackId, {
+                  id: trackId,
+                  title: item?.title || '',
+                  channelTitle: item?.channelTitle || item?.channel || '',
+                  thumbnailUrl: item?.thumbnailUrl || item?.thumbnail || '',
+                  publishedAt: item?.publishedAt || '',
+                  type: item?.type === 'video' ? 'video' : 'music',
+                  origin: 'youtube',
+                  channelId: item?.channelId || ''
+                });
+              }
+            }
+          }
         }
       } catch (err) {
         console.error('Popular chart candidates query failed:', err);

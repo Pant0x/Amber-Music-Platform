@@ -68,6 +68,7 @@ export async function GET(request: Request) {
           publishedAt: item.album?.release_date || new Date().toISOString(),
           type: 'music',
           origin: 'spotify',
+          playbackMode: 'song',
           artistId: item.artists[0]?.id || '',
           channelId: item.artists[0]?.id || '',
           duration: durationStr,
@@ -125,6 +126,48 @@ export async function GET(request: Request) {
       if (ytData.videos) {
         videos = ytData.videos;
       }
+    }
+
+    // Strict filtering: prefer songs (official audio) and exclude live/remix/cover from songs unless query suggests it
+    const songExcludeRegex = /\b(live|remix|cover|acoustic|lyric|lyrics|sped|slowed|demo|edit|instrumental|karaoke)\b/i;
+    const querySuggestsVariants = /\b(live|remix|cover|acoustic|lyric|sped|slowed)\b/i.test(query || '');
+
+    songs = songs.filter((s) => {
+      if (!s || !s.title) return false;
+      const title = s.title.toLowerCase();
+      if (!querySuggestsVariants && songExcludeRegex.test(title)) return false;
+      return true;
+    }).map((s) => ({ ...s, playbackMode: 'song' }));
+
+    videos = videos.filter((v) => {
+      if (!v || !v.title) return false;
+      // avoid very short/shorts content and clearly non-music cinematic pieces
+      const title = v.title.toLowerCase();
+      if (/\b(shorts|trailer|teaser|bts|behind the scenes|documentary)\b/.test(title)) return false;
+      return true;
+    }).map((v) => ({ ...v, playbackMode: 'video' }));
+
+    // Artist disambiguation: query YouTube Music for possible channel matches for top Spotify artists
+    const enrichArtistsWithYouTube = async (artistsArr: any[]) => {
+      try {
+        const promises = artistsArr.slice(0, 5).map(async (a: any) => {
+          try {
+            const yt = await ytMusicSearch(a.title);
+            const ytMatches = (yt.artists || []).slice(0, 3).map((y: any) => ({ id: y.id, title: y.title, thumbnailUrl: y.thumbnailUrl, origin: 'youtube' }));
+            return { ...a, possibleChannels: ytMatches };
+          } catch (e) {
+            return { ...a, possibleChannels: [] };
+          }
+        });
+        const enriched = await Promise.all(promises);
+        return enriched.concat(artistsArr.slice(enriched.length));
+      } catch (e) {
+        return artistsArr;
+      }
+    };
+
+    if (artists.length > 0) {
+      artists = await enrichArtistsWithYouTube(artists);
     }
 
     // Construct topResult
