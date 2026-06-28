@@ -211,7 +211,23 @@ const runYoutubeChannelFallback = async (artistId: string | null, name: string |
       ];
 
       // 1. Process search songs
+      const artistNameLower = profile.title.toLowerCase();
+      const artistRegex = new RegExp(`\\b${artistNameLower.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
+      
       for (const song of searchSongs) {
+        const songTitleLower = song.title.toLowerCase();
+        const songArtists = (song.channelTitle || '')
+          .split(/,|\s+&\s+|\s+and\s+/i)
+          .map((n: string) => n.trim().toLowerCase())
+          .filter(Boolean);
+          
+        const isActuallyArtist = 
+          songArtists.some((a: string) => a === artistNameLower) ||
+          artistRegex.test(song.channelTitle || '') ||
+          artistRegex.test(songTitleLower);
+          
+        if (!isActuallyArtist) continue;
+
         // Add to topSongs if not seen
         if (song.id && !seenSongIds.has(song.id)) {
           seenSongIds.add(song.id);
@@ -244,6 +260,18 @@ const runYoutubeChannelFallback = async (artistId: string | null, name: string |
 
       // 2. Process search albums
       for (const sa of searchAlbums) {
+        const saArtists = (sa.channelTitle || '')
+          .split(/,|\s+&\s+|\s+and\s+/i)
+          .map((n: string) => n.trim().toLowerCase())
+          .filter(Boolean);
+          
+        const isActuallyAlbumArtist = 
+          saArtists.some((a: string) => a === artistNameLower) ||
+          artistRegex.test(sa.title.toLowerCase()) ||
+          artistRegex.test(sa.channelTitle || '');
+          
+        if (!isActuallyAlbumArtist) continue;
+
         const isSingleOrEp = sa.releaseType?.toLowerCase() === 'single' || sa.releaseType?.toLowerCase() === 'ep';
         if (isSingleOrEp) {
           if (sa.id && !seenSingleIds.has(sa.id)) {
