@@ -129,7 +129,7 @@ export async function GET(request: Request) {
     }
 
     // Strict filtering: prefer songs (official audio) and exclude live/remix/cover from songs unless query suggests it
-    const songExcludeRegex = /\b(live|remix|cover|acoustic|lyric|lyrics|sped|slowed|demo|edit|instrumental|karaoke)\b/i;
+    const songExcludeRegex = /\b(live|remix|cover|acoustic|lyric|lyrics|sped|slowed|demo|edit|instrumental|karaoke|official\s+video|music\s+video|director|skit)\b/i;
     const querySuggestsVariants = /\b(live|remix|cover|acoustic|lyric|sped|slowed)\b/i.test(query || '');
 
     songs = songs.filter((s) => {

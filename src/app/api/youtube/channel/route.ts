@@ -116,7 +116,17 @@ const runYoutubeChannelFallback = async (artistId: string | null, name: string |
     const discography = await ytMusicArtistDiscography(resolvedId);
     
     const topSongs = (discography.topSongs || [])
-      .filter((song: any) => song.title && !isLowQualityChannel(song.channelTitle))
+      .filter((song: any) => {
+        if (!song.title || isLowQualityChannel(song.channelTitle)) return false;
+        const titleLower = song.title.toLowerCase();
+        if (titleLower.includes('official video') || 
+            titleLower.includes('music video') || 
+            titleLower.includes('director') || 
+            titleLower.includes('skit')) {
+          return false;
+        }
+        return true;
+      })
       .map((song: any) => ({
         ...song,
         title: cleanArtistName(song.title),

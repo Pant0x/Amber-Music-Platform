@@ -68,7 +68,7 @@ export const MediaDeck: React.FC = () => {
   const [isShuffle, setIsShuffle] = useState(false);
   const [isRepeat, setIsRepeat] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
-  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+  const [videoRect, setVideoRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
 
   // Avoid hydration mismatch
   const [mounted, setMounted] = useState(false);
@@ -193,13 +193,30 @@ export const MediaDeck: React.FC = () => {
 
   useEffect(() => {
     if (showNowPlaying && playbackMode === 'video') {
-      const timer = setTimeout(() => {
+      const updateRect = () => {
         const el = document.getElementById('now-playing-video-portal');
-        setPortalTarget(el);
-      }, 100);
-      return () => clearTimeout(timer);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          setVideoRect({
+            left: rect.left,
+            top: rect.top,
+            width: rect.width,
+            height: rect.height
+          });
+        }
+      };
+
+      updateRect();
+      window.addEventListener('resize', updateRect);
+      // Run multiple delayed sweeps to capture slide up transition frames
+      const timers = [50, 100, 200, 300, 500, 800].map(t => setTimeout(updateRect, t));
+
+      return () => {
+        window.removeEventListener('resize', updateRect);
+        timers.forEach(clearTimeout);
+      };
     } else {
-      setPortalTarget(null);
+      setVideoRect(null);
     }
   }, [showNowPlaying, playbackMode]);
 
@@ -325,56 +342,52 @@ export const MediaDeck: React.FC = () => {
       className={`h-20 bg-[#070707] px-6 flex items-center justify-between select-none relative z-40 flex-shrink-0 border-t border-white/5 yt-deck-slider-group cursor-pointer hover:bg-[#0f0f0f] transition-colors ${isMinimized ? 'media-deck--minimized' : ''}`}
     >
       
-      {/* Hidden/Portalled ReactPlayer Engine */}
-      {portalTarget ? (
-        createPortal(
-            <ReactPlayer
-            ref={playerRef}
-            url={currentTrack.youtubeId ? `https://www.youtube.com/watch?v=${currentTrack.youtubeId}` : currentTrack.origin === 'spotify' ? '' : `https://www.youtube.com/watch?v=${currentTrack.id}`}
-            playing={isPlaying && (currentTrack.origin !== 'spotify' || !!currentTrack.youtubeId)}
-            volume={volume}
-            muted={isMuted}
-            onProgress={handlePlayerProgress}
-            onDuration={(d: number) => {
-              setDuration(d);
-              setStoreDuration(d);
-            }}
-            onEnded={handlePlayerEnded}
-            width="100%"
-            height="100%"
-            controls={false}
-            config={{
-              youtube: {
-                playerVars: {
-                  autoplay: 1,
-                  controls: 0,
-                  modestbranding: 1,
-                  rel: 0
-                }
+      {/* Persistent ReactPlayer Engine */}
+      <div 
+        className="fixed z-50 rounded-2xl overflow-hidden pointer-events-none transition-all duration-300"
+        style={videoRect ? {
+          left: `${videoRect.left}px`,
+          top: `${videoRect.top}px`,
+          width: `${videoRect.width}px`,
+          height: `${videoRect.height}px`,
+          opacity: 1,
+          pointerEvents: 'auto'
+        } : {
+          left: 0,
+          top: 0,
+          width: 0,
+          height: 0,
+          opacity: 0,
+          pointerEvents: 'none'
+        }}
+      >
+        <ReactPlayer
+          ref={playerRef}
+          url={currentTrack.youtubeId ? `https://www.youtube.com/watch?v=${currentTrack.youtubeId}` : currentTrack.origin === 'spotify' ? '' : `https://www.youtube.com/watch?v=${currentTrack.id}`}
+          playing={isPlaying && (currentTrack.origin !== 'spotify' || !!currentTrack.youtubeId)}
+          volume={volume}
+          muted={isMuted}
+          onProgress={handlePlayerProgress}
+          onDuration={(d: number) => {
+            setDuration(d);
+            setStoreDuration(d);
+          }}
+          onEnded={handlePlayerEnded}
+          width="100%"
+          height="100%"
+          controls={false}
+          config={{
+            youtube: {
+              playerVars: {
+                autoplay: 1,
+                controls: 0,
+                modestbranding: 1,
+                rel: 0
               }
-            }}
-          />,
-          portalTarget
-        )
-      ) : (
-        <div className="hidden">
-          <ReactPlayer
-            ref={playerRef}
-            url={currentTrack.youtubeId ? `https://www.youtube.com/watch?v=${currentTrack.youtubeId}` : currentTrack.origin === 'spotify' ? '' : `https://www.youtube.com/watch?v=${currentTrack.id}`}
-            playing={isPlaying && (currentTrack.origin !== 'spotify' || !!currentTrack.youtubeId)}
-            volume={volume}
-            muted={isMuted}
-            onProgress={handlePlayerProgress}
-            onDuration={(d: number) => {
-              setDuration(d);
-              setStoreDuration(d);
-            }}
-            onEnded={handlePlayerEnded}
-            width="0"
-            height="0"
-          />
-        </div>
-      )}
+            }
+          }}
+        />
+      </div>
 
       {/* A. SIGNATURE YT MUSIC EDGE-TO-EDGE TIMELINE SLIDER */}
       <div className="absolute top-0 inset-x-0 h-1 bg-transparent pointer-events-auto">
