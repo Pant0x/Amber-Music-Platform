@@ -29,7 +29,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="h-screen w-screen bg-[#030303] text-zinc-300 font-sans select-none overflow-hidden flex flex-col">
+      <body className="h-[100dvh] w-screen bg-[#030303] text-zinc-300 font-sans select-none overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 relative flex flex-col">{children}</div>
         <MediaDeck />
       </body>
