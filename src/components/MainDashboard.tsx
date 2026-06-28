@@ -451,15 +451,7 @@ export const MainDashboard: React.FC = () => {
                                 {track.title}
                                 {track.isExplicit && <ExplicitBadge />}
                               </p>
-                              <p 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  viewChannel(track.channelTitle, track.channelId);
-                                }}
-                                className="text-[11px] text-zinc-400 truncate mt-0.5 hover:text-white hover:underline cursor-pointer"
-                              >
-                                {track.channelTitle}
-                              </p>
+                              <p className="text-[11px] text-zinc-400 truncate mt-0.5">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
                             </div>
                           </div>
                         );
@@ -502,15 +494,7 @@ export const MainDashboard: React.FC = () => {
                       </button>
                     </div>
                     <h4 className="text-xs font-bold text-white truncate mb-0.5">{track.title}</h4>
-                    <p 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        viewChannel(track.channelTitle, track.channelId);
-                      }}
-                      className="text-[10px] text-zinc-400 truncate hover:text-white hover:underline cursor-pointer"
-                    >
-                      {cleanVisualName(track.channelTitle)}
-                    </p>
+                    <p className="text-[10px] text-zinc-400 truncate mt-0.5">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
                   </div>
                 ))}
               </Carousel>
@@ -545,15 +529,7 @@ export const MainDashboard: React.FC = () => {
                       </button>
                     </div>
                     <h4 className="text-xs font-bold text-white truncate mb-0.5">{track.title}</h4>
-                    <p 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        viewChannel(track.channelTitle, track.channelId);
-                      }}
-                      className="text-[10px] text-zinc-400 truncate hover:text-white hover:underline cursor-pointer"
-                    >
-                      {cleanVisualName(track.channelTitle)}
-                    </p>
+                    <p className="text-[10px] text-zinc-400 truncate mt-0.5">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
                   </div>
                 ))}
               </Carousel>
@@ -601,15 +577,7 @@ export const MainDashboard: React.FC = () => {
                           </button>
                         </div>
                         <h4 className="text-xs font-bold text-white truncate mb-0.5">{track.title}</h4>
-                        <p
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            viewChannel(track.channelTitle, track.channelId);
-                          }}
-                          className="text-[10px] text-zinc-400 truncate hover:text-white hover:underline cursor-pointer"
-                        >
-                          {cleanVisualName(track.channelTitle)}
-                        </p>
+                        <p className="text-[10px] text-zinc-400 truncate mt-0.5">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
                       </div>
                     ))}
                   </Carousel>
@@ -644,15 +612,7 @@ export const MainDashboard: React.FC = () => {
                           </button>
                         </div>
                         <h4 className="text-xs font-bold text-white truncate mb-0.5">{track.title}</h4>
-                        <p
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            viewChannel(track.channelTitle, track.channelId);
-                          }}
-                          className="text-[10px] text-zinc-400 truncate hover:text-white hover:underline cursor-pointer"
-                        >
-                          {cleanVisualName(track.channelTitle)}
-                        </p>
+                        <p className="text-[10px] text-zinc-400 truncate mt-0.5">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
                       </div>
                     ))}
                   </Carousel>
@@ -783,12 +743,7 @@ export const MainDashboard: React.FC = () => {
                                   {track.title}
                                   {track.isExplicit && <ExplicitBadge />}
                                 </p>
-                                <p
-                                  onClick={(e) => { e.stopPropagation(); viewChannel(track.channelTitle, track.channelId); }}
-                                  className="text-xs text-zinc-400 truncate hover:text-white hover:underline cursor-pointer"
-                                >
-                                  {cleanVisualName(track.channelTitle)}
-                                </p>
+                                <p className="text-xs text-zinc-400 truncate mt-0.5">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
                               </div>
                               <div className="flex items-center gap-2 opacity-0 group-hover/row:opacity-100 transition-opacity">
                                 <button onClick={() => handlePlayAction(track, searchSongs)} className="text-white">
@@ -1175,15 +1130,7 @@ export const MainDashboard: React.FC = () => {
                           {track.title}
                           {track.isExplicit && <ExplicitBadge />}
                         </p>
-                        <p 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            viewChannel(track.channelTitle, track.channelId);
-                          }}
-                          className="text-xs text-zinc-400 truncate mt-0.5 group-hover/row:text-white hover:underline cursor-pointer inline-block"
-                        >
-                          {cleanVisualName(track.channelTitle)}
-                        </p>
+                        <p className="text-xs text-zinc-400 truncate mt-0.5 inline-block">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
                       </div>
 
                       <div className="flex items-center gap-3">
@@ -1336,15 +1283,7 @@ export const MainDashboard: React.FC = () => {
                           {track.title}
                           {track.isExplicit && <ExplicitBadge />}
                         </p>
-                        <p 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            viewChannel(track.channelTitle, track.channelId);
-                          }}
-                          className="text-xs text-zinc-400 truncate mt-0.5 group-hover/row:text-white hover:underline cursor-pointer inline-block"
-                        >
-                          {cleanVisualName(track.channelTitle)}
-                        </p>
+                        <p className="text-xs text-zinc-400 truncate mt-0.5 inline-block">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
                       </div>
 
                       <div className="flex items-center gap-3">
@@ -1461,15 +1400,7 @@ export const MainDashboard: React.FC = () => {
                         {track.title}
                         {track.isExplicit && <ExplicitBadge />}
                       </p>
-                      <p 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          viewChannel(track.channelTitle, track.channelId);
-                        }}
-                        className="text-xs text-zinc-400 truncate mt-0.5 group-hover/row:text-white hover:underline cursor-pointer inline-block"
-                      >
-                        {cleanVisualName(track.channelTitle)}
-                      </p>
+                      <p className="text-xs text-zinc-400 truncate mt-0.5 inline-block">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -1636,10 +1567,10 @@ export const MainDashboard: React.FC = () => {
                                 {track.title}
                                 {track.isExplicit && <ExplicitBadge />}
                               </p>
-                            </div>
-                            <div className="hidden sm:flex items-center gap-2 text-sm text-zinc-400 w-48 truncate flex-shrink-0">
-                              <Music className="w-3.5 h-3.5 flex-shrink-0" />
-                              <span className="truncate">{cleanVisualName(track.channelTitle)}</span>
+                              <div className="hidden sm:flex items-center gap-2 text-sm text-zinc-400 w-48 truncate flex-shrink-0">
+                               <Music className="w-3.5 h-3.5 flex-shrink-0" />
+                               {renderArtistLinks(track.channelTitle, track.channelId, "w-full")}
+                             </div>
                             </div>
                             {track.views && (
                               <div className="hidden md:block text-sm text-zinc-400 w-28 text-right flex-shrink-0">
@@ -1834,7 +1765,7 @@ export const MainDashboard: React.FC = () => {
                         </div>
                         <div className="hidden sm:flex items-center gap-2 text-sm text-zinc-400 w-48 truncate flex-shrink-0">
                           <Music className="w-3.5 h-3.5 flex-shrink-0" />
-                          <span className="truncate">{cleanVisualName(track.channelTitle)}</span>
+                          {renderArtistLinks(track.channelTitle, track.channelId, "w-full")}
                         </div>
                         {track.views ? (
                           <div className="hidden md:block text-sm text-zinc-400 w-28 text-right flex-shrink-0">{track.views.replace(' views', ' plays')}</div>
