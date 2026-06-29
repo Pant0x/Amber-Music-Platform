@@ -53,6 +53,7 @@ export async function GET(request: Request) {
       const defaultRow = {
         ip_address: ip,
         display_name: 'Anonymous Listener',
+        avatar_url: 'bg-gradient-to-tr from-blue-600 to-indigo-900',
         liked_tracks: [],
         subscribed_channels: [],
         playlists: [],
@@ -82,7 +83,7 @@ export async function POST(request: Request) {
   try {
     const ip = getClientIp(request);
     const body = await request.json();
-    const { display_name, liked_tracks, subscribed_channels, playlists, history } = body;
+    const { display_name, avatar_url, liked_tracks, subscribed_channels, playlists, history } = body;
 
     let supabase;
     try {
@@ -97,6 +98,7 @@ export async function POST(request: Request) {
       .upsert({
         ip_address: ip,
         display_name: display_name || 'Anonymous Listener',
+        avatar_url: avatar_url || 'bg-gradient-to-tr from-blue-600 to-indigo-900',
         liked_tracks: liked_tracks || [],
         subscribed_channels: subscribed_channels || [],
         playlists: playlists || [],

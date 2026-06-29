@@ -33,9 +33,11 @@ interface PlayerState {
   currentChannelDetails: any;
   subscribedChannels: string[];
   displayName: string;
+  avatarUrl: string;
 
   // Database / Sync Actions
   setDisplayName: (name: string) => void;
+  setAvatarUrl: (url: string) => void;
   fetchDatabaseData: () => Promise<void>;
 
   // Playback Actions
@@ -185,6 +187,7 @@ export const usePlayerStore = create<PlayerState>()(
       currentChannelDetails: null,
       subscribedChannels: [],
       displayName: 'Anonymous Listener',
+      avatarUrl: 'bg-gradient-to-tr from-blue-600 to-indigo-900',
 
       // Queue Panel Initial State
       showQueuePanel: false,
@@ -362,6 +365,7 @@ export const usePlayerStore = create<PlayerState>()(
 
       // User Profile & DB Sync Actions
       setDisplayName: (name) => set({ displayName: name }),
+      setAvatarUrl: (url) => set({ avatarUrl: url }),
       fetchDatabaseData: async () => {
         try {
           const res = await fetch('/api/user/sync');
@@ -369,6 +373,7 @@ export const usePlayerStore = create<PlayerState>()(
             const data = await res.json();
             set({
               displayName: data.display_name || 'Anonymous Listener',
+              avatarUrl: data.avatar_url || 'bg-gradient-to-tr from-blue-600 to-indigo-900',
               likedTracks: data.liked_tracks || [],
               subscribedChannels: data.subscribed_channels || [],
               playlists: data.playlists || [],
@@ -537,6 +542,7 @@ export const usePlayerStore = create<PlayerState>()(
         searchHistory: state.searchHistory,
         subscribedChannels: state.subscribedChannels,
         displayName: state.displayName,
+        avatarUrl: state.avatarUrl,
         isMinimized: state.isMinimized
       }),
       onRehydrateStorage: () => (state) => {

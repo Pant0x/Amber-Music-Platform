@@ -9,6 +9,7 @@ export const DatabaseSync: React.FC = () => {
   const subscribedChannels = usePlayerStore(state => state.subscribedChannels);
   const history = usePlayerStore(state => state.history);
   const displayName = usePlayerStore(state => state.displayName);
+  const avatarUrl = usePlayerStore(state => state.avatarUrl);
   const fetchDatabaseData = usePlayerStore(state => state.fetchDatabaseData);
   const isHydrated = usePlayerStore(state => state._hasHydrated);
 
@@ -35,6 +36,7 @@ export const DatabaseSync: React.FC = () => {
           },
           body: JSON.stringify({
             display_name: displayName,
+            avatar_url: avatarUrl,
             liked_tracks: likedTracks,
             subscribed_channels: subscribedChannels,
             playlists: playlists,
@@ -47,7 +49,7 @@ export const DatabaseSync: React.FC = () => {
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [playlists, likedTracks, subscribedChannels, history, displayName, isHydrated]);
+  }, [playlists, likedTracks, subscribedChannels, history, displayName, avatarUrl, isHydrated]);
 
   return null;
 };

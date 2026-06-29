@@ -17,7 +17,13 @@ export const Header: React.FC = () => {
     clearSearchHistory,
     setShowNowPlaying,
     displayName,
-    setDisplayName
+    setDisplayName,
+    avatarUrl,
+    setAvatarUrl,
+    playlists,
+    likedTracks,
+    subscribedChannels,
+    history
   } = usePlayerStore();
 
   const [mounted, setMounted] = useState(false);
@@ -25,12 +31,34 @@ export const Header: React.FC = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [newName, setNewName] = useState('');
+  const [tempAvatarUrl, setTempAvatarUrl] = useState('');
+  const [trendingQueries, setTrendingQueries] = useState<any[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Sync edit name state when displayName resolves
+  // Fetch trending searches on mount
+  useEffect(() => {
+    const fetchTrending = async () => {
+      try {
+        const res = await fetch('/api/search/trending');
+        if (res.ok) {
+          const list = await res.json();
+          setTrendingQueries(list);
+        }
+      } catch (err) {
+        console.error('Trending fetch error:', err);
+      }
+    };
+    fetchTrending();
+  }, []);
+
+  // Sync edit states when displayName/avatarUrl resolve
   useEffect(() => {
     setNewName(displayName || '');
   }, [displayName]);
+
+  useEffect(() => {
+    setTempAvatarUrl(avatarUrl || '');
+  }, [avatarUrl]);
 
   useEffect(() => {
     setMounted(true);
@@ -241,14 +269,17 @@ export const Header: React.FC = () => {
                       </span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 p-3">
-                      {[
-                        { name: 'Yeat', type: 'Artist' },
-                        { name: 'Drake', type: 'Artist' },
-                        { name: 'Don Toliver', type: 'Artist' },
-                        { name: 'The Beatles', type: 'Artist' },
-                        { name: 'Travis Scott', type: 'Artist' },
-                        { name: 'Lofi Chill', type: 'Genre' }
-                      ].map((item) => (
+                      {(trendingQueries && trendingQueries.length > 0
+                        ? trendingQueries
+                        : [
+                            { name: 'Yeat', type: 'Artist' },
+                            { name: 'Drake', type: 'Artist' },
+                            { name: 'Don Toliver', type: 'Artist' },
+                            { name: 'The Beatles', type: 'Artist' },
+                            { name: 'Travis Scott', type: 'Artist' },
+                            { name: 'Lofi Chill', type: 'Genre' }
+                          ]
+                      ).map((item) => (
                         <div
                           key={item.name}
                           onClick={() => selectQuery(item.name)}
@@ -288,28 +319,52 @@ export const Header: React.FC = () => {
 
         <div
           onClick={() => setShowProfileModal(true)}
-          className="w-8 h-8 rounded-full bg-[#0055ff] flex items-center justify-center text-white text-sm font-bold cursor-pointer hover:scale-105 transition-transform uppercase select-none"
+          className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold cursor-pointer hover:scale-105 transition-transform uppercase select-none relative overflow-hidden shadow-md ${
+            avatarUrl && avatarUrl.startsWith('bg-') ? avatarUrl : 'bg-[#0055ff]'
+          }`}
           title={`Profile: ${displayName || 'Anonymous Listener'}`}
         >
-          {displayName ? displayName.charAt(0) : 'A'}
+          {avatarUrl && (avatarUrl.startsWith('http') || avatarUrl.startsWith('/')) ? (
+            <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+          ) : (
+            displayName ? displayName.charAt(0) : 'A'
+          )}
         </div>
       </div>
 
       {/* Profile Name Edit Modal */}
       {showProfileModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
-          <div className="bg-[#161616] border border-white/10 p-6 rounded-2xl w-full max-w-sm shadow-2xl relative select-none">
+          <div className="bg-[#161616] border border-white/10 p-6 rounded-2xl w-full max-w-md shadow-2xl relative select-none max-h-[90vh] overflow-y-auto custom-scrollbar">
             <button
-              onClick={() => setShowProfileModal(false)}
+              onClick={() => {
+                setShowProfileModal(false);
+                setTempAvatarUrl(avatarUrl);
+              }}
               className="absolute right-4 top-4 text-zinc-400 hover:text-white transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
             
             <h3 className="text-base font-bold text-white mb-1">Listener Profile</h3>
-            <p className="text-xs text-zinc-500 mb-4">Your preferences are automatically synchronized based on your IP address.</p>
+            <p className="text-xs text-zinc-500 mb-6">Your profile is synchronized based on your IP address.</p>
             
-            <div className="space-y-4">
+            <div className="space-y-5">
+              {/* Profile Avatar Preview */}
+              <div className="flex flex-col items-center gap-2 pb-2">
+                <div className={`w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-bold uppercase shadow-lg border border-white/5 relative overflow-hidden ${
+                  tempAvatarUrl && tempAvatarUrl.startsWith('bg-') ? tempAvatarUrl : 'bg-[#0055ff]'
+                }`}>
+                  {tempAvatarUrl && (tempAvatarUrl.startsWith('http') || tempAvatarUrl.startsWith('/')) ? (
+                    <img src={tempAvatarUrl} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    newName ? newName.charAt(0) : 'A'
+                  )}
+                </div>
+                <span className="text-xs text-zinc-400 font-semibold">{newName || 'Anonymous Listener'}</span>
+              </div>
+
+              {/* Display Name Input */}
               <div>
                 <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Display Name</label>
                 <input
@@ -322,9 +377,69 @@ export const Header: React.FC = () => {
                 />
               </div>
 
+              {/* Avatar Selection */}
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Choose Avatar Color</label>
+                <div className="flex items-center gap-3">
+                  {[
+                    'bg-gradient-to-tr from-blue-600 to-indigo-900',
+                    'bg-gradient-to-tr from-orange-500 to-red-600',
+                    'bg-gradient-to-tr from-purple-600 to-pink-600',
+                    'bg-gradient-to-tr from-green-500 to-teal-700',
+                    'bg-gradient-to-tr from-amber-500 to-yellow-600'
+                  ].map((grad) => (
+                    <button
+                      key={grad}
+                      onClick={() => setTempAvatarUrl(grad)}
+                      className={`w-8 h-8 rounded-full transition-transform active:scale-95 border-2 ${grad} ${
+                        tempAvatarUrl === grad ? 'border-white scale-110' : 'border-transparent hover:scale-105'
+                      }`}
+                      aria-label="Select gradient avatar"
+                    />
+                  ))}
+                </div>
+                <div className="mt-3">
+                  <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Or paste custom image URL</label>
+                  <input
+                    type="text"
+                    value={tempAvatarUrl && tempAvatarUrl.startsWith('bg-') ? '' : tempAvatarUrl}
+                    onChange={(e) => setTempAvatarUrl(e.target.value)}
+                    placeholder="https://example.com/avatar.jpg"
+                    className="w-full bg-[#222] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-white/20 placeholder-zinc-650 font-medium"
+                  />
+                </div>
+              </div>
+
+              {/* Listener Stats */}
+              <div className="bg-white/5 border border-white/5 rounded-xl p-4 space-y-3">
+                <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-white/5 pb-2">Listener Statistics</h4>
+                <div className="grid grid-cols-2 gap-3 text-center">
+                  <div className="bg-black/20 p-2 rounded-lg border border-white/5">
+                    <span className="block text-lg font-bold text-white leading-none">{likedTracks?.length || 0}</span>
+                    <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider">Liked tracks</span>
+                  </div>
+                  <div className="bg-black/20 p-2 rounded-lg border border-white/5">
+                    <span className="block text-lg font-bold text-white leading-none">{subscribedChannels?.length || 0}</span>
+                    <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider">Subscriptions</span>
+                  </div>
+                  <div className="bg-black/20 p-2 rounded-lg border border-white/5">
+                    <span className="block text-lg font-bold text-white leading-none">{playlists?.length || 0}</span>
+                    <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider">Playlists</span>
+                  </div>
+                  <div className="bg-black/20 p-2 rounded-lg border border-white/5">
+                    <span className="block text-lg font-bold text-white leading-none">{history?.length || 0}</span>
+                    <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider">Songs listened</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Buttons */}
               <div className="flex items-center justify-end gap-3 pt-2">
                 <button
-                  onClick={() => setShowProfileModal(false)}
+                  onClick={() => {
+                    setShowProfileModal(false);
+                    setTempAvatarUrl(avatarUrl);
+                  }}
                   className="px-4 py-2 text-xs font-bold text-zinc-400 hover:text-white transition-colors"
                 >
                   Cancel
@@ -334,6 +449,7 @@ export const Header: React.FC = () => {
                     const trimmed = newName.trim();
                     if (trimmed) {
                       setDisplayName(trimmed);
+                      setAvatarUrl(tempAvatarUrl);
                       setShowProfileModal(false);
                     }
                   }}
