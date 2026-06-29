@@ -379,11 +379,28 @@ export async function ytMusicSearch(query: string, params?: string) {
 
   traverse(data);
 
+  const filteredArtists = artists.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i && !isJunkArtistOrChannel(v.title));
+  if (topResult && (topResult.type === 'channel' || topResult.resultType === 'artist')) {
+    if (!filteredArtists.some((a: any) => a.id === topResult.id)) {
+      filteredArtists.unshift({
+        id: topResult.id,
+        title: topResult.title,
+        channelTitle: 'Artist',
+        thumbnailUrl: topResult.thumbnailUrl,
+        subtitle: topResult.subtitle || 'Artist',
+        publishedAt: new Date().toISOString(),
+        type: 'channel',
+        origin: 'youtube',
+        channelId: topResult.id
+      });
+    }
+  }
+
   return {
     topResult: topResult && isJunkArtistOrChannel(topResult.title) ? null : topResult,
     songs: songs.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i && !isJunkArtistOrChannel(v.channelTitle)),
     videos: videos.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i && !isJunkArtistOrChannel(v.channelTitle)),
-    artists: artists.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i && !isJunkArtistOrChannel(v.title)),
+    artists: filteredArtists,
     albums: albums.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i && !isJunkArtistOrChannel(v.channelTitle)),
     communityPlaylists: communityPlaylists.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i),
   };

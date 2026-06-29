@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getSpotifyApi } from '@/lib/spotify';
 import { ytMusicSearch, cleanTopicGlobally } from '@/lib/youtubei';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get('q');
@@ -25,6 +27,7 @@ export async function GET(request: Request) {
     ]);
 
     let artists = ytArtistsData.artists || [];
+
     const cleanQuery = query.toLowerCase().trim();
     if (cleanQuery === 'fairuz' || cleanQuery === 'fairouz' || cleanQuery === 'fayrouz' || cleanQuery === 'فيروز') {
       const hasLebanese = artists.some((a: any) => a.id === 'UCzixfFiEFMjhSB3R9UdUdsA');
@@ -58,8 +61,13 @@ export async function GET(request: Request) {
       }
     }
 
+    // Determine top result: prefer the artist if the raw search query yielded an artist top result
+    const topResult = (ytArtistsData.topResult && (ytArtistsData.topResult.type === 'channel' || ytArtistsData.topResult.resultType === 'artist'))
+      ? ytArtistsData.topResult
+      : ytMusicData.topResult;
+
     return NextResponse.json(cleanTopicGlobally({
-      topResult: ytMusicData.topResult,
+      topResult,
       songs: ytMusicData.songs?.slice(0, 20) || [],
       videos: ytMusicData.videos?.slice(0, 10) || [],
       artists: artists.slice(0, 10),
@@ -242,17 +250,29 @@ export async function GET(request: Request) {
       }
     }
 
-    // Construct topResult
+    // Construct topResult (Spotify style: prefer artist if matching query)
     let topResult: any = null;
-    if (songs.length > 0) {
+    const firstArtist = artists[0];
+    const firstSong = songs[0];
+
+    if (firstArtist && (
+      firstArtist.title.toLowerCase().trim() === cleanQuery ||
+      cleanQuery.includes(firstArtist.title.toLowerCase().trim())
+    )) {
       topResult = {
-        ...songs[0],
+        ...firstArtist,
+        type: 'channel',
+        resultType: 'artist'
+      };
+    } else if (firstSong) {
+      topResult = {
+        ...firstSong,
         type: 'music',
         resultType: 'song'
       };
-    } else if (artists.length > 0) {
+    } else if (firstArtist) {
       topResult = {
-        ...artists[0],
+        ...firstArtist,
         type: 'channel',
         resultType: 'artist'
       };

@@ -56,7 +56,7 @@ export const SearchView: React.FC = () => {
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
+        const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}&t=${Date.now()}`);
         if (res.ok) {
           const data = await res.json();
           setSearchTopResult(data.topResult || null);
