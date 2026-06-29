@@ -51,6 +51,8 @@ interface PlayerState {
 
   // Search History Actions
   addSearchQueryToHistory: (query: string) => void;
+  removeSearchQueryFromHistory: (query: string) => void;
+  clearSearchHistory: () => void;
 
   // YouTube Channel Details Actions
   fetchChannelDetails: (idOrName: string, isName?: boolean) => Promise<void>;
@@ -345,6 +347,12 @@ export const usePlayerStore = create<PlayerState>()(
         const updated = [...filtered, trimmed].slice(-10);
         return { searchHistory: updated };
       }),
+
+      removeSearchQueryFromHistory: (query) => set((state) => {
+        return { searchHistory: state.searchHistory.filter((q) => q !== query) };
+      }),
+
+      clearSearchHistory: () => set({ searchHistory: [] }),
 
       // YouTube Channel Details Actions
       fetchChannelDetails: async (idOrName, isName = false) => {
