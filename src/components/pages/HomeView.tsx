@@ -3,7 +3,7 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { Track } from '@/types/music-player';
 import { Disc } from 'lucide-react';
 import { TrackCover } from '../TrackCover';
-import { Carousel, renderArtistLinks } from './shared';
+import { Carousel, ArtistLinks } from './shared';
 
 const MOOD_CHIPS = [
   { id: 'focus', label: 'Focus' },
@@ -133,7 +133,7 @@ export const HomeView: React.FC = () => {
                               </span>
                             )}
                           </p>
-                          <p className="text-[11px] text-zinc-400 truncate mt-0.5">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
+                          <p className="text-[11px] text-zinc-400 truncate mt-0.5"><ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} /></p>
                         </div>
                       </div>
                     );
@@ -161,7 +161,7 @@ export const HomeView: React.FC = () => {
                 >
                   <TrackCover track={track} contextTracks={history} sizeClass="aspect-square w-full rounded-md mb-3" />
                   <h4 className="text-xs font-bold text-white truncate mb-0.5">{track.title}</h4>
-                  <p className="text-[10px] text-zinc-400 truncate mt-0.5">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
+                  <p className="text-[10px] text-zinc-400 truncate mt-0.5"><ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} /></p>
                 </div>
               ))}
           </Carousel>
@@ -181,7 +181,7 @@ export const HomeView: React.FC = () => {
               >
                 <TrackCover track={track} contextTracks={recommendations} sizeClass="aspect-square w-full rounded-md mb-3" />
                 <h4 className="text-xs font-bold text-white truncate mb-0.5">{track.title}</h4>
-                <p className="text-[10px] text-zinc-400 truncate mt-0.5">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
+                <p className="text-[10px] text-zinc-400 truncate mt-0.5"><ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} /></p>
               </div>
             ))}
           </Carousel>

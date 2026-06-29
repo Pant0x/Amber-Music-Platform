@@ -3,7 +3,7 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { Track } from '@/types/music-player';
 import { Disc } from 'lucide-react';
 import { TrackCover } from '../TrackCover';
-import { Carousel, renderArtistLinks } from './shared';
+import { Carousel, ArtistLinks } from './shared';
 
 export const ExploreView: React.FC = () => {
   const [exploreCharts, setExploreCharts] = useState<Track[]>([]);
@@ -52,7 +52,7 @@ export const ExploreView: React.FC = () => {
                   >
                     <TrackCover track={track} contextTracks={exploreNewReleases} sizeClass="aspect-square w-full rounded-md mb-3" />
                     <h4 className="text-xs font-bold text-white truncate mb-0.5">{track.title}</h4>
-                    <p className="text-[10px] text-zinc-400 truncate mt-0.5">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
+                    <p className="text-[10px] text-zinc-400 truncate mt-0.5"><ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} /></p>
                   </div>
                 ))}
               </Carousel>
@@ -72,7 +72,7 @@ export const ExploreView: React.FC = () => {
                   >
                     <TrackCover track={track} contextTracks={exploreCharts} sizeClass="aspect-square w-full rounded-md mb-3" />
                     <h4 className="text-xs font-bold text-white truncate mb-0.5">{track.title}</h4>
-                    <p className="text-[10px] text-zinc-400 truncate mt-0.5">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
+                    <p className="text-[10px] text-zinc-400 truncate mt-0.5"><ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} /></p>
                   </div>
                 ))}
               </Carousel>

@@ -3,7 +3,7 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { Track } from '@/types/music-player';
 import { Play, Pause, Music, Trash2, X, Disc, Heart } from 'lucide-react';
 import { TrackCover } from '../TrackCover';
-import { ExplicitBadge, renderArtistLinks } from './shared';
+import { ExplicitBadge, ArtistLinks } from './shared';
 
 export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) => {
   const {
@@ -136,7 +136,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                       {track.title}
                       {track.isExplicit && <ExplicitBadge />}
                     </p>
-                    <p className="text-xs text-zinc-400 truncate mt-0.5 inline-block">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
+                    <p className="text-xs text-zinc-400 truncate mt-0.5 inline-block"><ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} /></p>
                   </div>
 
                   <div className="flex items-center gap-3">
@@ -250,7 +250,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                         {track.title}
                         {track.isExplicit && <ExplicitBadge />}
                       </p>
-                      <p className="text-xs text-zinc-400 truncate mt-0.5 inline-block">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
+                      <p className="text-xs text-zinc-400 truncate mt-0.5 inline-block"><ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} /></p>
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -328,11 +328,11 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                 {ytPlaylistDetails.metadata?.title}
               </h1>
               <div className="text-xs text-zinc-400 font-semibold flex items-center gap-1.5 flex-wrap">
-                {renderArtistLinks(
-                  ytPlaylistDetails.metadata?.channelTitle || '',
-                  ytPlaylistDetails.metadata?.channelId,
-                  "text-white font-bold inline-flex flex-wrap text-xs"
-                )}
+                <ArtistLinks
+                  channelTitle={ytPlaylistDetails.metadata?.channelTitle || ''}
+                  channelId={ytPlaylistDetails.metadata?.channelId}
+                  extraClass="text-white font-bold inline-flex flex-wrap text-xs"
+                />
                 <span>•</span>
                 <span>{ytPlaylistDetails.tracks?.length || 0} songs</span>
                 {ytPlaylistDetails.metadata?.description && (
@@ -397,7 +397,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                         {track.title}
                         {track.isExplicit && <ExplicitBadge />}
                       </p>
-                      <p className="text-xs text-zinc-400 truncate mt-0.5 inline-block">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
+                      <p className="text-xs text-zinc-400 truncate mt-0.5 inline-block"><ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} /></p>
                     </div>
 
                     <div className="flex items-center gap-3">

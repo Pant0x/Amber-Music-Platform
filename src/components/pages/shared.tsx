@@ -77,7 +77,17 @@ export const Carousel: React.FC<{ children: React.ReactNode; className?: string 
   );
 };
 
-export const renderArtistLinks = (channelTitle: string, channelId?: string, extraClass = "") => {
+interface ArtistLinksProps {
+  channelTitle: string;
+  channelId?: string;
+  extraClass?: string;
+}
+
+export const ArtistLinks: React.FC<ArtistLinksProps> = ({
+  channelTitle,
+  channelId,
+  extraClass = ""
+}) => {
   const { viewChannel } = usePlayerStore();
   const artistNames = channelTitle
     ? channelTitle.split(/,|\s+&\s+|\s+and\s+/i).map((n: string) => n.trim()).filter(Boolean)

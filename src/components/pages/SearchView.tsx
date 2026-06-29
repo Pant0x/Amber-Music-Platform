@@ -3,7 +3,7 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { Track } from '@/types/music-player';
 import { Play, Pause, Shuffle, Disc, Heart } from 'lucide-react';
 import { TrackCover } from '../TrackCover';
-import { ExplicitBadge, renderArtistLinks } from './shared';
+import { ExplicitBadge, ArtistLinks } from './shared';
 import { cleanVisualName } from '@/utils/text';
 
 export const SearchView: React.FC = () => {
@@ -177,7 +177,7 @@ export const SearchView: React.FC = () => {
                                   {track.title}
                                   {track.isExplicit && <ExplicitBadge />}
                                 </p>
-                                <p className="text-xs text-zinc-400 truncate mt-0.5">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
+                                <p className="text-xs text-zinc-400 truncate mt-0.5"><ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} /></p>
                               </div>
                               <div className="flex items-center gap-2 opacity-0 group-hover/row:opacity-100 transition-opacity">
                                 <button onClick={() => handlePlayAction(track, searchSongs)} className="text-white">
@@ -347,7 +347,7 @@ export const SearchView: React.FC = () => {
                       <p className={`text-sm font-semibold truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
                         {track.title}{track.isExplicit && <ExplicitBadge />}
                       </p>
-                      <p className="text-xs text-zinc-400 truncate mt-0.5">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
+                      <p className="text-xs text-zinc-400 truncate mt-0.5"><ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} /></p>
                     </div>
                     <div className="flex items-center gap-2">
                       <button onClick={() => toggleLikeTrack(track)} className={`p-1 transition-colors opacity-0 group-hover/row:opacity-100 ${likedTracks.some(t => t.id === track.id) ? 'opacity-100 text-[#ff0000]' : 'text-zinc-400 hover:text-white'}`}><Heart className="w-4 h-4 fill-current" /></button>

@@ -3,7 +3,7 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { Track } from '@/types/music-player';
 import { Play, Pause, Shuffle, Disc, Heart, Compass, Radio, Check, Clock, Music, PlusCircle } from 'lucide-react';
 import { TrackCover } from '../TrackCover';
-import { ExplicitBadge, renderArtistLinks, Carousel } from './shared';
+import { ExplicitBadge, ArtistLinks, Carousel } from './shared';
 import { cleanVisualName } from '@/utils/text';
 
 export const ArtistView: React.FC = () => {
@@ -213,7 +213,7 @@ export const ArtistView: React.FC = () => {
                         </p>
                         <div className="hidden sm:flex items-center gap-2 text-sm text-zinc-400 w-48 truncate flex-shrink-0">
                          <Music className="w-3.5 h-3.5 flex-shrink-0" />
-                         {renderArtistLinks(track.channelTitle, track.channelId, "w-full")}
+                         <ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} extraClass="w-full" />
                        </div>
                       </div>
                       {track.views && (
@@ -452,7 +452,7 @@ export const ArtistView: React.FC = () => {
                   </div>
                   <div className="hidden sm:flex items-center gap-2 text-sm text-zinc-400 w-48 truncate flex-shrink-0">
                     <Music className="w-3.5 h-3.5 flex-shrink-0" />
-                    {renderArtistLinks(track.channelTitle, track.channelId, "w-full")}
+                    <ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} extraClass="w-full" />
                   </div>
                   {track.views ? (
                     <div className="hidden md:block text-sm text-zinc-400 w-28 text-right flex-shrink-0">{track.views.replace(' views', ' plays')}</div>
