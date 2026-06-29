@@ -68,7 +68,7 @@ export default function ProfilePage() {
                 return {
                   id: id,
                   title: data.profile?.title || 'Unknown Artist',
-                  thumbnailUrl: data.profile?.thumbnailUrl || '',
+                  thumbnailUrl: data.profile?.avatarUrl || '',
                   subscribers: data.profile?.subscribers || ''
                 };
               }

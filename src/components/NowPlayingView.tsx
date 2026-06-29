@@ -880,7 +880,7 @@ const lyricsCache = new Map<string, any>();
                   <div className="bg-white/5 border border-white/10 p-4 rounded-xl space-y-4 shadow-lg">
                     <div className="flex items-center gap-4">
                       <img
-                        src={artistDetails.profile.thumbnailUrl   || undefined}
+                        src={artistDetails.profile.avatarUrl || undefined}
                         referrerPolicy="no-referrer"
                         alt=""
                         className="w-14 h-14 rounded-full object-cover border border-white/10"
