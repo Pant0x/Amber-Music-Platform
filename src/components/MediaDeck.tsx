@@ -204,6 +204,34 @@ export const MediaDeck: React.FC = () => {
     };
   }, [togglePlay, isMuted, volume, setVolume, progress.playedSeconds, duration, nextTrack, prevTrack, navigateBack, navigateForward]);
 
+  // Autoplay Unlocking: Browser security requires user interaction (click/tap) before playing audio
+  useEffect(() => {
+    const unlockAutoplay = () => {
+      if (isPlaying && playerRef.current && isReadyRef.current) {
+        const internal = playerRef.current.getInternalPlayer();
+        if (internal) {
+          if (typeof internal.playVideo === 'function') {
+            internal.playVideo();
+          } else if (typeof internal.play === 'function') {
+            internal.play().catch((e: any) => console.warn(e));
+          }
+        }
+      }
+      document.removeEventListener('click', unlockAutoplay);
+      document.removeEventListener('touchstart', unlockAutoplay);
+    };
+
+    if (isPlaying) {
+      document.addEventListener('click', unlockAutoplay);
+      document.addEventListener('touchstart', unlockAutoplay);
+    }
+
+    return () => {
+      document.removeEventListener('click', unlockAutoplay);
+      document.removeEventListener('touchstart', unlockAutoplay);
+    };
+  }, [isPlaying]);
+
   useEffect(() => {
     if (showNowPlaying && playbackMode === 'video') {
       const updateRect = () => {
@@ -457,6 +485,18 @@ export const MediaDeck: React.FC = () => {
               }));
               setStorePlayedSeconds(trigger);
               setSeekTrigger(null);
+            }
+
+            // Attempt programmatical play to handle allowed browser autoplay scenarios
+            if (isPlaying && playerRef.current) {
+              const internal = playerRef.current.getInternalPlayer();
+              if (internal) {
+                if (typeof internal.playVideo === 'function') {
+                  internal.playVideo();
+                } else if (typeof internal.play === 'function') {
+                  internal.play().catch((e: any) => console.warn('[Autoplay Blocked]', e));
+                }
+              }
             }
           }}
           width="100%"
