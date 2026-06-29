@@ -5,6 +5,7 @@ import { Play, Pause, Shuffle, Disc, Heart } from 'lucide-react';
 import { TrackCover } from '../TrackCover';
 import { ExplicitBadge, ArtistLinks } from './shared';
 import { cleanVisualName } from '@/utils/text';
+import { AlbumCoverPlayOverlay } from '../AlbumCoverPlayOverlay';
 
 export const SearchView: React.FC = () => {
   const {
@@ -256,11 +257,7 @@ export const SearchView: React.FC = () => {
                       >
                         <div className="aspect-square rounded-lg overflow-hidden bg-[#1f1f1f] mb-2 shadow-md group-hover:shadow-xl transition-shadow relative">
                           <img src={album.thumbnailUrl || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
-                            <div className="w-10 h-10 rounded-full bg-[#ff0000] flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all shadow-lg">
-                              <Play className="w-4 h-4 fill-white text-white ml-0.5" />
-                            </div>
-                          </div>
+                          <AlbumCoverPlayOverlay item={album} />
                         </div>
                         <h4 className="text-xs font-semibold text-white truncate">{album.title}</h4>
                         <p className="text-[10px] text-zinc-500 truncate">
@@ -311,8 +308,9 @@ export const SearchView: React.FC = () => {
                         onClick={() => { setActiveTab('playlist'); setCurrentPlaylistId(pl.id); }}
                         className="group flex-shrink-0 w-[160px] cursor-pointer"
                       >
-                        <div className="aspect-square rounded-lg overflow-hidden bg-[#1f1f1f] mb-2 shadow-md group-hover:shadow-xl transition-shadow">
+                        <div className="aspect-square rounded-lg overflow-hidden bg-[#1f1f1f] mb-2 shadow-md group-hover:shadow-xl transition-shadow relative">
                           <img src={pl.thumbnailUrl || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover" />
+                          <AlbumCoverPlayOverlay item={pl} />
                         </div>
                         <h4 className="text-xs font-semibold text-white truncate">{pl.title}</h4>
                         <p className="text-[10px] text-zinc-500 truncate">{cleanVisualName(pl.channelTitle)}</p>
@@ -431,11 +429,7 @@ export const SearchView: React.FC = () => {
                 <div key={`alf-${album.id}`} onClick={() => { setActiveTab('playlist'); setCurrentPlaylistId(album.id); }} className="group cursor-pointer">
                   <div className="aspect-square rounded-lg overflow-hidden bg-[#1f1f1f] mb-2 shadow-md group-hover:shadow-xl transition-shadow relative">
                     <img src={album.thumbnailUrl || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
-                      <div className="w-10 h-10 rounded-full bg-[#ff0000] flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all shadow-lg">
-                        <Play className="w-4 h-4 fill-white text-white ml-0.5" />
-                      </div>
-                    </div>
+                    <AlbumCoverPlayOverlay item={album} />
                   </div>
                   <h4 className="text-sm font-semibold text-white truncate">{album.title}</h4>
                   <p className="text-[10px] text-zinc-500 truncate">{album.releaseType || 'Album'} • {cleanVisualName(album.channelTitle)}{album.isExplicit && <ExplicitBadge />}</p>
@@ -450,8 +444,9 @@ export const SearchView: React.FC = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {searchPlaylists.map(pl => (
                 <div key={`plf-${pl.id}`} onClick={() => { setActiveTab('playlist'); setCurrentPlaylistId(pl.id); }} className="group cursor-pointer">
-                  <div className="aspect-square rounded-lg overflow-hidden bg-[#1f1f1f] mb-2 shadow-md group-hover:shadow-xl transition-shadow">
+                  <div className="aspect-square rounded-lg overflow-hidden bg-[#1f1f1f] mb-2 shadow-md group-hover:shadow-xl transition-shadow relative">
                     <img src={pl.thumbnailUrl || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover" />
+                    <AlbumCoverPlayOverlay item={pl} />
                   </div>
                   <h4 className="text-sm font-semibold text-white truncate">{pl.title}</h4>
                   <p className="text-[10px] text-zinc-500 truncate">{cleanVisualName(pl.channelTitle)}</p>

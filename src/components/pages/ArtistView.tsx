@@ -5,6 +5,7 @@ import { Play, Pause, Shuffle, Disc, Heart, Compass, Radio, Check, Clock, Music,
 import { TrackCover } from '../TrackCover';
 import { ExplicitBadge, ArtistLinks, Carousel } from './shared';
 import { cleanVisualName } from '@/utils/text';
+import { AlbumCoverPlayOverlay } from '../AlbumCoverPlayOverlay';
 
 export const ArtistView: React.FC = () => {
   const {
@@ -270,6 +271,7 @@ export const ArtistView: React.FC = () => {
                     <div className="relative aspect-square w-full rounded-sm overflow-hidden mb-2 bg-[#1f1f1f]">
                       <img src={album.thumbnailUrl || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                      <AlbumCoverPlayOverlay item={album} />
                     </div>
                     <h4 className="text-sm text-white truncate">{album.title}</h4>
                     <p className="text-[11px] text-zinc-400 truncate mt-0.5" title={album.channelTitle}>{cleanVisualName(album.channelTitle)}</p>
@@ -308,6 +310,7 @@ export const ArtistView: React.FC = () => {
                     <div className="relative aspect-square w-full rounded-sm overflow-hidden mb-2 bg-[#1f1f1f]">
                       <img src={album.thumbnailUrl || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                      <AlbumCoverPlayOverlay item={album} />
                     </div>
                     <h4 className="text-sm text-white truncate">{album.title}</h4>
                     <p className="text-[11px] text-zinc-400 truncate mt-0.5" title={album.channelTitle}>{cleanVisualName(album.channelTitle)}</p>
@@ -335,6 +338,7 @@ export const ArtistView: React.FC = () => {
                     <div className="relative aspect-square w-full rounded-sm overflow-hidden mb-2 bg-[#1f1f1f]">
                       <img src={album.thumbnailUrl || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                      <AlbumCoverPlayOverlay item={album} />
                     </div>
                     <h4 className="text-sm text-white truncate">{album.title}</h4>
                     <p className="text-[11px] text-zinc-400 truncate mt-0.5" title={album.channelTitle}>{cleanVisualName(album.channelTitle)}</p>
@@ -561,6 +565,7 @@ export const ArtistView: React.FC = () => {
                     className="group cursor-pointer">
                     <div className="relative aspect-square w-full rounded-sm overflow-hidden mb-2 bg-[#1f1f1f]">
                       <img src={album.thumbnailUrl || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <AlbumCoverPlayOverlay item={album} />
                     </div>
                     <h4 className="text-sm text-white truncate">{album.title}</h4>
                     <p className="text-xs text-zinc-400 truncate mt-0.5" title={album.channelTitle}>{cleanVisualName(album.channelTitle)}</p>

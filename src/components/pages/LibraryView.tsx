@@ -1,6 +1,7 @@
 import React from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { Heart, Music } from 'lucide-react';
+import { AlbumCoverPlayOverlay } from '../AlbumCoverPlayOverlay';
 
 export const LibraryView: React.FC = () => {
   const {
@@ -24,10 +25,11 @@ export const LibraryView: React.FC = () => {
               setActiveTab('liked');
               setCurrentPlaylistId(null);
             }}
-            className="group bg-[#0d0d0d] hover:bg-[#1a1a1a] p-4 rounded-lg transition-all duration-200 cursor-pointer shadow-lg relative"
+            className="group bg-[#0d0d0d] hover:bg-[#1a1a1a] p-4 rounded-lg transition-all duration-200 cursor-pointer shadow-lg relative border border-white/5"
           >
-            <div className="aspect-square w-full rounded bg-gradient-to-br from-[#ff0000] to-[#b30000] flex items-center justify-center mb-3">
+            <div className="aspect-square w-full rounded bg-gradient-to-br from-[#ff0000] to-[#b30000] flex items-center justify-center mb-3 relative overflow-hidden">
               <Heart className="w-12 h-12 text-white fill-current" />
+              <AlbumCoverPlayOverlay item={{ id: 'liked', title: 'Liked Music', type: 'playlist' }} contextTracks={likedTracks} />
             </div>
             <h4 className="text-xs font-bold text-white truncate mb-0.5">Liked Music</h4>
             <p className="text-[10px] text-zinc-400">Playlist • {likedTracks.length} songs</p>
@@ -43,8 +45,9 @@ export const LibraryView: React.FC = () => {
               }}
               className="group bg-[#0d0d0d] hover:bg-[#1a1a1a] p-4 rounded-lg transition-all duration-200 cursor-pointer shadow-lg relative border border-white/5"
             >
-              <div className="aspect-square w-full rounded bg-[#1f1f1f] flex items-center justify-center mb-3">
+              <div className="aspect-square w-full rounded bg-[#1f1f1f] flex items-center justify-center mb-3 relative overflow-hidden">
                 <Music className="w-10 h-10 text-zinc-600" />
+                <AlbumCoverPlayOverlay item={{ id: pl.id, title: pl.name, type: 'playlist' }} contextTracks={pl.tracks} />
               </div>
               <h4 className="text-xs font-bold text-white truncate mb-0.5">{pl.name}</h4>
               <p className="text-[10px] text-zinc-400">Playlist • {pl.tracks.length} songs</p>
