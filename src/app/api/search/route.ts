@@ -75,6 +75,102 @@ export async function GET(request: Request) {
       communityPlaylists: ytMusicData.communityPlaylists?.slice(0, 10) || []
     }));
   };
+  // SerpApi YouTube search fallback
+  const runSerpApiSearch = async () => {
+    const serpApiKey = process.env.SERPAPI_API_KEY;
+    if (!serpApiKey) {
+      return await runYoutubeSearchFallback();
+    }
+
+    console.log('[Search API] Querying SerpApi for search results...');
+    try {
+      const url = `https://serpapi.com/search.json?engine=youtube&search_query=${encodeURIComponent(query)}&api_key=${serpApiKey}`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error(`SerpApi response not ok: ${res.status}`);
+      }
+      const data = await res.json();
+
+      // Map SerpApi video_results to songs/videos
+      const songs = (data.video_results || []).map((v: any) => {
+        const id = v.video_id || '';
+        return {
+          id,
+          title: v.title,
+          channelTitle: v.channel?.name || 'Unknown Channel',
+          thumbnailUrl: v.thumbnail?.static || v.thumbnail || '',
+          publishedAt: v.published_date || new Date().toISOString(),
+          type: 'music',
+          origin: 'youtube',
+          playbackMode: 'song',
+          artistId: v.channel?.link?.split('/channel/')?.[1] || v.channel?.link?.split('/@')?.[1] || '',
+          channelId: v.channel?.link?.split('/channel/')?.[1] || v.channel?.link?.split('/@')?.[1] || '',
+          duration: v.length || '3:30',
+          isExplicit: false
+        };
+      });
+
+      // Map SerpApi channel_results to artists
+      const artists = (data.channel_results || []).map((c: any) => {
+        const id = c.channel_id || c.link?.split('/channel/')?.[1] || c.link?.split('/@')?.[1] || c.handle || '';
+        return {
+          id,
+          title: c.title,
+          channelTitle: 'Artist',
+          thumbnailUrl: c.thumbnail || '',
+          subtitle: c.subscribers ? `${c.subscribers.toLocaleString()} subscribers` : 'Artist',
+          publishedAt: new Date().toISOString(),
+          type: 'channel',
+          origin: 'youtube',
+          channelId: id
+        };
+      });
+
+      // Map SerpApi playlist_results to albums/communityPlaylists
+      const albums = (data.playlist_results || []).map((p: any) => {
+        const id = p.playlist_id || p.link?.split('list=')?.[1] || '';
+        return {
+          id,
+          title: p.title,
+          channelTitle: p.channel?.name || 'YouTube Playlist',
+          thumbnailUrl: p.thumbnail || '',
+          publishedAt: new Date().toISOString(),
+          type: 'playlist',
+          releaseType: 'Playlist',
+          origin: 'youtube',
+          artistId: p.channel?.link?.split('/channel/')?.[1] || p.channel?.link?.split('/@')?.[1] || ''
+        };
+      });
+
+      // Construct a top result: prefer the first artist/channel or the first video/song
+      let topResult = null;
+      if (artists.length > 0) {
+        topResult = {
+          ...artists[0],
+          resultType: 'artist'
+        };
+      } else if (songs.length > 0) {
+        topResult = {
+          ...songs[0],
+          resultType: 'song',
+          type: 'song'
+        };
+      }
+
+      return NextResponse.json(cleanTopicGlobally({
+        topResult,
+        songs: songs.slice(0, 20),
+        videos: songs.slice(0, 10).map((s: any) => ({ ...s, playbackMode: 'video' })), // map some songs to videos for tab display
+        artists: artists.slice(0, 10),
+        albums: albums.slice(0, 10),
+        communityPlaylists: albums.slice(0, 10)
+      }));
+
+    } catch (err) {
+      console.error('[Search API] SerpApi search error:', err);
+      return await runYoutubeSearchFallback();
+    }
+  };
 
   try {
     const spotifyApi = await getSpotifyApi();
@@ -88,6 +184,9 @@ export async function GET(request: Request) {
     // Check if Spotify search failed completely
     if (spotifyRes.status === 'rejected') {
       console.error('[Search API] Spotify search failed:', spotifyRes.reason);
+      if (process.env.SERPAPI_API_KEY) {
+        return await runSerpApiSearch();
+      }
       return await runYoutubeSearchFallback();
     }
 
@@ -289,6 +388,9 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('[Search API] Outer error, triggering YouTube search fallback:', error);
     try {
+      if (process.env.SERPAPI_API_KEY) {
+        return await runSerpApiSearch();
+      }
       return await runYoutubeSearchFallback();
     } catch (fallbackError) {
       console.error('[Search API] Fallback failed:', fallbackError);

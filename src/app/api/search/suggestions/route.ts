@@ -11,6 +11,24 @@ export async function GET(request: Request) {
       return NextResponse.json([]);
     }
 
+    const serpApiKey = process.env.SERPAPI_API_KEY;
+    if (serpApiKey) {
+      console.log('[Suggestions API] Querying SerpApi for autocomplete suggestions...');
+      try {
+        const url = `https://serpapi.com/search.json?engine=google_autocomplete&client=youtube&q=${encodeURIComponent(query.trim())}&api_key=${serpApiKey}`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.suggestions && Array.isArray(data.suggestions)) {
+            const list = data.suggestions.map((s: any) => s.value);
+            return NextResponse.json(list.slice(0, 8));
+          }
+        }
+      } catch (err) {
+        console.error('[Suggestions API] SerpApi suggestions call failed:', err);
+      }
+    }
+
     const suggestUrl = `https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=${encodeURIComponent(query.trim())}`;
     
     const res = await fetch(suggestUrl, {
