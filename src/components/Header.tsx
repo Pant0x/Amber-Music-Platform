@@ -318,7 +318,10 @@ export const Header: React.FC = () => {
         </button>
 
         <div
-          onClick={() => setShowProfileModal(true)}
+          onClick={() => {
+            setShowNowPlaying(false);
+            router.push('/profile');
+          }}
           className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold cursor-pointer hover:scale-105 transition-transform uppercase select-none relative overflow-hidden shadow-md ${
             avatarUrl && avatarUrl.startsWith('bg-') ? avatarUrl : 'bg-[#0055ff]'
           }`}
@@ -331,137 +334,6 @@ export const Header: React.FC = () => {
           )}
         </div>
       </div>
-
-      {/* Profile Name Edit Modal */}
-      {showProfileModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
-          <div className="bg-[#161616] border border-white/10 p-6 rounded-2xl w-full max-w-md shadow-2xl relative select-none max-h-[90vh] overflow-y-auto custom-scrollbar">
-            <button
-              onClick={() => {
-                setShowProfileModal(false);
-                setTempAvatarUrl(avatarUrl);
-              }}
-              className="absolute right-4 top-4 text-zinc-400 hover:text-white transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-            
-            <h3 className="text-base font-bold text-white mb-1">Listener Profile</h3>
-            <p className="text-xs text-zinc-500 mb-6">Your profile is synchronized based on your IP address.</p>
-            
-            <div className="space-y-5">
-              {/* Profile Avatar Preview */}
-              <div className="flex flex-col items-center gap-2 pb-2">
-                <div className={`w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-bold uppercase shadow-lg border border-white/5 relative overflow-hidden ${
-                  tempAvatarUrl && tempAvatarUrl.startsWith('bg-') ? tempAvatarUrl : 'bg-[#0055ff]'
-                }`}>
-                  {tempAvatarUrl && (tempAvatarUrl.startsWith('http') || tempAvatarUrl.startsWith('/')) ? (
-                    <img src={tempAvatarUrl} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    newName ? newName.charAt(0) : 'A'
-                  )}
-                </div>
-                <span className="text-xs text-zinc-400 font-semibold">{newName || 'Anonymous Listener'}</span>
-              </div>
-
-              {/* Display Name Input */}
-              <div>
-                <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Display Name</label>
-                <input
-                  type="text"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  maxLength={25}
-                  placeholder="Enter listener name..."
-                  className="w-full bg-[#222] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20 placeholder-zinc-500 font-medium"
-                />
-              </div>
-
-              {/* Avatar Selection */}
-              <div>
-                <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Choose Avatar Color</label>
-                <div className="flex items-center gap-3">
-                  {[
-                    'bg-gradient-to-tr from-blue-600 to-indigo-900',
-                    'bg-gradient-to-tr from-orange-500 to-red-600',
-                    'bg-gradient-to-tr from-purple-600 to-pink-600',
-                    'bg-gradient-to-tr from-green-500 to-teal-700',
-                    'bg-gradient-to-tr from-amber-500 to-yellow-600'
-                  ].map((grad) => (
-                    <button
-                      key={grad}
-                      onClick={() => setTempAvatarUrl(grad)}
-                      className={`w-8 h-8 rounded-full transition-transform active:scale-95 border-2 ${grad} ${
-                        tempAvatarUrl === grad ? 'border-white scale-110' : 'border-transparent hover:scale-105'
-                      }`}
-                      aria-label="Select gradient avatar"
-                    />
-                  ))}
-                </div>
-                <div className="mt-3">
-                  <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Or paste custom image URL</label>
-                  <input
-                    type="text"
-                    value={tempAvatarUrl && tempAvatarUrl.startsWith('bg-') ? '' : tempAvatarUrl}
-                    onChange={(e) => setTempAvatarUrl(e.target.value)}
-                    placeholder="https://example.com/avatar.jpg"
-                    className="w-full bg-[#222] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-white/20 placeholder-zinc-650 font-medium"
-                  />
-                </div>
-              </div>
-
-              {/* Listener Stats */}
-              <div className="bg-white/5 border border-white/5 rounded-xl p-4 space-y-3">
-                <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-white/5 pb-2">Listener Statistics</h4>
-                <div className="grid grid-cols-2 gap-3 text-center">
-                  <div className="bg-black/20 p-2 rounded-lg border border-white/5">
-                    <span className="block text-lg font-bold text-white leading-none">{likedTracks?.length || 0}</span>
-                    <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider">Liked tracks</span>
-                  </div>
-                  <div className="bg-black/20 p-2 rounded-lg border border-white/5">
-                    <span className="block text-lg font-bold text-white leading-none">{subscribedChannels?.length || 0}</span>
-                    <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider">Subscriptions</span>
-                  </div>
-                  <div className="bg-black/20 p-2 rounded-lg border border-white/5">
-                    <span className="block text-lg font-bold text-white leading-none">{playlists?.length || 0}</span>
-                    <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider">Playlists</span>
-                  </div>
-                  <div className="bg-black/20 p-2 rounded-lg border border-white/5">
-                    <span className="block text-lg font-bold text-white leading-none">{history?.length || 0}</span>
-                    <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider">Songs listened</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Modal Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-2">
-                <button
-                  onClick={() => {
-                    setShowProfileModal(false);
-                    setTempAvatarUrl(avatarUrl);
-                  }}
-                  className="px-4 py-2 text-xs font-bold text-zinc-400 hover:text-white transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    const trimmed = newName.trim();
-                    if (trimmed) {
-                      setDisplayName(trimmed);
-                      setAvatarUrl(tempAvatarUrl);
-                      setShowProfileModal(false);
-                    }
-                  }}
-                  className="px-4 py-2 bg-white text-black hover:bg-zinc-200 rounded-full text-xs font-bold transition-all"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
     </header>
   );

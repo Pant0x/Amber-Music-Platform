@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Home, Compass, Library, Plus, Music, Heart } from 'lucide-react';
+import { Home, Compass, Library, Plus, Music, Heart, User } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { usePlayerStore } from '@/store/usePlayerStore';
 
@@ -63,6 +63,15 @@ export const Sidebar: React.FC = () => {
         >
           <Library className="w-5 h-5" />
           Library
+        </button>
+        <button
+          onClick={() => { setShowNowPlaying(false); router.push('/profile'); }}
+          className={`flex items-center gap-4 px-4 py-2.5 rounded-lg text-sm transition-colors duration-150 hover:bg-[#1a1a1a] hover:text-white ${
+            pathname === '/profile' ? 'bg-[#1a1a1a] text-white font-bold' : ''
+          }`}
+        >
+          <User className="w-5 h-5" />
+          My Profile
         </button>
       </nav>
 
