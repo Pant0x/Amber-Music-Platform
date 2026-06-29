@@ -297,8 +297,12 @@ const lyricsCache = new Map<string, any>();
           
           {playbackMode === 'song' ? (
             /* Song Mode Cover Art Canvas */
-            <div className="w-full flex flex-col items-center justify-center animate-fade-in">
-              <div className="relative w-[70vw] h-[70vw] sm:w-[50vw] sm:h-[50vw] lg:w-[380px] lg:h-[380px] aspect-square rounded-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] overflow-hidden bg-zinc-900 border border-white/10 group">
+            <div className="w-full flex flex-col items-center justify-center animate-fade-in relative">
+              {/* Backglow Ambient Neon Effect */}
+              <div className="absolute w-[280px] h-[280px] rounded-full bg-[#ff0000]/20 blur-[80px] pointer-events-none -translate-x-8 -translate-y-8 animate-pulse z-0" />
+              <div className="absolute w-[280px] h-[280px] rounded-full bg-[#0055ff]/15 blur-[80px] pointer-events-none translate-x-8 translate-y-8 animate-pulse z-0" />
+
+              <div className="relative w-[70vw] h-[70vw] sm:w-[50vw] sm:h-[50vw] lg:w-[380px] lg:h-[380px] aspect-square rounded-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] neon-border-glow overflow-hidden bg-zinc-900 border border-white/10 group z-10">
                 <img
                   src={upgradeThumbnailUrl(currentTrack.thumbnailUrl)   || undefined}
                   referrerPolicy="no-referrer"

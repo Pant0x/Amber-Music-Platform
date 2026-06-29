@@ -354,10 +354,57 @@ export const MainDashboard: React.FC = () => {
     }
   };
 
+  const renderTrackCover = (track: Track, contextTracks: Track[], sizeClass = "w-12 h-12 rounded shadow") => {
+    const isActive = currentTrack?.id === track.id;
+    const isCurrentPlaying = isActive && isPlaying;
+
+    return (
+      <div className={`relative ${sizeClass} overflow-hidden group/cover flex-shrink-0 bg-zinc-900 border border-white/5`}>
+        <img 
+          src={track.thumbnailUrl || undefined} 
+          referrerPolicy="no-referrer" 
+          alt="" 
+          className="w-full h-full object-cover transition-transform duration-300 group-hover/cover:scale-105" 
+        />
+        <div 
+          onClick={(e) => {
+            e.stopPropagation();
+            if (isActive) {
+              togglePlay();
+            } else {
+              handlePlayAction(track, contextTracks);
+            }
+          }}
+          className={`absolute inset-0 bg-black/45 flex items-center justify-center transition-all duration-200 cursor-pointer ${
+            isActive ? 'opacity-100' : 'opacity-0 group-hover/cover:opacity-100'
+          }`}
+        >
+          {isCurrentPlaying ? (
+            <div className="flex items-center gap-0.75 h-4 justify-center">
+              <span className="w-0.75 h-3 bg-[#ff0000] rounded-full animate-bounce-slow" />
+              <span className="w-0.75 h-4.5 bg-[#ff0000] rounded-full animate-bounce-normal" />
+              <span className="w-0.75 h-2.5 bg-[#ff0000] rounded-full animate-bounce-fast" />
+              <div className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center rounded">
+                <Pause className="w-5 h-5 fill-current text-white" />
+              </div>
+            </div>
+          ) : isActive ? (
+            <Play className="w-5 h-5 fill-current text-[#ff0000]" />
+          ) : (
+            <Play className="w-5 h-5 fill-current text-white ml-0.5" />
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const activePlaylist = activeTab === 'playlist' ? playlists.find(p => p.id === currentPlaylistId) : null;
 
   return (
-    <div className="flex-1 overflow-y-auto px-6 py-6 pb-32 select-none bg-[#030303] custom-scrollbar">
+    <div className="flex-1 overflow-y-auto px-6 py-6 pb-32 select-none bg-[#030303] custom-scrollbar relative">
+      {/* Dynamic Ambient Background Lights */}
+      <div className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] rounded-full bg-[#ff0000]/5 blur-[120px] pointer-events-none z-0" />
+      <div className="absolute bottom-[20%] right-[10%] w-[600px] h-[600px] rounded-full bg-[#0055ff]/4 blur-[150px] pointer-events-none z-0" />
       
       {/* VIEW A: HOME VIEW */}
       {activeTab === 'home' && (
@@ -429,22 +476,7 @@ export const MainDashboard: React.FC = () => {
                               isActive ? 'bg-white/5' : ''
                             }`}
                           >
-                            <div className="relative w-12 h-12 flex-shrink-0 rounded overflow-hidden shadow">
-                              <img src={track.thumbnailUrl   || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover" />
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handlePlayAction(track, recommendations);
-                                }}
-                                className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
-                              >
-                                {isCurrentPlaying ? (
-                                  <Pause className="w-5 h-5 fill-current text-[#ff0000]" />
-                                ) : (
-                                  <Play className="w-5 h-5 fill-current ml-0.5 text-white" />
-                                )}
-                              </button>
-                            </div>
+                            {renderTrackCover(track, recommendations, "w-12 h-12 rounded")}
                             
                             <div className="min-w-0 flex-1">
                               <p className={`text-xs font-bold truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
@@ -477,22 +509,7 @@ export const MainDashboard: React.FC = () => {
                     onClick={() => handlePlayAction(track, history)}
                     className="group bg-[#0d0d0d] hover:bg-[#1a1a1a] p-3 rounded-lg transition-all duration-200 cursor-pointer relative shadow-lg flex-shrink-0 w-36 sm:w-44 snap-start border border-white/5"
                   >
-                    <div className="relative aspect-square w-full rounded-md mb-3 overflow-hidden bg-[#1f1f1f]">
-                      <img src={track.thumbnailUrl   || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover" />
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlePlayAction(track, history);
-                        }}
-                        className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-[#ff0000] text-white shadow-xl flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200 hover:scale-105 z-10"
-                      >
-                        {isPlaying && currentTrack?.id === track.id ? (
-                          <Pause className="w-3.5 h-3.5 fill-current text-white" />
-                        ) : (
-                          <Play className="w-3.5 h-3.5 fill-current ml-0.5 text-white" />
-                        )}
-                      </button>
-                    </div>
+                      {renderTrackCover(track, history, "aspect-square w-full rounded-md mb-3")}
                     <h4 className="text-xs font-bold text-white truncate mb-0.5">{track.title}</h4>
                     <p className="text-[10px] text-zinc-400 truncate mt-0.5">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
                   </div>
@@ -512,22 +529,7 @@ export const MainDashboard: React.FC = () => {
                     onClick={() => handlePlayAction(track, recommendations)}
                     className="group bg-[#0d0d0d] hover:bg-[#1a1a1a] p-3 rounded-lg transition-all duration-200 cursor-pointer relative shadow-lg flex-shrink-0 w-36 sm:w-44 snap-start border border-white/5"
                   >
-                    <div className="relative aspect-square w-full rounded-md mb-3 overflow-hidden bg-[#1f1f1f]">
-                      <img src={track.thumbnailUrl   || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover" />
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlePlayAction(track, recommendations);
-                        }}
-                        className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-[#ff0000] text-white shadow-xl flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200 hover:scale-105 z-10"
-                      >
-                        {isPlaying && currentTrack?.id === track.id ? (
-                          <Pause className="w-3.5 h-3.5 fill-current text-white" />
-                        ) : (
-                          <Play className="w-3.5 h-3.5 fill-current ml-0.5 text-white" />
-                        )}
-                      </button>
-                    </div>
+                      {renderTrackCover(track, recommendations, "aspect-square w-full rounded-md mb-3")}
                     <h4 className="text-xs font-bold text-white truncate mb-0.5">{track.title}</h4>
                     <p className="text-[10px] text-zinc-400 truncate mt-0.5">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
                   </div>
@@ -560,22 +562,7 @@ export const MainDashboard: React.FC = () => {
                         onClick={() => handlePlayAction(track, exploreNewReleases)}
                         className="group bg-[#0d0d0d] hover:bg-[#1a1a1a] p-3 rounded-lg transition-all duration-200 cursor-pointer relative shadow-lg flex-shrink-0 w-36 sm:w-44 snap-start border border-white/5"
                       >
-                        <div className="relative aspect-square w-full rounded-md mb-3 overflow-hidden bg-[#1f1f1f]">
-                          <img src={track.thumbnailUrl   || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover" />
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handlePlayAction(track, exploreNewReleases);
-                            }}
-                            className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-[#ff0000] text-white shadow-xl flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200 hover:scale-105 z-10"
-                          >
-                            {isPlaying && currentTrack?.id === track.id ? (
-                              <Pause className="w-3.5 h-3.5 fill-current text-white" />
-                            ) : (
-                              <Play className="w-3.5 h-3.5 fill-current ml-0.5 text-white" />
-                            )}
-                          </button>
-                        </div>
+                          {renderTrackCover(track, exploreNewReleases, "aspect-square w-full rounded-md mb-3")}
                         <h4 className="text-xs font-bold text-white truncate mb-0.5">{track.title}</h4>
                         <p className="text-[10px] text-zinc-400 truncate mt-0.5">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
                       </div>
@@ -595,22 +582,7 @@ export const MainDashboard: React.FC = () => {
                         onClick={() => handlePlayAction(track, exploreCharts)}
                         className="group bg-[#0d0d0d] hover:bg-[#1a1a1a] p-3 rounded-lg transition-all duration-200 cursor-pointer relative shadow-lg flex-shrink-0 w-36 sm:w-44 snap-start border border-white/5"
                       >
-                        <div className="relative aspect-square w-full rounded-md mb-3 overflow-hidden bg-[#1f1f1f]">
-                          <img src={track.thumbnailUrl   || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover" />
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handlePlayAction(track, exploreCharts);
-                            }}
-                            className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-[#ff0000] text-white shadow-xl flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200 hover:scale-105 z-10"
-                          >
-                            {isPlaying && currentTrack?.id === track.id ? (
-                              <Pause className="w-3.5 h-3.5 fill-current text-white" />
-                            ) : (
-                              <Play className="w-3.5 h-3.5 fill-current ml-0.5 text-white" />
-                            )}
-                          </button>
-                        </div>
+                          {renderTrackCover(track, exploreCharts, "aspect-square w-full rounded-md mb-3")}
                         <h4 className="text-xs font-bold text-white truncate mb-0.5">{track.title}</h4>
                         <p className="text-[10px] text-zinc-400 truncate mt-0.5">{renderArtistLinks(track.channelTitle, track.channelId)}</p>
                       </div>
@@ -737,7 +709,7 @@ export const MainDashboard: React.FC = () => {
                               onDoubleClick={() => handlePlayAction(track, searchSongs)}
                               className={`group/row flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition-colors ${isActive ? 'bg-white/5' : ''}`}
                             >
-                              <img src={track.thumbnailUrl   || undefined} referrerPolicy="no-referrer" alt="" className="w-10 h-10 object-cover rounded bg-[#1f1f1f] flex-shrink-0" />
+                              {renderTrackCover(track, searchSongs, "w-10 h-10 rounded")}
                               <div className="min-w-0 flex-1">
                                 <p className={`text-sm font-medium truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
                                   {track.title}
@@ -908,7 +880,7 @@ export const MainDashboard: React.FC = () => {
                         {isCurrentPlaying ? <Pause className="w-4 h-4 fill-current text-[#ff0000]" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
                       </button>
                     </div>
-                    <img src={track.thumbnailUrl   || undefined} referrerPolicy="no-referrer" alt="" className="w-10 h-10 object-cover rounded bg-[#1f1f1f] flex-shrink-0" />
+                    {renderTrackCover(track, searchSongs, "w-10 h-10 rounded")}
                     <div className="min-w-0 flex-1">
                       <p className={`text-sm font-semibold truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
                         {track.title}{track.isExplicit && <ExplicitBadge />}
@@ -1118,12 +1090,7 @@ export const MainDashboard: React.FC = () => {
                         </button>
                       </div>
 
-                      <img
-                        src={track.thumbnailUrl   || undefined}
-                        referrerPolicy="no-referrer"
-                        alt=""
-                        className="w-10 h-10 object-cover rounded bg-[#1f1f1f] flex-shrink-0"
-                      />
+                      {renderTrackCover(track, activePlaylist.tracks, "w-10 h-10 rounded")}
 
                       <div className="min-w-0 flex-1">
                         <p className={`text-sm font-semibold truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
@@ -1270,12 +1237,7 @@ export const MainDashboard: React.FC = () => {
                         </button>
                       </div>
 
-                      <img
-                        src={track.thumbnailUrl   || undefined}
-                        referrerPolicy="no-referrer"
-                        alt=""
-                        className="w-10 h-10 object-cover rounded bg-[#1f1f1f] flex-shrink-0"
-                      />
+                      {renderTrackCover(track, ytPlaylistDetails.tracks, "w-10 h-10 rounded")}
 
                       <div className="min-w-0 flex-1">
                         <p className={`text-sm font-semibold truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
@@ -1387,12 +1349,7 @@ export const MainDashboard: React.FC = () => {
                       </button>
                     </div>
 
-                    <img
-                      src={track.thumbnailUrl   || undefined}
-                      referrerPolicy="no-referrer"
-                      alt=""
-                      className="w-10 h-10 object-cover rounded bg-[#1f1f1f] flex-shrink-0"
-                    />
+                    {renderTrackCover(track, likedTracks, "w-10 h-10 rounded")}
 
                     <div className="min-w-0 flex-1">
                       <p className={`text-sm font-semibold truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
@@ -1555,12 +1512,7 @@ export const MainDashboard: React.FC = () => {
                             onClick={() => handlePlayAction(track, currentChannelDetails.topSongs)}
                             className={`group/row flex items-center gap-4 px-2 py-2.5 rounded-sm hover:bg-white/5 transition-colors cursor-pointer ${isActive ? 'bg-white/5' : ''}`}
                           >
-                            <div className="relative w-12 h-12 flex-shrink-0 rounded overflow-hidden">
-                              <img src={track.thumbnailUrl   || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover" />
-                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/row:opacity-100 transition-opacity flex items-center justify-center">
-                                {isCurrentPlaying ? <Pause className="w-5 h-5 fill-current text-white" /> : <Play className="w-5 h-5 fill-current ml-0.5 text-white" />}
-                              </div>
-                            </div>
+                            {renderTrackCover(track, currentChannelDetails.topSongs, "w-12 h-12 rounded")}
                             <div className="min-w-0 flex-1">
                               <p className={`text-sm truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
                                 {track.title}
@@ -1801,7 +1753,7 @@ export const MainDashboard: React.FC = () => {
                           </button>
                         </div>
                         <div className="flex items-center gap-3 min-w-0 flex-1">
-                          <img src={track.thumbnailUrl   || undefined} referrerPolicy="no-referrer" alt="" className="w-10 h-10 object-cover rounded flex-shrink-0" />
+                          {renderTrackCover(track, currentChannelDetails.topSongs, "w-10 h-10 rounded")}
                           <p className={`text-sm truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>{track.title}</p>
                         </div>
                         <div className="hidden sm:flex items-center gap-2 text-sm text-zinc-400 w-48 truncate flex-shrink-0">
