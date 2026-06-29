@@ -80,13 +80,20 @@ export const MediaDeck: React.FC = () => {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
+  const isReadyRef = useRef(false);
+
+  // Reset ready state when track changes
+  useEffect(() => {
+    isReadyRef.current = false;
+  }, [currentTrack?.id]);
+
   const seekTrigger = usePlayerStore((s) => s.seekTrigger);
   const setSeekTrigger = usePlayerStore((s) => s.setSeekTrigger);
   const isMinimized = usePlayerStore((s) => s.isMinimized);
   const setIsMinimized = usePlayerStore((s) => s.setIsMinimized);
 
   useEffect(() => {
-    if (seekTrigger !== null && playerRef.current) {
+    if (seekTrigger !== null && playerRef.current && isReadyRef.current) {
       playerRef.current.seekTo(seekTrigger);
       setProgress((prev) => ({ 
         ...prev, 
@@ -438,6 +445,20 @@ export const MediaDeck: React.FC = () => {
             setStoreDuration(d);
           }}
           onEnded={handlePlayerEnded}
+          onReady={() => {
+            isReadyRef.current = true;
+            const trigger = usePlayerStore.getState().seekTrigger;
+            if (trigger !== null && playerRef.current) {
+              console.log(`[MediaDeck] Deferred initial seek to: ${trigger}s`);
+              playerRef.current.seekTo(trigger);
+              setProgress((prev) => ({
+                ...prev,
+                playedSeconds: trigger
+              }));
+              setStorePlayedSeconds(trigger);
+              setSeekTrigger(null);
+            }
+          }}
           width="100%"
           height="100%"
           controls={false}
