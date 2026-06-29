@@ -9,6 +9,9 @@ import { NowPlayingView } from '@/components/NowPlayingView';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { RouterRegister } from '@/components/RouterRegister';
 import { DatabaseSync } from '@/components/DatabaseSync';
+import { ShareResolver } from '@/components/ShareResolver';
+import { ShareModal } from '@/components/ShareModal';
+import { Suspense } from 'react';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -72,6 +75,10 @@ export default function RootLayout({
         <MediaDeck />
         <RouterRegister />
         <DatabaseSync />
+        <Suspense fallback={null}>
+          <ShareResolver />
+        </Suspense>
+        <ShareModal />
       </body>
     </html>
   );

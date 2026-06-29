@@ -19,7 +19,8 @@ import {
   Radio,
   User,
   Check,
-  ExternalLink
+  ExternalLink,
+  Share2
 } from 'lucide-react';
 
 const upgradeThumbnailUrl = (url: string | undefined): string => {
@@ -75,7 +76,8 @@ export const NowPlayingView: React.FC = () => {
     subscribedChannels,
     toggleSubscribeChannel,
     searchHistory,
-    selectedMood
+    selectedMood,
+    setShareTrack
   } = usePlayerStore();
 
   const [lyricsData, setLyricsData] = useState<{ lyrics: string; lines: { text: string; time: number }[]; isSynced?: boolean } | null>(null);
@@ -397,6 +399,13 @@ const lyricsCache = new Map<string, any>();
                   >
                     <ThumbsUp className={`w-5 h-5 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
                   </button>
+                  <button
+                    onClick={() => setShareTrack(currentTrack)}
+                    className="p-2 rounded-full hover:bg-white/5 text-zinc-400 hover:text-white transition-colors"
+                    title="Share Song"
+                  >
+                    <Share2 className="w-5 h-5" />
+                  </button>
                 </div>
               </div>
             </div>
@@ -494,6 +503,13 @@ const lyricsCache = new Map<string, any>();
                     title="Like"
                   >
                     <ThumbsUp className={`w-5 h-5 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+                  </button>
+                  <button
+                    onClick={() => setShareTrack(currentTrack)}
+                    className="p-2 rounded-full hover:bg-white/5 text-zinc-400 hover:text-white transition-colors"
+                    title="Share Song"
+                  >
+                    <Share2 className="w-5 h-5" />
                   </button>
                 </div>
               </div>

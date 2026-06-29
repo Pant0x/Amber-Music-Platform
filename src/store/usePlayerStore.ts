@@ -34,10 +34,12 @@ interface PlayerState {
   subscribedChannels: string[];
   displayName: string;
   avatarUrl: string;
+  shareTrack: Track | null;
 
   // Database / Sync Actions
   setDisplayName: (name: string) => void;
   setAvatarUrl: (url: string) => void;
+  setShareTrack: (track: Track | null) => void;
   fetchDatabaseData: () => Promise<void>;
 
   // Playback Actions
@@ -188,6 +190,7 @@ export const usePlayerStore = create<PlayerState>()(
       subscribedChannels: [],
       displayName: 'Anonymous Listener',
       avatarUrl: 'bg-gradient-to-tr from-blue-600 to-indigo-900',
+      shareTrack: null,
 
       // Queue Panel Initial State
       showQueuePanel: false,
@@ -366,6 +369,7 @@ export const usePlayerStore = create<PlayerState>()(
       // User Profile & DB Sync Actions
       setDisplayName: (name) => set({ displayName: name }),
       setAvatarUrl: (url) => set({ avatarUrl: url }),
+      setShareTrack: (track) => set({ shareTrack: track }),
       fetchDatabaseData: async () => {
         try {
           const res = await fetch('/api/user/sync');
