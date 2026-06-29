@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { HomeView } from '@/components/pages/HomeView';
+import { PlaylistView } from '@/components/pages/PlaylistView';
 import { usePlayerStore } from '@/store/usePlayerStore';
 
-export default function Home() {
+export default function LikedPage() {
   const { setActiveTab } = usePlayerStore();
 
   useEffect(() => {
-    setActiveTab('home');
+    setActiveTab('liked');
   }, [setActiveTab]);
 
-  return <HomeView />;
+  return <PlaylistView mode="liked" />;
 }

@@ -95,6 +95,8 @@ interface PlayerState {
   // Hydration state
   _hasHydrated: boolean;
   setHasHydrated: (state: boolean) => void;
+  router: any | null;
+  setRouter: (router: any) => void;
 }
 
 export const usePlayerStore = create<PlayerState>()(
@@ -106,6 +108,8 @@ export const usePlayerStore = create<PlayerState>()(
       volume: 0.8,
       queue: [],
       history: [],
+      router: null,
+      setRouter: (router) => set({ router }),
 
       // Navigation & Query Initial State
       activeTab: 'home',
@@ -291,16 +295,46 @@ export const usePlayerStore = create<PlayerState>()(
       setActiveTab: (activeTab) => {
         get().pushNavState(activeTab, get().currentPlaylistId, get().currentChannelId);
         set({ activeTab, showNowPlaying: false });
+        const router = get().router;
+        if (router && typeof window !== 'undefined') {
+          const currentPath = window.location.pathname;
+          let targetPath = '';
+          if (activeTab === 'home') targetPath = '/';
+          else if (activeTab === 'explore') targetPath = '/explore';
+          else if (activeTab === 'library') targetPath = '/library';
+          else if (activeTab === 'liked') targetPath = '/liked';
+          else if (activeTab === 'search') targetPath = '/search';
+          
+          if (targetPath && currentPath !== targetPath) {
+            router.push(targetPath);
+          }
+        }
       },
       setSearchQuery: (searchQuery) => set({ searchQuery }),
       setSelectedMood: (selectedMood) => set({ selectedMood }),
       setCurrentPlaylistId: (currentPlaylistId) => {
         get().pushNavState(get().activeTab, currentPlaylistId, get().currentChannelId);
         set({ currentPlaylistId, showNowPlaying: false });
+        const router = get().router;
+        if (currentPlaylistId && router && typeof window !== 'undefined') {
+          const currentPath = window.location.pathname;
+          const targetPath = `/playlist/${encodeURIComponent(currentPlaylistId)}`;
+          if (currentPath !== targetPath) {
+            router.push(targetPath);
+          }
+        }
       },
       setCurrentChannelId: (currentChannelId) => {
         get().pushNavState(get().activeTab, get().currentPlaylistId, currentChannelId);
         set({ currentChannelId, showNowPlaying: false });
+        const router = get().router;
+        if (currentChannelId && router && typeof window !== 'undefined') {
+          const currentPath = window.location.pathname;
+          const targetPath = `/artist/${encodeURIComponent(currentChannelId)}`;
+          if (currentPath !== targetPath) {
+            router.push(targetPath);
+          }
+        }
       },
 
       // Search History Actions
@@ -334,8 +368,13 @@ export const usePlayerStore = create<PlayerState>()(
         get().pushNavState('channel', null, idOrName);
         set({ activeTab: 'channel', currentChannelDetails: null, currentChannelId: idOrName });
         
-        if (typeof window !== 'undefined') {
-          window.history.pushState(null, '', `/artist/${encodeURIComponent(idOrName)}`);
+        const router = get().router;
+        if (router && typeof window !== 'undefined') {
+          const currentPath = window.location.pathname;
+          const targetPath = `/artist/${encodeURIComponent(idOrName)}`;
+          if (currentPath !== targetPath) {
+            router.push(targetPath);
+          }
         }
         
         await get().fetchChannelDetails(idOrName, isName);

@@ -1,24 +1,17 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Search, User, X, Play, Compass, Home, Library, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, X, Play, ChevronLeft, ChevronRight } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 export const Header: React.FC = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const {
-    activeTab,
-    setActiveTab,
     searchQuery,
     setSearchQuery,
-    addSearchQueryToHistory,
-    setCurrentPlaylistId,
-    setCurrentChannelId,
-    navHistory,
-    navForward,
-    navigateBack,
-    navigateForward
+    addSearchQueryToHistory
   } = usePlayerStore();
 
   const [mounted, setMounted] = useState(false);
@@ -27,9 +20,7 @@ export const Header: React.FC = () => {
   }, []);
 
   const handleLogoClick = () => {
-    setActiveTab('home');
-    setCurrentPlaylistId(null);
-    setCurrentChannelId(null);
+    router.push('/');
   };
 
   const handleSearchClear = () => {
@@ -60,26 +51,16 @@ export const Header: React.FC = () => {
           {mounted && (
             <>
               <button
-                onClick={navigateBack}
-                disabled={navHistory.length === 0}
-                className={`p-1.5 rounded-full transition-colors ${
-                  navHistory.length === 0 
-                    ? 'opacity-30 cursor-not-allowed text-zinc-600' 
-                    : 'hover:bg-white/10 text-zinc-400 hover:text-white'
-                }`}
+                onClick={() => router.back()}
+                className="p-1.5 rounded-full transition-colors hover:bg-white/10 text-zinc-400 hover:text-white"
                 title="Back"
                 aria-label="Back"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button
-                onClick={navigateForward}
-                disabled={navForward.length === 0}
-                className={`p-1.5 rounded-full transition-colors ${
-                  navForward.length === 0 
-                    ? 'opacity-30 cursor-not-allowed text-zinc-600' 
-                    : 'hover:bg-white/10 text-zinc-400 hover:text-white'
-                }`}
+                onClick={() => router.forward()}
+                className="p-1.5 rounded-full transition-colors hover:bg-white/10 text-zinc-400 hover:text-white"
                 title="Forward"
                 aria-label="Forward"
               >
@@ -99,10 +80,8 @@ export const Header: React.FC = () => {
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
-              if (activeTab !== 'search') {
-                setActiveTab('search');
-                setCurrentPlaylistId(null);
-                setCurrentChannelId(null);
+              if (pathname !== '/search') {
+                router.push('/search');
               }
             }}
             onKeyDown={handleSearchKeyDown}
@@ -125,9 +104,9 @@ export const Header: React.FC = () => {
         {/* Mobile Search Button */}
         <button
           onClick={() => {
-            setActiveTab('search');
-            setCurrentPlaylistId(null);
-            setCurrentChannelId(null);
+            if (pathname !== '/search') {
+              router.push('/search');
+            }
           }}
           className="p-2 text-zinc-400 hover:text-white md:hidden"
         >

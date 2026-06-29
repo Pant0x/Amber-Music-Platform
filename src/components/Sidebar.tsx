@@ -2,18 +2,17 @@
 
 import React from 'react';
 import { Home, Compass, Library, Plus, Music, Heart } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
 import { usePlayerStore } from '@/store/usePlayerStore';
 
 export const Sidebar: React.FC = () => {
+  const router = useRouter();
+  const pathname = usePathname();
+  
   const {
-    activeTab,
-    setActiveTab,
     playlists,
     likedTracks,
-    currentPlaylistId,
-    setCurrentPlaylistId,
-    createPlaylist,
-    setCurrentChannelId
+    createPlaylist
   } = usePlayerStore();
 
   const handlePlaylistCreate = () => {
@@ -24,20 +23,22 @@ export const Sidebar: React.FC = () => {
   };
 
   const navigateToTab = (tab: 'home' | 'explore' | 'library' | 'liked') => {
-    setActiveTab(tab);
-    setCurrentPlaylistId(null);
-    setCurrentChannelId(null);
+    if (tab === 'liked') {
+      router.push('/liked');
+    } else {
+      router.push(tab === 'home' ? '/' : `/${tab}`);
+    }
   };
 
   return (
-    <aside className="hidden md:flex w-[240px] bg-[#030303] flex flex-col gap-4 select-none h-full flex-shrink-0 text-zinc-400 font-semibold p-4 border-r border-white/5">
+    <aside className="hidden md:flex w-[240px] bg-[#030303] flex-col gap-4 select-none h-full flex-shrink-0 text-zinc-400 font-semibold p-4 border-r border-white/5">
       
       {/* 1. Main Navigation Items */}
       <nav className="flex flex-col gap-1">
         <button
           onClick={() => navigateToTab('home')}
           className={`flex items-center gap-4 px-4 py-2.5 rounded-lg text-sm transition-colors duration-150 hover:bg-[#1a1a1a] hover:text-white ${
-            activeTab === 'home' ? 'bg-[#1a1a1a] text-white font-bold' : ''
+            pathname === '/' ? 'bg-[#1a1a1a] text-white font-bold' : ''
           }`}
         >
           <Home className="w-5 h-5" />
@@ -46,7 +47,7 @@ export const Sidebar: React.FC = () => {
         <button
           onClick={() => navigateToTab('explore')}
           className={`flex items-center gap-4 px-4 py-2.5 rounded-lg text-sm transition-colors duration-150 hover:bg-[#1a1a1a] hover:text-white ${
-            activeTab === 'explore' ? 'bg-[#1a1a1a] text-white font-bold' : ''
+            pathname === '/explore' ? 'bg-[#1a1a1a] text-white font-bold' : ''
           }`}
         >
           <Compass className="w-5 h-5" />
@@ -55,7 +56,7 @@ export const Sidebar: React.FC = () => {
         <button
           onClick={() => navigateToTab('library')}
           className={`flex items-center gap-4 px-4 py-2.5 rounded-lg text-sm transition-colors duration-150 hover:bg-[#1a1a1a] hover:text-white ${
-            activeTab === 'library' ? 'bg-[#1a1a1a] text-white font-bold' : ''
+            pathname === '/library' ? 'bg-[#1a1a1a] text-white font-bold' : ''
           }`}
         >
           <Library className="w-5 h-5" />
@@ -82,7 +83,7 @@ export const Sidebar: React.FC = () => {
           <div
             onClick={() => navigateToTab('liked')}
             className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors duration-150 ${
-              activeTab === 'liked' ? 'bg-[#1a1a1a] text-white' : 'hover:bg-[#0d0d0d]'
+              pathname === '/liked' ? 'bg-[#1a1a1a] text-white font-bold' : 'hover:bg-[#0d0d0d]'
             }`}
           >
             <div className="w-9 h-9 rounded bg-gradient-to-br from-[#ff0000] to-[#b30000] flex items-center justify-center flex-shrink-0 shadow-md">
@@ -98,17 +99,15 @@ export const Sidebar: React.FC = () => {
 
           {/* User Custom Playlists */}
           {playlists.map((playlist) => {
-            const isCurrent = activeTab === 'playlist' && currentPlaylistId === playlist.id;
+            const isCurrent = pathname === `/playlist/${playlist.id}`;
             return (
               <div
                 key={playlist.id}
                 onClick={() => {
-                  setCurrentPlaylistId(playlist.id);
-                  setCurrentChannelId(null);
-                  setActiveTab('playlist');
+                  router.push(`/playlist/${playlist.id}`);
                 }}
                 className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors duration-150 ${
-                  isCurrent ? 'bg-[#1a1a1a] text-white' : 'hover:bg-[#0d0d0d]'
+                  isCurrent ? 'bg-[#1a1a1a] text-white font-bold' : 'hover:bg-[#0d0d0d]'
                 }`}
               >
                 <div className="w-9 h-9 rounded bg-[#1f1f1f] flex items-center justify-center flex-shrink-0 shadow-md border border-white/5">

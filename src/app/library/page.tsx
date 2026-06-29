@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { HomeView } from '@/components/pages/HomeView';
+import { LibraryView } from '@/components/pages/LibraryView';
 import { usePlayerStore } from '@/store/usePlayerStore';
 
-export default function Home() {
+export default function LibraryPage() {
   const { setActiveTab } = usePlayerStore();
 
   useEffect(() => {
-    setActiveTab('home');
+    setActiveTab('library');
   }, [setActiveTab]);
 
-  return <HomeView />;
+  return <LibraryView />;
 }

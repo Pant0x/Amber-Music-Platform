@@ -2,6 +2,7 @@ import React from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { cleanVisualName } from '@/utils/text';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export const ExplicitBadge = () => (
   <span className="inline-flex items-center justify-center bg-zinc-600/80 text-white text-[9px] font-bold px-1 py-0.5 rounded-sm mx-1.5 leading-none h-[14px]">
@@ -26,12 +27,12 @@ export const Carousel: React.FC<{ children: React.ReactNode; className?: string 
     const el = containerRef.current;
     if (el) {
       el.addEventListener('scroll', checkScroll);
-      setTimeout(checkScroll, 100);
-      const observer = new ResizeObserver(() => checkScroll());
-      observer.observe(el);
+      checkScroll();
+      // Wait for images to load
+      const timer = setTimeout(checkScroll, 500);
       return () => {
         el.removeEventListener('scroll', checkScroll);
-        observer.disconnect();
+        clearTimeout(timer);
       };
     }
   }, [children]);
@@ -48,28 +49,28 @@ export const Carousel: React.FC<{ children: React.ReactNode; className?: string 
   };
 
   return (
-    <div className="relative group/carousel w-full">
+    <div className="relative group/carousel">
       {showLeft && (
         <button
-          onClick={(e) => { e.stopPropagation(); scroll('left'); }}
-          className="absolute left-1 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/85 hover:bg-black text-white flex items-center justify-center border border-white/10 shadow-lg hover:scale-105 active:scale-95 transition-all opacity-0 group-hover/carousel:opacity-100 duration-200"
-          title="Scroll Left"
+          onClick={() => scroll('left')}
+          className="absolute left-[-16px] top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/80 hover:bg-black text-white flex items-center justify-center border border-white/10 opacity-0 group-hover/carousel:opacity-100 transition-opacity shadow-lg"
+          aria-label="Scroll left"
         >
-          <ChevronLeft className="w-5 h-5 text-zinc-300 hover:text-white" />
+          <ChevronLeft className="w-5 h-5" />
         </button>
       )}
       {showRight && (
         <button
-          onClick={(e) => { e.stopPropagation(); scroll('right'); }}
-          className="absolute right-1 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/85 hover:bg-black text-white flex items-center justify-center border border-white/10 shadow-lg hover:scale-105 active:scale-95 transition-all opacity-0 group-hover/carousel:opacity-100 duration-200"
-          title="Scroll Right"
+          onClick={() => scroll('right')}
+          className="absolute right-[-16px] top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/80 hover:bg-black text-white flex items-center justify-center border border-white/10 opacity-0 group-hover/carousel:opacity-100 transition-opacity shadow-lg"
+          aria-label="Scroll right"
         >
-          <ChevronRight className="w-5 h-5 text-zinc-300 hover:text-white" />
+          <ChevronRight className="w-5 h-5" />
         </button>
       )}
       <div
         ref={containerRef}
-        className={`flex overflow-x-auto no-scrollbar pb-2 w-full snap-x snap-mandatory ${className}`}
+        className={`flex overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar select-none ${className}`}
       >
         {children}
       </div>
@@ -88,7 +89,7 @@ export const ArtistLinks: React.FC<ArtistLinksProps> = ({
   channelId,
   extraClass = ""
 }) => {
-  const { viewChannel } = usePlayerStore();
+  const router = useRouter();
   const artistNames = channelTitle
     ? channelTitle.split(/,|\s+&\s+|\s+and\s+/i).map((n: string) => n.trim()).filter(Boolean)
     : [];
@@ -105,7 +106,7 @@ export const ArtistLinks: React.FC<ArtistLinksProps> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 const artistId = idx === 0 ? channelId : undefined;
-                viewChannel(cleanName, artistId);
+                router.push(`/artist/${encodeURIComponent(artistId || cleanName)}`);
               }}
               className="hover:underline hover:text-white cursor-pointer"
             >
