@@ -8,11 +8,12 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 export const MobileBottomNav: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
-  const { setActiveTab, setCurrentPlaylistId, setCurrentChannelId } = usePlayerStore();
+  const { setActiveTab, setCurrentPlaylistId, setCurrentChannelId, setShowNowPlaying } = usePlayerStore();
 
   const currentTab = pathname === '/' ? 'home' : pathname === '/explore' ? 'explore' : pathname === '/library' ? 'library' : '';
 
   const navigateToTab = (tab: 'home' | 'explore' | 'library') => {
+    setShowNowPlaying(false);
     setActiveTab(tab);
     setCurrentPlaylistId(null);
     setCurrentChannelId(null);

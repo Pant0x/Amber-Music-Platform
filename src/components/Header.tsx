@@ -11,7 +11,8 @@ export const Header: React.FC = () => {
   const {
     searchQuery,
     setSearchQuery,
-    addSearchQueryToHistory
+    addSearchQueryToHistory,
+    setShowNowPlaying
   } = usePlayerStore();
 
   const [mounted, setMounted] = useState(false);
@@ -20,6 +21,7 @@ export const Header: React.FC = () => {
   }, []);
 
   const handleLogoClick = () => {
+    setShowNowPlaying(false);
     router.push('/');
   };
 
@@ -81,6 +83,7 @@ export const Header: React.FC = () => {
             onChange={(e) => {
               setSearchQuery(e.target.value);
               if (pathname !== '/search') {
+                setShowNowPlaying(false);
                 router.push('/search');
               }
             }}
@@ -105,6 +108,7 @@ export const Header: React.FC = () => {
         <button
           onClick={() => {
             if (pathname !== '/search') {
+              setShowNowPlaying(false);
               router.push('/search');
             }
           }}

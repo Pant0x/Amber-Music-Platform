@@ -12,7 +12,8 @@ export const Sidebar: React.FC = () => {
   const {
     playlists,
     likedTracks,
-    createPlaylist
+    createPlaylist,
+    setShowNowPlaying
   } = usePlayerStore();
 
   const handlePlaylistCreate = () => {
@@ -23,6 +24,7 @@ export const Sidebar: React.FC = () => {
   };
 
   const navigateToTab = (tab: 'home' | 'explore' | 'library' | 'liked') => {
+    setShowNowPlaying(false);
     if (tab === 'liked') {
       router.push('/liked');
     } else {
@@ -104,6 +106,7 @@ export const Sidebar: React.FC = () => {
               <div
                 key={playlist.id}
                 onClick={() => {
+                  setShowNowPlaying(false);
                   router.push(`/playlist/${playlist.id}`);
                 }}
                 className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors duration-150 ${
