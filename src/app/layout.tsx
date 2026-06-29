@@ -8,6 +8,7 @@ import { QueuePanel } from '@/components/QueuePanel';
 import { NowPlayingView } from '@/components/NowPlayingView';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { RouterRegister } from '@/components/RouterRegister';
+import { DatabaseSync } from '@/components/DatabaseSync';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -70,6 +71,7 @@ export default function RootLayout({
         </div>
         <MediaDeck />
         <RouterRegister />
+        <DatabaseSync />
       </body>
     </html>
   );

@@ -32,6 +32,11 @@ interface PlayerState {
   searchHistory: string[];
   currentChannelDetails: any;
   subscribedChannels: string[];
+  displayName: string;
+
+  // Database / Sync Actions
+  setDisplayName: (name: string) => void;
+  fetchDatabaseData: () => Promise<void>;
 
   // Playback Actions
   playTrack: (track: Track, contextTracks?: Track[]) => void;
@@ -179,6 +184,7 @@ export const usePlayerStore = create<PlayerState>()(
       searchHistory: [],
       currentChannelDetails: null,
       subscribedChannels: [],
+      displayName: 'Anonymous Listener',
 
       // Queue Panel Initial State
       showQueuePanel: false,
@@ -354,6 +360,26 @@ export const usePlayerStore = create<PlayerState>()(
 
       clearSearchHistory: () => set({ searchHistory: [] }),
 
+      // User Profile & DB Sync Actions
+      setDisplayName: (name) => set({ displayName: name }),
+      fetchDatabaseData: async () => {
+        try {
+          const res = await fetch('/api/user/sync');
+          if (res.ok) {
+            const data = await res.json();
+            set({
+              displayName: data.display_name || 'Anonymous Listener',
+              likedTracks: data.liked_tracks || [],
+              subscribedChannels: data.subscribed_channels || [],
+              playlists: data.playlists || [],
+              history: data.history || []
+            });
+          }
+        } catch (err) {
+          console.error('[Store] Failed to fetch database data:', err);
+        }
+      },
+
       // YouTube Channel Details Actions
       fetchChannelDetails: async (idOrName, isName = false) => {
         try {
@@ -509,8 +535,9 @@ export const usePlayerStore = create<PlayerState>()(
         playlists: state.playlists,
         likedTracks: state.likedTracks,
         searchHistory: state.searchHistory,
-        subscribedChannels: state.subscribedChannels
-        ,isMinimized: state.isMinimized
+        subscribedChannels: state.subscribedChannels,
+        displayName: state.displayName,
+        isMinimized: state.isMinimized
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

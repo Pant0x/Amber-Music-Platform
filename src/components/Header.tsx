@@ -15,13 +15,22 @@ export const Header: React.FC = () => {
     addSearchQueryToHistory,
     removeSearchQueryFromHistory,
     clearSearchHistory,
-    setShowNowPlaying
+    setShowNowPlaying,
+    displayName,
+    setDisplayName
   } = usePlayerStore();
 
   const [mounted, setMounted] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [newName, setNewName] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Sync edit name state when displayName resolves
+  useEffect(() => {
+    setNewName(displayName || '');
+  }, [displayName]);
 
   useEffect(() => {
     setMounted(true);
@@ -277,10 +286,66 @@ export const Header: React.FC = () => {
           <Search className="w-5 h-5" />
         </button>
 
-        <div className="w-8 h-8 rounded-full bg-[#0055ff] flex items-center justify-center text-white text-sm font-bold cursor-pointer hover:scale-105 transition-transform">
-          G
+        <div
+          onClick={() => setShowProfileModal(true)}
+          className="w-8 h-8 rounded-full bg-[#0055ff] flex items-center justify-center text-white text-sm font-bold cursor-pointer hover:scale-105 transition-transform uppercase select-none"
+          title={`Profile: ${displayName || 'Anonymous Listener'}`}
+        >
+          {displayName ? displayName.charAt(0) : 'A'}
         </div>
       </div>
+
+      {/* Profile Name Edit Modal */}
+      {showProfileModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+          <div className="bg-[#161616] border border-white/10 p-6 rounded-2xl w-full max-w-sm shadow-2xl relative select-none">
+            <button
+              onClick={() => setShowProfileModal(false)}
+              className="absolute right-4 top-4 text-zinc-400 hover:text-white transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            
+            <h3 className="text-base font-bold text-white mb-1">Listener Profile</h3>
+            <p className="text-xs text-zinc-500 mb-4">Your preferences are automatically synchronized based on your IP address.</p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Display Name</label>
+                <input
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  maxLength={25}
+                  placeholder="Enter listener name..."
+                  className="w-full bg-[#222] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20 placeholder-zinc-500 font-medium"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  onClick={() => setShowProfileModal(false)}
+                  className="px-4 py-2 text-xs font-bold text-zinc-400 hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    const trimmed = newName.trim();
+                    if (trimmed) {
+                      setDisplayName(trimmed);
+                      setShowProfileModal(false);
+                    }
+                  }}
+                  className="px-4 py-2 bg-white text-black hover:bg-zinc-200 rounded-full text-xs font-bold transition-all"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </header>
   );
