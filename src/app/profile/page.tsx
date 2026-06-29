@@ -35,8 +35,7 @@ export default function ProfilePage() {
     currentTrack,
     setPlaying,
     addToQueue,
-    toggleLikeTrack,
-    setActiveTab
+    toggleLikeTrack
   } = usePlayerStore();
 
   const [isEditingName, setIsEditingName] = useState(false);
@@ -54,10 +53,6 @@ export default function ProfilePage() {
   useEffect(() => {
     setTempAvatar(avatarUrl);
   }, [avatarUrl]);
-
-  useEffect(() => {
-    setActiveTab('library'); // Map to library or similar highlight tab
-  }, [setActiveTab]);
 
   // Fetch Subscribed Channels detail (avatar/title)
   useEffect(() => {
