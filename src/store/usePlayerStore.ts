@@ -315,8 +315,7 @@ export const usePlayerStore = create<PlayerState>()(
       // YouTube Channel Details Actions
       fetchChannelDetails: async (idOrName, isName = false) => {
         try {
-          const param = isName ? `name=${encodeURIComponent(idOrName)}` : `id=${encodeURIComponent(idOrName)}`;
-          const res = await fetch(`/api/youtube/channel?${param}`);
+          const res = await fetch(`/api/youtube/channel/${encodeURIComponent(idOrName)}`);
           if (res.ok) {
             const data = await res.json();
             set({ 
@@ -334,16 +333,17 @@ export const usePlayerStore = create<PlayerState>()(
         const isName = !channelId;
         get().pushNavState('channel', null, idOrName);
         set({ activeTab: 'channel', currentChannelDetails: null, currentChannelId: idOrName });
+        
+        if (typeof window !== 'undefined') {
+          window.history.pushState(null, '', `/artist/${encodeURIComponent(idOrName)}`);
+        }
+        
         await get().fetchChannelDetails(idOrName, isName);
       },
 
       playArtistRadio: async (artistIdOrName) => {
         try {
-          const isYtId = artistIdOrName.startsWith('UC') || artistIdOrName.startsWith('FE') || artistIdOrName.startsWith('FEmusic');
-          const isSpotifyId = artistIdOrName.length === 22 && !isYtId;
-          const param = (isYtId || isSpotifyId) ? `id=${encodeURIComponent(artistIdOrName)}` : `name=${encodeURIComponent(artistIdOrName)}`;
-          
-          const res = await fetch(`/api/youtube/channel?${param}`);
+          const res = await fetch(`/api/youtube/channel/${encodeURIComponent(artistIdOrName)}`);
           if (res.ok) {
             const data = await res.json();
             const topSongs = (data.topSongs || []).slice(0, 20);

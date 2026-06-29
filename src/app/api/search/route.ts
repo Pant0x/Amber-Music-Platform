@@ -16,16 +16,55 @@ export async function GET(request: Request) {
   };
 
   // YouTube Music search fallback
+  // YouTube Music search fallback
   const runYoutubeSearchFallback = async () => {
     console.log('[Search API] Falling back to YouTube Music search...');
-    const data = await ytMusicSearch(getSearchQueryWithAudioSuffix(query));
+    const [ytMusicData, ytArtistsData] = await Promise.all([
+      ytMusicSearch(getSearchQueryWithAudioSuffix(query)),
+      ytMusicSearch(query)
+    ]);
+
+    let artists = ytArtistsData.artists || [];
+    const cleanQuery = query.toLowerCase().trim();
+    if (cleanQuery === 'fairuz' || cleanQuery === 'fairouz' || cleanQuery === 'fayrouz' || cleanQuery === 'فيروز') {
+      const hasLebanese = artists.some((a: any) => a.id === 'UCzixfFiEFMjhSB3R9UdUdsA');
+      if (!hasLebanese) {
+        artists.unshift({
+          id: 'UCzixfFiEFMjhSB3R9UdUdsA',
+          title: 'Fairuz',
+          channelTitle: 'Artist',
+          thumbnailUrl: 'https://yt3.googleusercontent.com/ZIONSAndglfiCvZdwa0CNCrUFWN6EUvhQxyY6MtqRzzuZQYeg27M80K0LAikAZkmWcTgbSXXkA=w1000-h1000-l90-rj',
+          subtitle: 'Legendary Lebanese Singer',
+          publishedAt: new Date().toISOString(),
+          type: 'channel',
+          origin: 'youtube',
+          channelId: 'UCzixfFiEFMjhSB3R9UdUdsA'
+        });
+      }
+      
+      const hasGerman = artists.some((a: any) => a.id === 'german-fairuz');
+      if (!hasGerman) {
+        artists.push({
+          id: 'german-fairuz',
+          title: 'Fairuz (DE)',
+          channelTitle: 'Artist',
+          thumbnailUrl: 'https://yt3.googleusercontent.com/r-nlAuthMmcTD_7SWnkTM0b60SyLjCD7IbWje50Da6lPquj0kEG5cDLabupRrnufiV4muhbbvwgkURv14w=w1000-h1000-l90-rj',
+          subtitle: 'German Pop/Rapper',
+          publishedAt: new Date().toISOString(),
+          type: 'channel',
+          origin: 'youtube',
+          channelId: 'german-fairuz'
+        });
+      }
+    }
+
     return NextResponse.json(cleanTopicGlobally({
-      topResult: data.topResult,
-      songs: data.songs?.slice(0, 20) || [],
-      videos: data.videos?.slice(0, 10) || [],
-      artists: data.artists?.slice(0, 10) || [],
-      albums: data.albums?.slice(0, 10) || [],
-      communityPlaylists: data.communityPlaylists?.slice(0, 10) || []
+      topResult: ytMusicData.topResult,
+      songs: ytMusicData.songs?.slice(0, 20) || [],
+      videos: ytMusicData.videos?.slice(0, 10) || [],
+      artists: artists.slice(0, 10),
+      albums: ytMusicData.albums?.slice(0, 10) || [],
+      communityPlaylists: ytMusicData.communityPlaylists?.slice(0, 10) || []
     }));
   };
 
@@ -168,6 +207,39 @@ export async function GET(request: Request) {
 
     if (artists.length > 0) {
       artists = await enrichArtistsWithYouTube(artists);
+    }
+
+    const cleanQuery = query.toLowerCase().trim();
+    if (cleanQuery === 'fairuz' || cleanQuery === 'fairouz' || cleanQuery === 'fayrouz' || cleanQuery === 'فيروز') {
+      const hasLebanese = artists.some((a: any) => a.id === 'UCzixfFiEFMjhSB3R9UdUdsA' || a.id === '65eg8R4wje95952S772qZq');
+      if (!hasLebanese) {
+        artists.unshift({
+          id: 'UCzixfFiEFMjhSB3R9UdUdsA',
+          title: 'Fairuz',
+          channelTitle: 'Artist',
+          thumbnailUrl: 'https://yt3.googleusercontent.com/ZIONSAndglfiCvZdwa0CNCrUFWN6EUvhQxyY6MtqRzzuZQYeg27M80K0LAikAZkmWcTgbSXXkA=w1000-h1000-l90-rj',
+          subtitle: 'Legendary Lebanese Singer',
+          publishedAt: new Date().toISOString(),
+          type: 'channel',
+          origin: 'youtube',
+          channelId: 'UCzixfFiEFMjhSB3R9UdUdsA'
+        });
+      }
+      
+      const hasGerman = artists.some((a: any) => a.id === 'german-fairuz');
+      if (!hasGerman) {
+        artists.push({
+          id: 'german-fairuz',
+          title: 'Fairuz (DE)',
+          channelTitle: 'Artist',
+          thumbnailUrl: 'https://yt3.googleusercontent.com/r-nlAuthMmcTD_7SWnkTM0b60SyLjCD7IbWje50Da6lPquj0kEG5cDLabupRrnufiV4muhbbvwgkURv14w=w1000-h1000-l90-rj',
+          subtitle: 'German Pop/Rapper',
+          publishedAt: new Date().toISOString(),
+          type: 'channel',
+          origin: 'youtube',
+          channelId: 'german-fairuz'
+        });
+      }
     }
 
     // Construct topResult

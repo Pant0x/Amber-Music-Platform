@@ -71,6 +71,10 @@ export const MediaDeck: React.FC = () => {
   const [isDisliked, setIsDisliked] = useState(false);
   const [videoRect, setVideoRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
 
+  const [activeVolume, setActiveVolume] = useState(volume);
+  const [isFadingOut, setIsFadingOut] = useState(false);
+  const hasEndedRef = useRef(false);
+
   const progressRef = useRef(progress);
   useEffect(() => {
     progressRef.current = progress;
@@ -350,16 +354,42 @@ export const MediaDeck: React.FC = () => {
   const handlePlayerProgress = (state: { played: number; playedSeconds: number; loaded: number }) => {
     setProgress(state);
     setStorePlayedSeconds(state.playedSeconds);
+
+    // Trigger fade-out 4 seconds before the track ends
+    const remaining = duration - state.playedSeconds;
+    const fadeTime = 4;
+    if (duration > 10 && remaining <= fadeTime && !isFadingOut && isPlaying) {
+      setIsFadingOut(true);
+    }
   };
 
   const handlePlayerEnded = () => {
+    if (hasEndedRef.current) return;
+    hasEndedRef.current = true;
+
     if (isRepeat) {
       playerRef.current?.seekTo(0);
       setProgress((prev) => ({ ...prev, played: 0, playedSeconds: 0 }));
       setStorePlayedSeconds(0);
       setPlaying(true);
+      hasEndedRef.current = false;
+
+      // Trigger fade-in on repeat
+      setActiveVolume(0);
+      setIsFadingOut(false);
+      let currentVol = 0;
+      const targetVol = volume;
+      const stepSize = targetVol / 20;
+      const interval = setInterval(() => {
+        currentVol += stepSize;
+        if (currentVol >= targetVol) {
+          setActiveVolume(targetVol);
+          clearInterval(interval);
+        } else {
+          setActiveVolume(currentVol);
+        }
+      }, 100);
     } else {
-      // Finalize listen on end (best-effort)
       if (currentTrack) {
         recordListen({ 
           track_id: currentTrack.id, 
@@ -374,6 +404,63 @@ export const MediaDeck: React.FC = () => {
       nextTrack();
     }
   };
+
+  // Trigger Fade-In on track change
+  useEffect(() => {
+    if (!currentTrack) return;
+    
+    setActiveVolume(0);
+    setIsFadingOut(false);
+    hasEndedRef.current = false;
+    
+    let currentVol = 0;
+    const fadeSteps = 20;
+    const targetVol = volume;
+    const stepSize = targetVol / fadeSteps;
+    
+    const interval = setInterval(() => {
+      currentVol += stepSize;
+      if (currentVol >= targetVol) {
+        setActiveVolume(targetVol);
+        clearInterval(interval);
+      } else {
+        setActiveVolume(currentVol);
+      }
+    }, 100);
+    
+    return () => clearInterval(interval);
+  }, [currentTrack?.id]);
+
+  // Synchronize activeVolume with user adjustments when not fading
+  useEffect(() => {
+    if (!isFadingOut) {
+      setActiveVolume(volume);
+    }
+  }, [volume, isFadingOut]);
+
+  // Handle Fade-Out transition
+  useEffect(() => {
+    if (!isFadingOut || !isPlaying) return;
+    
+    let currentVol = activeVolume;
+    const steps = 20;
+    const stepSize = currentVol / steps;
+    const stepInterval = 100;
+    
+    const interval = setInterval(() => {
+      currentVol -= stepSize;
+      if (currentVol <= 0) {
+        setActiveVolume(0);
+        clearInterval(interval);
+        console.log('[MediaDeck] Fade out completed. Skipping to next track...');
+        handlePlayerEnded();
+      } else {
+        setActiveVolume(currentVol);
+      }
+    }, stepInterval);
+    
+    return () => clearInterval(interval);
+  }, [isFadingOut, isPlaying]);
 
   const toggleMute = () => setIsMuted(!isMuted);
 
@@ -430,7 +517,7 @@ export const MediaDeck: React.FC = () => {
           ref={playerRef}
           url={currentTrack.youtubeId ? `https://www.youtube.com/watch?v=${currentTrack.youtubeId}` : currentTrack.origin === 'spotify' ? '' : `https://www.youtube.com/watch?v=${currentTrack.id}`}
           playing={isPlaying && (currentTrack.origin !== 'spotify' || !!currentTrack.youtubeId)}
-          volume={volume}
+          volume={activeVolume}
           muted={isMuted}
           onProgress={handlePlayerProgress}
           onDuration={(d: number) => {

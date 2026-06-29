@@ -24,7 +24,7 @@ export default function ArtistPage() {
       setCurrentChannelId(decodedId);
       
       // If it looks like a YouTube browse ID or Spotify ID, fetch by ID. Else, treat as name fallback.
-      const isYtOrSpotifyId = decodedId.startsWith('UC') || decodedId.startsWith('FE') || decodedId.length === 22;
+      const isYtOrSpotifyId = decodedId.startsWith('UC') || decodedId.startsWith('FE') || decodedId.length === 22 || decodedId === 'german-fairuz';
       fetchChannelDetails(decodedId, !isYtOrSpotifyId);
     }
   }, [id, setActiveTab, setCurrentChannelId, fetchChannelDetails]);
