@@ -598,7 +598,33 @@ const lyricsCache = new Map<string, any>();
                                 ))}
                               </p>
                             )}
-                            <p className="text-xs text-zinc-400 truncate mt-0.5">{cleanVisualName(currentTrack.channelTitle)}</p>
+                            <p className="text-xs text-zinc-400 truncate mt-0.5 font-medium">
+                              {(() => {
+                                const artistNames = currentTrack.channelTitle
+                                  ? currentTrack.channelTitle.split(/,|\s+&\s+|\s+and\s+/i).map((n: string) => n.trim()).filter(Boolean)
+                                  : [];
+                                if (artistNames.length === 0) return 'Unknown Artist';
+                                return artistNames.map((name: string, idx: number) => {
+                                  const cleanName = cleanVisualName(name);
+                                  return (
+                                    <React.Fragment key={name}>
+                                      {idx > 0 && <span className="text-zinc-500">, </span>}
+                                      <span
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const artistId = idx === 0 ? currentTrack.channelId || currentTrack.artistId : undefined;
+                                          viewChannel(cleanName, artistId);
+                                          setShowNowPlaying(false);
+                                        }}
+                                        className="hover:underline hover:text-white cursor-pointer"
+                                      >
+                                        {cleanName}
+                                      </span>
+                                    </React.Fragment>
+                                  );
+                                });
+                              })()}
+                            </p>
                           </>
                         );
                       })()}
@@ -661,8 +687,32 @@ const lyricsCache = new Map<string, any>();
                                     ))}
                                   </p>
                                 )}
-                                <p className="text-xs text-zinc-500 truncate mt-0.5 group-hover/item:text-zinc-400">
-                                  {cleanVisualName(track.channelTitle)}
+                                <p className="text-xs text-zinc-500 truncate mt-0.5 group-hover/item:text-zinc-400 font-medium">
+                                  {(() => {
+                                    const artistNames = track.channelTitle
+                                      ? track.channelTitle.split(/,|\s+&\s+|\s+and\s+/i).map((n: string) => n.trim()).filter(Boolean)
+                                      : [];
+                                    if (artistNames.length === 0) return 'Unknown Artist';
+                                    return artistNames.map((name: string, idx: number) => {
+                                      const cleanName = cleanVisualName(name);
+                                      return (
+                                        <React.Fragment key={name}>
+                                          {idx > 0 && <span className="text-zinc-500">, </span>}
+                                          <span
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              const artistId = idx === 0 ? track.channelId || track.artistId : undefined;
+                                              viewChannel(cleanName, artistId);
+                                              setShowNowPlaying(false);
+                                            }}
+                                            className="hover:underline hover:text-white cursor-pointer"
+                                          >
+                                            {cleanName}
+                                          </span>
+                                        </React.Fragment>
+                                      );
+                                    });
+                                  })()}
                                 </p>
                               </>
                             );

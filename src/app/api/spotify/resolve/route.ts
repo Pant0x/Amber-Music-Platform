@@ -14,7 +14,39 @@ export async function GET(request: Request) {
 
     // Clean up typical YouTube titles if they have feat keywords so we search Spotify cleanly
     const cleanTitle = title.replace(/\(feat\..+?\)|\(with.+?\)|\(ft\..+?\)/i, '').trim();
-    const query = artist ? `${cleanArtistName(artist)} ${cleanTitle}` : cleanTitle;
+
+    // If the title contains a dash, it usually has the artist name(s) in it.
+    // In that case, do NOT prepend the uploader channel title (which could be a blog/distributor).
+    const hasDash = /[-–—]/.test(title);
+    const query = (artist && !hasDash) ? `${cleanArtistName(artist)} ${cleanTitle}` : cleanTitle;
+
+    const isTitleMatch = (reqT: string, resT: string) => {
+      const clean = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const r = clean(reqT);
+      const m = clean(resT);
+      if (r === m) return true;
+
+      // If the request title has a dash, check the part after the dash
+      const dashParts = reqT.split(/[-–—]/);
+      if (dashParts.length > 1) {
+        const potentialTitle = dashParts[dashParts.length - 1].trim();
+        const ptCleaned = clean(potentialTitle);
+        if (ptCleaned === m) return true;
+
+        if (m.includes(ptCleaned) || ptCleaned.includes(m)) {
+          const minLen = Math.min(ptCleaned.length, m.length);
+          const maxLen = Math.max(ptCleaned.length, m.length);
+          if (minLen / maxLen >= 0.75) return true;
+        }
+      }
+
+      if (r.includes(m) || m.includes(r)) {
+        const minLen = Math.min(r.length, m.length);
+        const maxLen = Math.max(r.length, m.length);
+        if (minLen / maxLen >= 0.75) return true;
+      }
+      return false;
+    };
 
     let enrichedData: any = null;
 
@@ -25,8 +57,8 @@ export async function GET(request: Request) {
       const searchRes = await spotifyApi.searchTracks(query, { limit: 5 });
       const tracks = searchRes.body.tracks?.items || [];
 
-      if (tracks.length > 0) {
-        const match = tracks[0];
+      const match = tracks.find((t: any) => isTitleMatch(cleanTitle, t.name));
+      if (match) {
         const artistsStr = match.artists.map((a: any) => a.name).join(', ');
         enrichedData = {
           enriched: true,
@@ -47,8 +79,8 @@ export async function GET(request: Request) {
         const searchRes = await ytMusicSearch(query);
         const songs = searchRes.songs || [];
         
-        if (songs.length > 0) {
-          const match = songs[0];
+        const match = songs.find((s: any) => isTitleMatch(cleanTitle, s.title));
+        if (match) {
           enrichedData = {
             enriched: true,
             title: match.title,

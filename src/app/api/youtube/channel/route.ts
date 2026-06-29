@@ -551,7 +551,7 @@ export async function GET(request: Request) {
     };
 
     // Map top tracks
-    const topSongs = (topTracksRes.body.tracks || []).map((item: any) => {
+    const topSongs: any[] = (topTracksRes.body.tracks || []).map((item: any) => {
       const durationMs = item.duration_ms || 180000;
       const mins = Math.floor(durationMs / 60000);
       const secs = Math.floor((durationMs % 60000) / 1000);
@@ -603,13 +603,108 @@ export async function GET(request: Request) {
       };
     });
 
-    const albums = sortReleasesNewestToOldest(
-      mappedReleases.filter(item => item.releaseType === 'Album')
-    );
+    const albumsRaw: any[] = mappedReleases.filter(item => item.releaseType === 'Album');
+    const singlesRaw: any[] = mappedReleases.filter(item => item.releaseType === 'Single' || item.releaseType === 'EP');
 
-    const singles = sortReleasesNewestToOldest(
-      mappedReleases.filter(item => item.releaseType === 'Single' || item.releaseType === 'EP')
-    );
+    const seenSongIds = new Set<string>(topSongs.map((s: any) => s.id));
+    const seenAlbumIds = new Set<string>(albumsRaw.map((a: any) => a.id));
+    const seenSingleIds = new Set<string>(singlesRaw.map((s: any) => s.id));
+
+    // Fetch user's local database history matched collaborative songs
+    try {
+      const supabase = createSupabaseServerClient();
+      if (supabase) {
+        console.log(`[Artist API Spotify] Fetching local database listen history for artist: "${profile.title}"`);
+        const { data: matchedRows, error: dbErr } = await supabase
+          .from('listen_history')
+          .select('metadata')
+          .not('metadata', 'is', null);
+
+        if (!dbErr && matchedRows) {
+          const artistNameLower = profile.title.toLowerCase();
+          const artistRegex = new RegExp(`\\b${artistNameLower.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
+
+          for (const row of matchedRows) {
+            const track = row.metadata;
+            if (!track || !track.title) continue;
+
+            const songTitleLower = track.title.toLowerCase();
+            const songArtists = (track.channelTitle || '')
+              .split(/,|\s+&\s+|\s+and\s+/i)
+              .map((n: string) => n.trim().toLowerCase())
+              .filter(Boolean);
+
+            const isActuallyArtist = 
+              songArtists.some((a: string) => a === artistNameLower) ||
+              artistRegex.test(track.channelTitle || '') ||
+              artistRegex.test(songTitleLower);
+
+            if (isActuallyArtist && track.id && !seenSongIds.has(track.id)) {
+              seenSongIds.add(track.id);
+              topSongs.push({
+                id: track.id,
+                title: cleanArtistName(track.title),
+                channelTitle: track.channelTitle && track.channelTitle !== 'Unknown Artist'
+                  ? cleanArtistName(track.channelTitle)
+                  : profile.title,
+                thumbnailUrl: upgradeThumbnailUrl(track.thumbnailUrl || ''),
+                duration: track.duration || '3:00',
+                isExplicit: track.isExplicit || false,
+                albumId: track.albumId || null,
+                albumName: track.albumName || null
+              });
+
+              // If the track from history has an albumId, add it to albumsRaw
+              if (track.albumId && track.albumName && !seenAlbumIds.has(track.albumId)) {
+                seenAlbumIds.add(track.albumId);
+                albumsRaw.push({
+                  id: track.albumId,
+                  title: cleanArtistName(track.albumName),
+                  channelTitle: track.channelTitle && track.channelTitle !== 'Unknown Artist'
+                    ? cleanArtistName(track.channelTitle)
+                    : profile.title,
+                  thumbnailUrl: upgradeThumbnailUrl(track.thumbnailUrl || ''),
+                  releaseType: 'Album',
+                  origin: 'youtube'
+                });
+              }
+            }
+          }
+        }
+      }
+    } catch (dbErr) {
+      console.warn('[Artist API Spotify] Supabase history resolution failed:', dbErr);
+    }
+
+    // Dynamic Single-release fallback for songs without parent albums
+    for (const song of topSongs) {
+      const cleanedSongTitle = cleanArtistName(song.title);
+      const lowerSongTitle = cleanedSongTitle.toLowerCase();
+
+      const isAlreadyRelease = 
+        albumsRaw.some((a: any) => a.title.toLowerCase() === lowerSongTitle) ||
+        singlesRaw.some((s: any) => s.title.toLowerCase() === lowerSongTitle);
+
+      if (!isAlreadyRelease) {
+        if (song.id && !seenSingleIds.has(song.id)) {
+          seenSingleIds.add(song.id);
+          singlesRaw.push({
+            id: song.id,
+            title: cleanedSongTitle,
+            channelTitle: song.channelTitle || profile.title,
+            thumbnailUrl: song.thumbnailUrl,
+            releaseType: 'Single',
+            origin: song.origin || 'youtube',
+            type: 'music',
+            duration: song.duration || '3:00',
+            isExplicit: song.isExplicit || false
+          });
+        }
+      }
+    }
+
+    const albums = sortReleasesNewestToOldest(albumsRaw);
+    const singles = sortReleasesNewestToOldest(singlesRaw);
 
     // Merge and deduplicate for allPlaylists, sorted newest-to-oldest
     const seenIds = new Set<string>();
