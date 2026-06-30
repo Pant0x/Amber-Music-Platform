@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, SkipForward, SkipBack, Volume2, Maximize2 } from 'lucide-react';
 
 export const FloatingPlayerDemo = () => {
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [progress, setProgress] = useState(35); // simulated percentage
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0); // start at 0
 
   // Simulate progress bar moving
   useEffect(() => {
@@ -41,11 +41,11 @@ export const FloatingPlayerDemo = () => {
 
         {/* Album Cover & Status */}
         <div className="relative w-24 h-24 md:w-28 md:h-28 rounded-2xl overflow-hidden shrink-0 shadow-xl bg-zinc-900 border border-white/5">
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-red-600 opacity-80 mix-blend-overlay"></div>
+          <div className="absolute inset-0 bg-black/20 mix-blend-overlay"></div>
           <img 
-            src="https://images.unsplash.com/photo-1614680376593-902f74cf0d41?q=80&w=400&auto=format&fit=crop" 
+            src="https://images.unsplash.com/photo-1518609878373-06d740f60d8b?q=80&w=400&auto=format&fit=crop&grayscale=true" 
             alt="Demo Track Cover" 
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover grayscale"
           />
           {/* Active indicator overlay */}
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -59,8 +59,8 @@ export const FloatingPlayerDemo = () => {
             <span className="inline-flex items-center justify-center bg-zinc-700/80 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm tracking-wider">E</span>
             <span className="text-xs font-bold text-red-500 tracking-widest uppercase">Live Demo</span>
           </div>
-          <h3 className="text-xl font-bold text-white mb-1 truncate">Midnight Symphony</h3>
-          <p className="text-sm text-zinc-400 mb-4">Pantooty Exclusive &bull; High-Res Audio</p>
+          <h3 className="text-xl font-bold text-white mb-1 truncate">KICK OUT</h3>
+          <p className="text-sm text-zinc-400 mb-4">Travis Scott</p>
 
           {/* Scrubber */}
           <div className="w-full flex items-center gap-3">
