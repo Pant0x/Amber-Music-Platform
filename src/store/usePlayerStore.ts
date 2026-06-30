@@ -81,6 +81,14 @@ interface PlayerState {
   toggleQueuePanel: () => void;
   removeFromQueue: (id: string) => void;
   clearQueue: () => void;
+  playNext: (track: Track) => void;
+
+  // Autoplay Recommendation System State
+  autoplayQueue: Track[];
+  isAutoplayEnabled: boolean;
+  toggleAutoplay: () => void;
+  setAutoplayQueue: (queue: Track[]) => void;
+  fetchAutoplayQueue: (videoId: string) => Promise<void>;
 
   // Now Playing Panel State
   showNowPlaying: boolean;
@@ -203,6 +211,29 @@ export const usePlayerStore = create<PlayerState>()(
         return { queue: newQueue };
       }),
       clearQueue: () => set({ queue: [] }),
+      playNext: (track) => set((state) => {
+        const filteredQueue = state.queue.filter(t => t.id !== track.id);
+        return { queue: [track, ...filteredQueue] };
+      }),
+
+      // Autoplay System State
+      autoplayQueue: [],
+      isAutoplayEnabled: true,
+      toggleAutoplay: () => set((state) => ({ isAutoplayEnabled: !state.isAutoplayEnabled })),
+      setAutoplayQueue: (autoplayQueue) => set({ autoplayQueue }),
+      fetchAutoplayQueue: async (videoId: string) => {
+        try {
+          const res = await fetch(`/api/youtube/next?videoId=${encodeURIComponent(videoId)}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data)) {
+              set({ autoplayQueue: data });
+            }
+          }
+        } catch (err) {
+          console.error('[Store Autoplay] Failed to fetch autoplay next tracks:', err);
+        }
+      },
 
       // Now Playing Initial State
       showNowPlaying: false,
@@ -221,15 +252,18 @@ export const usePlayerStore = create<PlayerState>()(
       setDuration: (duration) => set({ duration }),
       seekTrigger: null,
       setSeekTrigger: (seekTrigger) => set({ seekTrigger }),
-      setYoutubeIdForCurrentTrack: (youtubeId) => set((state) => {
-        if (!state.currentTrack) return state;
-        return {
-          currentTrack: {
-            ...state.currentTrack,
-            youtubeId
-          }
-        };
-      }),
+      setYoutubeIdForCurrentTrack: (youtubeId) => {
+        set((state) => {
+          if (!state.currentTrack) return state;
+          return {
+            currentTrack: {
+              ...state.currentTrack,
+              youtubeId
+            }
+          };
+        });
+        get().fetchAutoplayQueue(youtubeId);
+      },
       enrichCurrentTrack: (metadata) => set((state) => {
         if (!state.currentTrack) return state;
         return {
@@ -268,6 +302,12 @@ export const usePlayerStore = create<PlayerState>()(
             queue: newQueue
           };
         });
+
+        // Trigger autoplay queue fetch immediately if it's a YouTube track, or if it already has youtubeId
+        const resolvedId = track.youtubeId || (track.origin === 'youtube' ? track.id : null);
+        if (resolvedId) {
+          get().fetchAutoplayQueue(resolvedId);
+        }
       },
 
       togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
@@ -289,6 +329,16 @@ export const usePlayerStore = create<PlayerState>()(
               ? [state.currentTrack, ...state.history.filter(t => t.id !== state.currentTrack?.id)].slice(0, 50) 
               : state.history
           });
+        } else if (state.isAutoplayEnabled && state.autoplayQueue.length > 0) {
+          const next = state.autoplayQueue[0];
+          const newAutoplay = state.autoplayQueue.slice(1);
+          state.playTrack(next);
+          set({
+            autoplayQueue: newAutoplay,
+            history: state.currentTrack 
+              ? [state.currentTrack, ...state.history.filter(t => t.id !== state.currentTrack?.id)].slice(0, 50) 
+              : state.history
+          });
         }
       },
 
@@ -297,11 +347,16 @@ export const usePlayerStore = create<PlayerState>()(
         if (state.history.length > 0) {
           const prev = state.history[0];
           const newHistory = state.history.slice(1);
-          state.playTrack(prev);
           set({
+            currentTrack: prev,
+            isPlaying: true,
             history: newHistory,
             queue: state.currentTrack ? [state.currentTrack, ...state.queue] : state.queue
           });
+          const resolvedId = prev.youtubeId || (prev.origin === 'youtube' ? prev.id : null);
+          if (resolvedId) {
+            get().fetchAutoplayQueue(resolvedId);
+          }
         }
       },
 

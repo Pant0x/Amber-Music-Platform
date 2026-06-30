@@ -3,7 +3,7 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { Track } from '@/types/music-player';
 import { Play, Pause, Music, Trash2, X, Disc, Heart } from 'lucide-react';
 import { TrackCover } from '../TrackCover';
-import { ExplicitBadge, ArtistLinks } from './shared';
+import { ExplicitBadge, ArtistLinks, PlayingEqualizer } from './shared';
 
 export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) => {
   const {
@@ -116,17 +116,33 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                   }`}
                 >
                   <div className="w-8 flex items-center justify-center text-xs text-zinc-500 relative flex-shrink-0">
-                    <span className="group-hover/row:hidden">{i + 1}</span>
-                    <button
-                      onClick={() => handlePlayAction(track, likedTracks)}
-                      className="hidden group-hover/row:flex text-white items-center justify-center"
-                    >
-                      {isCurrentPlaying ? (
-                        <Pause className="w-4 h-4 fill-current text-[#ff0000]" />
-                      ) : (
-                        <Play className="w-4 h-4 fill-current ml-0.5 text-white" />
-                      )}
-                    </button>
+                    {isActive ? (
+                      <>
+                        <div className="group-hover/row:hidden flex items-center justify-center">
+                          <PlayingEqualizer isPlaying={isPlaying} />
+                        </div>
+                        <button
+                          onClick={() => handlePlayAction(track, likedTracks)}
+                          className="hidden group-hover/row:flex text-white items-center justify-center"
+                        >
+                          {isCurrentPlaying ? (
+                            <Pause className="w-4 h-4 fill-current text-[#ff0000]" />
+                          ) : (
+                            <Play className="w-4 h-4 fill-current ml-0.5 text-white" />
+                          )}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="group-hover/row:hidden">{i + 1}</span>
+                        <button
+                          onClick={() => handlePlayAction(track, likedTracks)}
+                          className="hidden group-hover/row:flex text-white items-center justify-center"
+                        >
+                          <Play className="w-4 h-4 fill-current ml-0.5 text-white" />
+                        </button>
+                      </>
+                    )}
                   </div>
 
                   <TrackCover track={track} contextTracks={likedTracks} sizeClass="w-10 h-10 rounded" />
@@ -139,16 +155,34 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                     <p className="text-xs text-zinc-400 truncate mt-0.5 inline-block"><ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} /></p>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleLikeTrack(track);
                       }}
-                      className="text-[#ff0000] hover:text-white p-1 transition-colors"
+                      className="text-[#ff0000] hover:text-white p-1 transition-colors flex-shrink-0"
                       title="Unlike"
                     >
                       <Heart className="w-4.5 h-4.5 fill-current" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        usePlayerStore.getState().playNext(track);
+                      }}
+                      className="opacity-0 group-hover/row:opacity-100 text-[10px] font-bold text-zinc-400 hover:text-white uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10 flex-shrink-0"
+                    >
+                      + Next
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToQueue(track);
+                      }}
+                      className="opacity-0 group-hover/row:opacity-100 text-[10px] font-bold text-zinc-400 hover:text-white uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10 flex-shrink-0"
+                    >
+                      + Queue
                     </button>
                   </div>
                 </div>
@@ -230,17 +264,33 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                     }`}
                   >
                     <div className="w-8 flex items-center justify-center text-xs text-zinc-500 relative flex-shrink-0">
-                      <span className="group-hover/row:hidden">{i + 1}</span>
-                      <button
-                        onClick={() => handlePlayAction(track, activePlaylist.tracks)}
-                        className="hidden group-hover/row:flex text-white items-center justify-center"
-                      >
-                        {isCurrentPlaying ? (
-                          <Pause className="w-4 h-4 fill-current text-[#ff0000]" />
-                        ) : (
-                          <Play className="w-4 h-4 fill-current ml-0.5 text-white" />
-                        )}
-                      </button>
+                      {isActive ? (
+                        <>
+                          <div className="group-hover/row:hidden flex items-center justify-center">
+                            <PlayingEqualizer isPlaying={isPlaying} />
+                          </div>
+                          <button
+                            onClick={() => handlePlayAction(track, activePlaylist.tracks)}
+                            className="hidden group-hover/row:flex text-white items-center justify-center"
+                          >
+                            {isCurrentPlaying ? (
+                              <Pause className="w-4 h-4 fill-current text-[#ff0000]" />
+                            ) : (
+                              <Play className="w-4 h-4 fill-current ml-0.5 text-white" />
+                            )}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="group-hover/row:hidden">{i + 1}</span>
+                          <button
+                            onClick={() => handlePlayAction(track, activePlaylist.tracks)}
+                            className="hidden group-hover/row:flex text-white items-center justify-center"
+                          >
+                            <Play className="w-4 h-4 fill-current ml-0.5 text-white" />
+                          </button>
+                        </>
+                      )}
                     </div>
 
                     <TrackCover track={track} contextTracks={activePlaylist.tracks} sizeClass="w-10 h-10 rounded" />
@@ -253,16 +303,34 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                       <p className="text-xs text-zinc-400 truncate mt-0.5 inline-block"><ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} /></p>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           removeTrackFromPlaylist(activePlaylist.id, track.id);
                         }}
-                        className="opacity-0 group-hover/row:opacity-100 text-zinc-500 hover:text-white p-1"
+                        className="opacity-0 group-hover/row:opacity-100 text-zinc-500 hover:text-rose-500 p-1 flex-shrink-0"
                         title="Remove track"
                       >
                         <X className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          usePlayerStore.getState().playNext(track);
+                        }}
+                        className="opacity-0 group-hover/row:opacity-100 text-[10px] font-bold text-zinc-400 hover:text-white uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10 flex-shrink-0"
+                      >
+                        + Next
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToQueue(track);
+                        }}
+                        className="opacity-0 group-hover/row:opacity-100 text-[10px] font-bold text-zinc-400 hover:text-white uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10 flex-shrink-0"
+                      >
+                        + Queue
                       </button>
                     </div>
                   </div>
@@ -374,20 +442,39 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                     }`}
                   >
                     <div className="w-8 flex items-center justify-center text-xs text-zinc-500 relative flex-shrink-0">
-                      <span className="group-hover/row:hidden">{i + 1}</span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlePlayAction(track, ytPlaylistDetails.tracks);
-                        }}
-                        className="hidden group-hover/row:flex text-white items-center justify-center"
-                      >
-                        {isCurrentPlaying ? (
-                          <Pause className="w-4 h-4 fill-current text-[#ff0000]" />
-                        ) : (
-                          <Play className="w-4 h-4 fill-current ml-0.5 text-white" />
-                        )}
-                      </button>
+                      {isActive ? (
+                        <>
+                          <div className="group-hover/row:hidden flex items-center justify-center">
+                            <PlayingEqualizer isPlaying={isPlaying} />
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePlayAction(track, ytPlaylistDetails.tracks);
+                            }}
+                            className="hidden group-hover/row:flex text-white items-center justify-center"
+                          >
+                            {isCurrentPlaying ? (
+                              <Pause className="w-4 h-4 fill-current text-[#ff0000]" />
+                            ) : (
+                              <Play className="w-4 h-4 fill-current ml-0.5 text-white" />
+                            )}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="group-hover/row:hidden">{i + 1}</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePlayAction(track, ytPlaylistDetails.tracks);
+                            }}
+                            className="hidden group-hover/row:flex text-white items-center justify-center"
+                          >
+                            <Play className="w-4 h-4 fill-current ml-0.5 text-white" />
+                          </button>
+                        </>
+                      )}
                     </div>
 
                     <TrackCover track={track} contextTracks={ytPlaylistDetails.tracks} sizeClass="w-10 h-10 rounded" />
@@ -400,14 +487,14 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                       <p className="text-xs text-zinc-400 truncate mt-0.5 inline-block"><ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} /></p>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleLikeTrack(track);
                         }}
-                        className={`p-1.5 opacity-0 group-hover/row:opacity-100 transition-opacity ${
-                          likedTracks.some(t => t.id === track.id) ? 'opacity-100 text-[#ff0000]' : 'text-zinc-400 hover:text-white'
+                        className={`p-1.5 transition-opacity ${
+                          likedTracks.some(t => t.id === track.id) ? 'text-[#ff0000]' : 'opacity-0 group-hover/row:opacity-100 text-zinc-400 hover:text-white'
                         }`}
                       >
                         <Heart className="w-4 h-4 fill-current" />
@@ -415,9 +502,18 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
+                          usePlayerStore.getState().playNext(track);
+                        }}
+                        className="opacity-0 group-hover/row:opacity-100 text-[10px] font-bold text-zinc-400 hover:text-white uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10 transition-colors flex-shrink-0"
+                      >
+                        + Next
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
                           addToQueue(track);
                         }}
-                        className="text-[10px] font-bold text-zinc-400 hover:text-white uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10 transition-colors"
+                        className="opacity-0 group-hover/row:opacity-100 text-[10px] font-bold text-zinc-400 hover:text-white uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10 transition-colors flex-shrink-0"
                       >
                         + Queue
                       </button>

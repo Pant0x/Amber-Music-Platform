@@ -18,6 +18,7 @@ import {
   ExternalLink 
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { PlayingEqualizer, ExplicitBadge } from '@/components/pages/shared';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -269,30 +270,55 @@ export default function ProfilePage() {
                   }`}
                 >
                   <div className="w-8 flex items-center justify-center flex-shrink-0 relative">
-                    <span className="text-xs text-zinc-500 font-semibold group-hover:hidden">{i + 1}</span>
-                    <button
-                      onClick={() => handlePlaySong(track, likedTracks)}
-                      className="hidden group-hover:flex items-center justify-center text-white"
-                    >
-                      {active && isPlaying ? <Pause className="w-4 h-4 fill-current text-[#ff0000]" /> : <Play className="w-4 h-4 fill-current" />}
-                    </button>
+                    {active ? (
+                      <>
+                        <div className="group-hover:hidden flex items-center justify-center">
+                          <PlayingEqualizer isPlaying={isPlaying} />
+                        </div>
+                        <button
+                          onClick={() => handlePlaySong(track, likedTracks)}
+                          className="hidden group-hover:flex items-center justify-center text-white"
+                        >
+                          {isPlaying ? <Pause className="w-4 h-4 fill-current text-[#ff0000]" /> : <Play className="w-4 h-4 fill-current" />}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-xs text-zinc-500 font-semibold group-hover:hidden">{i + 1}</span>
+                        <button
+                          onClick={() => handlePlaySong(track, likedTracks)}
+                          className="hidden group-hover:flex items-center justify-center text-white"
+                        >
+                          <Play className="w-4 h-4 fill-current" />
+                        </button>
+                      </>
+                    )}
                   </div>
                   <img src={track.thumbnailUrl || undefined} referrerPolicy="no-referrer" alt="" className="w-9 h-9 rounded object-cover flex-shrink-0 border border-white/5" />
                   <div className="min-w-0 flex-1">
-                    <p className={`text-xs font-bold truncate ${active ? 'text-[#ff0000]' : 'text-white'}`}>{track.title}</p>
+                    <p className={`text-xs font-bold truncate ${active ? 'text-[#ff0000]' : 'text-white'}`}>
+                      {track.title}
+                      {track.isExplicit && <ExplicitBadge />}
+                    </p>
                     <p className="text-[10px] text-zinc-500 truncate mt-0.5">{track.channelTitle}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button 
                       onClick={() => toggleLikeTrack(track)}
-                      className="p-1.5 text-[#ff0000] hover:text-zinc-400 transition-colors"
+                      className="p-1.5 text-[#ff0000] hover:text-zinc-400 transition-colors flex-shrink-0"
                       title="Unlike"
                     >
                       <Heart className="w-3.5 h-3.5 fill-current" />
                     </button>
                     <button 
+                      onClick={() => usePlayerStore.getState().playNext(track)}
+                      className="opacity-0 group-hover:opacity-100 text-[9px] font-bold text-zinc-400 hover:text-white uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10 flex-shrink-0"
+                    >
+                      + Next
+                    </button>
+                    <button 
                       onClick={() => addToQueue(track)}
-                      className="text-[9px] font-bold text-zinc-400 hover:text-white uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10"
+                      className="opacity-0 group-hover:opacity-100 text-[9px] font-bold text-zinc-400 hover:text-white uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10 flex-shrink-0"
                     >
                       + Queue
                     </button>
@@ -338,25 +364,52 @@ export default function ProfilePage() {
                   }`}
                 >
                   <div className="w-8 flex items-center justify-center flex-shrink-0 relative">
-                    <span className="text-xs text-zinc-500 font-semibold group-hover:hidden">{i + 1}</span>
-                    <button
-                      onClick={() => handlePlaySong(track, history)}
-                      className="hidden group-hover:flex items-center justify-center text-white"
-                    >
-                      {active && isPlaying ? <Pause className="w-4 h-4 fill-current text-[#ff0000]" /> : <Play className="w-4 h-4 fill-current" />}
-                    </button>
+                    {active ? (
+                      <>
+                        <div className="group-hover:hidden flex items-center justify-center">
+                          <PlayingEqualizer isPlaying={isPlaying} />
+                        </div>
+                        <button
+                          onClick={() => handlePlaySong(track, history)}
+                          className="hidden group-hover:flex items-center justify-center text-white"
+                        >
+                          {isPlaying ? <Pause className="w-4 h-4 fill-current text-[#ff0000]" /> : <Play className="w-4 h-4 fill-current" />}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-xs text-zinc-500 font-semibold group-hover:hidden">{i + 1}</span>
+                        <button
+                          onClick={() => handlePlaySong(track, history)}
+                          className="hidden group-hover:flex items-center justify-center text-white"
+                        >
+                          <Play className="w-4 h-4 fill-current" />
+                        </button>
+                      </>
+                    )}
                   </div>
                   <img src={track.thumbnailUrl || undefined} referrerPolicy="no-referrer" alt="" className="w-9 h-9 rounded object-cover flex-shrink-0 border border-white/5" />
                   <div className="min-w-0 flex-1">
-                    <p className={`text-xs font-bold truncate ${active ? 'text-[#ff0000]' : 'text-white'}`}>{track.title}</p>
+                    <p className={`text-xs font-bold truncate ${active ? 'text-[#ff0000]' : 'text-white'}`}>
+                      {track.title}
+                      {track.isExplicit && <ExplicitBadge />}
+                    </p>
                     <p className="text-[10px] text-zinc-500 truncate mt-0.5">{track.channelTitle}</p>
                   </div>
-                  <button 
-                    onClick={() => addToQueue(track)}
-                    className="text-[9px] font-bold text-zinc-400 hover:text-white uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10 flex-shrink-0"
-                  >
-                    + Queue
-                  </button>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <button 
+                      onClick={() => usePlayerStore.getState().playNext(track)}
+                      className="opacity-0 group-hover:opacity-100 text-[9px] font-bold text-zinc-400 hover:text-white uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10 flex-shrink-0"
+                    >
+                      + Next
+                    </button>
+                    <button 
+                      onClick={() => addToQueue(track)}
+                      className="text-[9px] font-bold text-zinc-400 hover:text-white uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10 flex-shrink-0"
+                    >
+                      + Queue
+                    </button>
+                  </div>
                 </div>
               );
             })}

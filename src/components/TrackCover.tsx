@@ -44,10 +44,10 @@ export const TrackCover: React.FC<TrackCoverProps> = ({
         }`}
       >
         {isCurrentPlaying ? (
-          <div className="flex items-center gap-0.75 h-4 justify-center">
-            <span className="w-0.75 h-3 bg-[#ff0000] rounded-full animate-bounce-slow" />
-            <span className="w-0.75 h-4.5 bg-[#ff0000] rounded-full animate-bounce-normal" />
-            <span className="w-0.75 h-2.5 bg-[#ff0000] rounded-full animate-bounce-fast" />
+          <div className="flex items-end gap-[3px] h-[18px] justify-center pb-[2px]">
+            <span style={{ animationPlayState: isCurrentPlaying ? 'running' : 'paused' }} className="w-[3px] h-3 bg-[#ff0000] rounded-t-sm animate-wave-1" />
+            <span style={{ animationPlayState: isCurrentPlaying ? 'running' : 'paused' }} className="w-[3px] h-[18px] bg-[#ff0000] rounded-t-sm animate-wave-2" />
+            <span style={{ animationPlayState: isCurrentPlaying ? 'running' : 'paused' }} className="w-[3px] h-[10px] bg-[#ff0000] rounded-t-sm animate-wave-3" />
             <div className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center rounded">
               <Pause className="w-5 h-5 fill-current text-white" />
             </div>

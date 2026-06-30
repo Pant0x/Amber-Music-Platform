@@ -3,7 +3,7 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { Track } from '@/types/music-player';
 import { Play, Pause, Shuffle, Disc, Heart } from 'lucide-react';
 import { TrackCover } from '../TrackCover';
-import { ExplicitBadge, ArtistLinks } from './shared';
+import { ExplicitBadge, ArtistLinks, PlayingEqualizer } from './shared';
 import { cleanVisualName } from '@/utils/text';
 import { AlbumCoverPlayOverlay } from '../AlbumCoverPlayOverlay';
 
@@ -15,12 +15,17 @@ export const SearchView: React.FC = () => {
     toggleLikeTrack,
     addToQueue,
     searchQuery,
+    setSearchQuery,
     setActiveTab,
     setCurrentPlaylistId,
     viewChannel,
     playArtistRadio,
     playTrack,
-    togglePlay
+    togglePlay,
+    history,
+    searchHistory,
+    selectedMood,
+    addSearchQueryToHistory
   } = usePlayerStore();
 
   const [loading, setLoading] = useState(false);
@@ -31,6 +36,47 @@ export const SearchView: React.FC = () => {
   const [searchAlbums, setSearchAlbums] = useState<any[]>([]);
   const [searchPlaylists, setSearchPlaylists] = useState<any[]>([]);
   const [searchFilter, setSearchFilter] = useState<'all' | 'songs' | 'videos' | 'artists' | 'albums' | 'playlists'>('all');
+
+  const [landingRecs, setLandingRecs] = useState<Track[]>([]);
+  const [landingTrends, setLandingTrends] = useState<any[]>([]);
+  const [recsLoading, setRecsLoading] = useState(false);
+
+  useEffect(() => {
+    if (searchQuery) return;
+
+    const fetchLandingData = async () => {
+      setRecsLoading(true);
+      try {
+        const recPromise = fetch('/api/recommendations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            history: history.map(t => ({ id: t.id, title: t.title, channelTitle: t.channelTitle })),
+            searchHistory,
+            mood: selectedMood
+          })
+        }).then(r => r.ok ? r.json() : null).catch(() => null);
+
+        const trendPromise = fetch('/api/search/trending')
+          .then(r => r.ok ? r.json() : null).catch(() => null);
+
+        const [recData, trendData] = await Promise.all([recPromise, trendPromise]);
+        
+        if (recData && recData.items) {
+          setLandingRecs(recData.items.slice(0, 10));
+        }
+        if (trendData) {
+          setLandingTrends(trendData.slice(0, 6));
+        }
+      } catch (err) {
+        console.error('Failed to fetch landing recommendations/trends:', err);
+      } finally {
+        setRecsLoading(false);
+      }
+    };
+
+    fetchLandingData();
+  }, [searchQuery, history.length, searchHistory.length, selectedMood]);
 
   const handlePlayAction = (track: Track, contextTracks: Track[] = []) => {
     if (currentTrack?.id === track.id) {
@@ -106,6 +152,119 @@ export const SearchView: React.FC = () => {
         <div className="flex items-center gap-2 py-16 text-xs text-zinc-500 font-semibold">
           <Disc className="w-5 h-5 animate-spin text-[#ff0000]" /> Resolving search index...
         </div>
+      ) : !searchQuery ? (
+        <div className="space-y-10 animate-fade-in pb-16">
+          {/* Trending Searches */}
+          {landingTrends.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-xs font-extrabold text-zinc-400 uppercase tracking-widest">Trending Searches</h3>
+              <div className="flex flex-wrap gap-2">
+                {landingTrends.map((trend) => (
+                  <button
+                    key={trend.name}
+                    onClick={() => {
+                      setSearchQuery(trend.name);
+                      addSearchQueryToHistory(trend.name);
+                    }}
+                    className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 rounded-full text-xs font-bold text-zinc-300 hover:text-white transition-all cursor-pointer"
+                  >
+                    🔥 {trend.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Explore Moods */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-extrabold text-zinc-400 uppercase tracking-widest">Explore Genres & Moods</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 select-none">
+              {[
+                { name: 'Focus Beats', query: 'lofi study focus beats', gradient: 'from-[#1e3c72] to-[#2a5298]' },
+                { name: 'Hype Rap', query: 'hype trap rap hip hop hits', gradient: 'from-[#ff416c] to-[#ff4b2b]' },
+                { name: 'Chill Vibes', query: 'chill lofi sleep relax music', gradient: 'from-[#11998e] to-[#38ef7d]' },
+                { name: 'Commute Drive', query: 'happy acoustic pop roadtrip', gradient: 'from-[#00c6ff] to-[#0072ff]' },
+                { name: 'Gym Energy', query: 'workout training synthwave techno', gradient: 'from-[#f857a6] to-[#ff5858]' },
+                { name: 'Late Night Jazz', query: 'ambient jazz blues chill lounge', gradient: 'from-[#8a2387] to-[#e94057]' }
+              ].map((item) => (
+                <div
+                  key={item.name}
+                  onClick={() => {
+                    setSearchQuery(item.query);
+                    addSearchQueryToHistory(item.query);
+                  }}
+                  className={`relative p-5 rounded-2xl bg-gradient-to-br ${item.gradient} hover:scale-[1.03] active:scale-95 transition-all cursor-pointer shadow-lg aspect-[4/3] flex flex-col justify-end border border-white/10`}
+                >
+                  <div className="absolute inset-0 bg-black/10 rounded-2xl" />
+                  <span className="relative z-10 text-xs font-black text-white leading-tight drop-shadow">{item.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Recommended for You */}
+          {recsLoading ? (
+            <div className="flex items-center gap-2 py-10 text-xs text-zinc-500 font-semibold">
+              <Disc className="w-4 h-4 animate-spin text-[#ff0000]" /> Tailoring recommendations...
+            </div>
+          ) : landingRecs.length > 0 ? (
+            <div className="space-y-4">
+              <div>
+                <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">Tailored to your taste</p>
+                <h3 className="text-xl font-bold text-white tracking-tight">Recommended for you</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {landingRecs.map((track, idx) => {
+                  const isActive = currentTrack?.id === track.id;
+                  return (
+                    <div
+                      key={`recs-${track.id}-${idx}`}
+                      onClick={() => handlePlayAction(track, landingRecs)}
+                      className={`group flex items-center gap-3.5 p-2 rounded-xl hover:bg-white/5 cursor-pointer transition-all border border-transparent hover:border-white/5 ${
+                        isActive ? 'bg-white/5 border-white/5' : ''
+                      }`}
+                    >
+                      <TrackCover track={track} contextTracks={landingRecs} sizeClass="w-12 h-12 rounded-lg" />
+                      <div className="min-w-0 flex-1">
+                        <p className={`text-xs font-bold truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
+                          {track.title}
+                          {track.isExplicit && <ExplicitBadge />}
+                        </p>
+                        <p className="text-[10px] text-zinc-400 truncate mt-0.5"><ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} /></p>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            usePlayerStore.getState().playNext(track);
+                          }}
+                          className="px-2 py-1 text-[9px] font-bold text-zinc-400 hover:text-white uppercase tracking-wider rounded bg-white/5 hover:bg-white/10"
+                        >
+                          + Next
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToQueue(track);
+                          }}
+                          className="px-2 py-1 text-[9px] font-bold text-zinc-400 hover:text-white uppercase tracking-wider rounded bg-white/5 hover:bg-white/10"
+                        >
+                          + Queue
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            searchHistory.length === 0 && (
+              <div className="py-10 text-center text-xs text-zinc-500">
+                Your recommendations will appear here once you play songs or search.
+              </div>
+            )
+          )}
+        </div>
       ) : (
         <div className="space-y-8">
           {/* "All" filter — YT Music-style mixed layout */}
@@ -180,10 +339,11 @@ export const SearchView: React.FC = () => {
                                 </p>
                                 <p className="text-xs text-zinc-400 truncate mt-0.5"><ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} /></p>
                               </div>
-                              <div className="flex items-center gap-2 opacity-0 group-hover/row:opacity-100 transition-opacity">
-                                <button onClick={() => handlePlayAction(track, searchSongs)} className="text-white">
+                              <div className="flex items-center gap-1.5 opacity-0 group-hover/row:opacity-100 transition-opacity flex-shrink-0">
+                                <button onClick={() => handlePlayAction(track, searchSongs)} className="text-white p-1">
                                   {isCurrentPlaying ? <Pause className="w-4 h-4 fill-current text-[#ff0000]" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
                                 </button>
+                                <button onClick={() => usePlayerStore.getState().playNext(track)} className="text-zinc-400 hover:text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10">+ Next</button>
                                 <button onClick={() => addToQueue(track)} className="text-zinc-400 hover:text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10">+ Queue</button>
                               </div>
                             </div>
@@ -335,10 +495,23 @@ export const SearchView: React.FC = () => {
                     className={`group/row flex items-center gap-4 p-2.5 rounded-lg hover:bg-white/5 cursor-pointer transition-colors ${isActive ? 'bg-white/5' : ''}`}
                   >
                     <div className="w-8 flex items-center justify-center text-xs text-zinc-500 flex-shrink-0">
-                      <span className="group-hover/row:hidden">{i + 1}</span>
-                      <button onClick={() => handlePlayAction(track, searchSongs)} className="hidden group-hover/row:flex text-white items-center justify-center">
-                        {isCurrentPlaying ? <Pause className="w-4 h-4 fill-current text-[#ff0000]" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
-                      </button>
+                      {isActive ? (
+                        <>
+                          <div className="group-hover/row:hidden flex items-center justify-center">
+                            <PlayingEqualizer isPlaying={isPlaying} />
+                          </div>
+                          <button onClick={() => handlePlayAction(track, searchSongs)} className="hidden group-hover/row:flex text-white items-center justify-center">
+                            {isCurrentPlaying ? <Pause className="w-4 h-4 fill-current text-[#ff0000]" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="group-hover/row:hidden">{i + 1}</span>
+                          <button onClick={() => handlePlayAction(track, searchSongs)} className="hidden group-hover/row:flex text-white items-center justify-center">
+                            <Play className="w-4 h-4 fill-current ml-0.5" />
+                          </button>
+                        </>
+                      )}
                     </div>
                     <TrackCover track={track} contextTracks={searchSongs} sizeClass="w-10 h-10 rounded" />
                     <div className="min-w-0 flex-1">
@@ -349,12 +522,13 @@ export const SearchView: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <button onClick={() => toggleLikeTrack(track)} className={`p-1 transition-colors opacity-0 group-hover/row:opacity-100 ${likedTracks.some(t => t.id === track.id) ? 'opacity-100 text-[#ff0000]' : 'text-zinc-400 hover:text-white'}`}><Heart className="w-4 h-4 fill-current" /></button>
-                      <button onClick={() => addToQueue(track)} className="text-[10px] font-bold text-zinc-400 hover:text-white uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10 + Queue">+ Queue</button>
+                      <button onClick={() => usePlayerStore.getState().playNext(track)} className="text-[10px] font-bold text-zinc-400 hover:text-white uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10">+ Next</button>
+                      <button onClick={() => addToQueue(track)} className="text-[10px] font-bold text-zinc-400 hover:text-white uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10">+ Queue</button>
                     </div>
                   </div>
                 );
               })}
-              {searchSongs.length === 0 && <p className="text-sm text-zinc-500 py-10 text-center">No songs found.</p>}
+              {searchSongs.length === 0 && <p className="text-sm text-zinc-500 py-10 text-center col-span-full">No songs found.</p>}
             </div>
           )}
 

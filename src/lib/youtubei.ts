@@ -741,3 +741,63 @@ export async function getYTMusicLyrics(browseId: string): Promise<string | null>
   }
   return null;
 }
+
+export async function ytMusicGetNext(videoId: string) {
+  try {
+    const data = await fetchYTMusic('next', { videoId });
+    const tracks: any[] = [];
+    
+    const extractThumbnail = (item: any) => {
+      const thumbs = item?.thumbnail?.thumbnails || item?.thumbnailRenderer?.musicThumbnailRenderer?.thumbnail?.thumbnails;
+      if (!thumbs) return '';
+      return upgradeThumbnailUrl(thumbs[thumbs.length - 1]?.url || thumbs[0]?.url || '');
+    };
+
+    const traverse = (obj: any) => {
+      if (!obj || typeof obj !== 'object') return;
+      
+      if (obj.playlistPanelVideoRenderer) {
+        const video = obj.playlistPanelVideoRenderer;
+        const title = video.title?.runs?.[0]?.text;
+        const id = video.videoId;
+        
+        if (title && id && id !== videoId) {
+          let artistName = 'Unknown Artist';
+          let artistId = '';
+          const bylineRuns = video.longBylineText?.runs || video.shortBylineText?.runs || [];
+          const artistRuns = bylineRuns.filter((r: any) => r?.text && r.text !== ' • ' && r.text.trim() !== '•');
+          
+          if (artistRuns.length > 0) {
+            artistName = artistRuns.map((r: any) => r.text).join('');
+            artistId = artistRuns[0]?.navigationEndpoint?.browseEndpoint?.browseId || '';
+          }
+          
+          const durationStr = video.lengthText?.runs?.[0]?.text || '3:00';
+          
+          tracks.push({
+            id,
+            title: cleanArtistName(title),
+            channelTitle: cleanArtistName(artistName),
+            thumbnailUrl: extractThumbnail(video),
+            publishedAt: new Date().toISOString(),
+            type: 'music',
+            origin: 'youtube',
+            channelId: artistId,
+            duration: durationStr
+          });
+        }
+      }
+      
+      for (const key of Object.keys(obj)) {
+        traverse(obj[key]);
+      }
+    };
+    
+    traverse(data);
+    return tracks.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i && v.id !== videoId).slice(0, 15);
+  } catch (err) {
+    console.error('Failed in ytMusicGetNext:', err);
+    return [];
+  }
+}
+

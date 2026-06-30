@@ -77,7 +77,11 @@ export const NowPlayingView: React.FC = () => {
     toggleSubscribeChannel,
     searchHistory,
     selectedMood,
-    setShareTrack
+    setShareTrack,
+    isAutoplayEnabled,
+    toggleAutoplay,
+    autoplayQueue,
+    addToQueue
   } = usePlayerStore();
 
   const [lyricsData, setLyricsData] = useState<{ lyrics: string; lines: { text: string; time: number }[]; isSynced?: boolean } | null>(null);
@@ -562,9 +566,21 @@ const lyricsCache = new Map<string, any>();
             {nowPlayingTab === 'upnext' && (
               <div className="absolute inset-0 flex flex-col overflow-hidden p-4 animate-fade-in">
                 <div className="flex items-center justify-between pb-3 border-b border-white/5 mb-3 flex-shrink-0">
-                  <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">
-                    Playing from your queue
-                  </span>
+                  <div className="flex items-center gap-4">
+                    <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">
+                      Playing from queue
+                    </span>
+                    <label className="flex items-center gap-1.5 cursor-pointer select-none group/toggle">
+                      <input 
+                        type="checkbox" 
+                        checked={isAutoplayEnabled} 
+                        onChange={toggleAutoplay} 
+                        className="sr-only peer" 
+                      />
+                      <div className="w-7 h-4 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-zinc-400 after:border-zinc-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-red-600 peer-checked:after:bg-white relative"></div>
+                      <span className="text-[10px] font-extrabold text-zinc-500 group-hover/toggle:text-zinc-300 transition-colors uppercase tracking-wider">Autoplay</span>
+                    </label>
+                  </div>
                   {queue.length > 0 && (
                     <button
                       onClick={clearQueue}
@@ -751,6 +767,120 @@ const lyricsCache = new Map<string, any>();
                       </div>
                     </div>
                   ))}
+
+                  {/* Autoplay suggestions */}
+                  {isAutoplayEnabled && autoplayQueue.length > 0 && (
+                    <>
+                      <div className="py-2 mt-4 text-[9px] font-bold text-zinc-500 uppercase tracking-widest text-center flex items-center justify-center gap-2">
+                        <span className="h-[1px] bg-white/5 flex-1" />
+                        <span>Autoplay suggestions</span>
+                        <span className="h-[1px] bg-white/5 flex-1" />
+                      </div>
+                      
+                      {autoplayQueue.map((track, idx) => (
+                        <div
+                          key={`np-autoplay-${track.id}-${idx}`}
+                          className="group/item flex items-center justify-between p-2 rounded-lg hover:bg-white/5 transition-colors"
+                        >
+                          <div
+                            onClick={() => playTrack(track)}
+                            className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
+                          >
+                            <span className="text-xs font-bold text-zinc-500 w-4 text-center group-hover/item:text-white">
+                              💡
+                            </span>
+                            <img
+                              src={track.thumbnailUrl || undefined}
+                              referrerPolicy="no-referrer"
+                              alt=""
+                              className="w-10 h-10 object-cover rounded bg-zinc-800 flex-shrink-0 border border-white/5"
+                            />
+                            <div className="min-w-0 flex-1">
+                              {(() => {
+                                const parsed = parseFeaturedArtists(track.title);
+                                return (
+                                  <>
+                                    <p className="text-sm font-bold text-zinc-300 truncate group-hover/item:text-white">
+                                      {parsed.title}
+                                      {track.isExplicit && <ExplicitBadge />}
+                                    </p>
+                                    {parsed.featured.length > 0 && (
+                                      <p className="text-[10px] text-zinc-500 truncate font-medium mt-0.5">
+                                        feat.{' '}
+                                        {parsed.featured.map((featName, idx) => (
+                                          <React.Fragment key={featName}>
+                                            {idx > 0 && ', '}
+                                            <span
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                viewChannel(featName);
+                                                setShowNowPlaying(false);
+                                              }}
+                                              className="hover:underline hover:text-white cursor-pointer"
+                                            >
+                                              {featName}
+                                            </span>
+                                          </React.Fragment>
+                                        ))}
+                                      </p>
+                                    )}
+                                    <p className="text-xs text-zinc-500 truncate mt-0.5 group-hover/item:text-zinc-400 font-medium">
+                                      {(() => {
+                                        const artistNames = track.channelTitle
+                                          ? track.channelTitle.split(/,|\s+&\s+|\s+and\s+/i).map((n: string) => n.trim()).filter(Boolean)
+                                          : [];
+                                        if (artistNames.length === 0) return 'Unknown Artist';
+                                        return artistNames.map((name: string, idx: number) => {
+                                          const cleanName = cleanVisualName(name);
+                                          return (
+                                            <React.Fragment key={name}>
+                                              {idx > 0 && <span className="text-zinc-500">, </span>}
+                                              <span
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  const artistId = idx === 0 ? track.channelId || track.artistId : undefined;
+                                                  viewChannel(cleanName, artistId);
+                                                  setShowNowPlaying(false);
+                                                }}
+                                                className="hover:underline hover:text-white cursor-pointer"
+                                              >
+                                                {cleanName}
+                                              </span>
+                                            </React.Fragment>
+                                          );
+                                        });
+                                      })()}
+                                    </p>
+                                  </>
+                                );
+                              })()}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className="text-xs font-mono text-zinc-500">{track.duration || '—'}</span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                usePlayerStore.getState().playNext(track);
+                              }}
+                              className="opacity-0 group-hover/item:opacity-100 text-[9px] font-bold text-zinc-400 hover:text-white uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10"
+                            >
+                              + Next
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addToQueue(track);
+                              }}
+                              className="opacity-0 group-hover/item:opacity-100 text-[9px] font-bold text-zinc-400 hover:text-white uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10"
+                            >
+                              + Queue
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
 
                   {/* Recently played divider */}
                   {history.length > 1 && (
