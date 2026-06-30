@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { WaitlistForm } from './WaitlistForm';
+import { FloatingPlayerDemo } from './FloatingPlayerDemo';
 
 export const HeroSection = () => {
   return (
@@ -11,13 +12,13 @@ export const HeroSection = () => {
       <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] mix-blend-screen pointer-events-none animate-pulse-slow"></div>
       <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-red-500/10 rounded-full blur-[150px] mix-blend-screen pointer-events-none animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
 
-      <div className="relative z-10 max-w-4xl mx-auto text-center">
+      <div className="relative z-10 w-full max-w-5xl mx-auto text-center">
         {/* Urgency Badge */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-semibold tracking-wider text-white mb-8"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-semibold tracking-wider text-white mb-8 shadow-[0_0_30px_rgba(255,255,255,0.05)]"
         >
           <span className="animate-pulse">🔥</span> 
           WAITING LIST USERS GET THE FIRST YEAR COMPLETELY FREE
@@ -28,11 +29,11 @@ export const HeroSection = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-5xl md:text-7xl font-extrabold tracking-tight text-white mb-6 leading-tight"
+          className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight text-white mb-6 leading-tight"
         >
           Your Music. <br className="md:hidden" />
           <span className="text-zinc-500">Your Rules.</span> <br />
-          <span className="text-gradient bg-gradient-to-r from-white to-zinc-500">Uninterrupted.</span>
+          <span className="text-gradient bg-gradient-to-r from-white via-zinc-400 to-zinc-600">Uninterrupted.</span>
         </motion.h1>
 
         <motion.p 
@@ -49,9 +50,13 @@ export const HeroSection = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
+          className="relative z-30"
         >
           <WaitlistForm />
         </motion.div>
+
+        {/* Floating Demo Player Hook */}
+        <FloatingPlayerDemo />
       </div>
     </section>
   );
