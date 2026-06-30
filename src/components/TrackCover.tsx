@@ -2,6 +2,7 @@ import React from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { Track } from '@/types/music-player';
 import { Play, Pause } from 'lucide-react';
+import { isActiveTrack } from './pages/shared';
 
 interface TrackCoverProps {
   track: Track;
@@ -15,7 +16,7 @@ export const TrackCover: React.FC<TrackCoverProps> = ({
   sizeClass = "w-12 h-12 rounded shadow"
 }) => {
   const { currentTrack, isPlaying, playTrack, togglePlay } = usePlayerStore();
-  const isActive = currentTrack?.id === track.id;
+  const isActive = isActiveTrack(currentTrack, track);
   const isCurrentPlaying = isActive && isPlaying;
 
   const handlePlayAction = () => {

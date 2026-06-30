@@ -1,4 +1,5 @@
 import React from 'react';
+import { Track } from '@/types/music-player';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { cleanVisualName } from '@/utils/text';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -135,6 +136,18 @@ export const PlayingEqualizer: React.FC<{ isPlaying: boolean; color?: string }> 
         className="w-[2px] h-1.5 bg-[#ff0000] rounded-t-sm animate-wave-3" 
       />
     </div>
+  );
+};
+
+export const isActiveTrack = (currentTrack: Track | null, track: Track) => {
+  if (!currentTrack) return false;
+  return (
+    currentTrack.id === track.id ||
+    (currentTrack.youtubeId && currentTrack.youtubeId === track.id) ||
+    (track.youtubeId && track.youtubeId === currentTrack.id) ||
+    (currentTrack.youtubeId && track.youtubeId && currentTrack.youtubeId === track.youtubeId) ||
+    (currentTrack.title.toLowerCase() === track.title.toLowerCase() && 
+     currentTrack.channelTitle.toLowerCase() === track.channelTitle.toLowerCase())
   );
 };
 

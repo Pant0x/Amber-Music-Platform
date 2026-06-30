@@ -3,7 +3,7 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { Track } from '@/types/music-player';
 import { Play, Pause, Shuffle, Disc, Heart } from 'lucide-react';
 import { TrackCover } from '../TrackCover';
-import { ExplicitBadge, ArtistLinks, PlayingEqualizer } from './shared';
+import { ExplicitBadge, ArtistLinks, PlayingEqualizer, isActiveTrack } from './shared';
 import { cleanVisualName } from '@/utils/text';
 import { AlbumCoverPlayOverlay } from '../AlbumCoverPlayOverlay';
 
@@ -215,7 +215,7 @@ export const SearchView: React.FC = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {landingRecs.map((track, idx) => {
-                  const isActive = currentTrack?.id === track.id;
+                  const isActive = isActiveTrack(currentTrack, track);
                   return (
                     <div
                       key={`recs-${track.id}-${idx}`}
@@ -323,7 +323,7 @@ export const SearchView: React.FC = () => {
                       <h3 className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-3">Songs</h3>
                       <div className="space-y-0.5">
                         {searchSongs.slice(0, 4).map((track, i) => {
-                          const isActive = currentTrack?.id === track.id;
+                          const isActive = isActiveTrack(currentTrack, track);
                           const isCurrentPlaying = isActive && isPlaying;
                           return (
                             <div
@@ -486,7 +486,7 @@ export const SearchView: React.FC = () => {
           {searchFilter === 'songs' && (
             <div className="space-y-1">
               {searchSongs.map((track, i) => {
-                const isActive = currentTrack?.id === track.id;
+                const isActive = isActiveTrack(currentTrack, track);
                 const isCurrentPlaying = isActive && isPlaying;
                 return (
                   <div

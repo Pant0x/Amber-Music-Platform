@@ -3,7 +3,7 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { Track } from '@/types/music-player';
 import { Play, Pause, Shuffle, Disc, Heart, Compass, Radio, Check, Clock, Music, PlusCircle } from 'lucide-react';
 import { TrackCover } from '../TrackCover';
-import { ExplicitBadge, ArtistLinks, Carousel } from './shared';
+import { ExplicitBadge, ArtistLinks, Carousel, isActiveTrack, PlayingEqualizer } from './shared';
 import { cleanVisualName } from '@/utils/text';
 import { AlbumCoverPlayOverlay } from '../AlbumCoverPlayOverlay';
 
@@ -199,7 +199,7 @@ export const ArtistView: React.FC = () => {
               <h2 className="text-2xl font-bold text-white mb-4">Songs</h2>
               <div className="space-y-0">
                 {currentChannelDetails.topSongs.slice(0, 4).map((track: Track, idx: number) => {
-                  const isActive = currentTrack?.id === track.id;
+                  const isActive = isActiveTrack(currentTrack, track);
                   return (
                     <div
                       key={`ov-song-${track.id}`}
@@ -437,18 +437,32 @@ export const ArtistView: React.FC = () => {
           </div>
           <div className="space-y-0">
             {currentChannelDetails.topSongs?.map((track: Track, idx: number) => {
-              const isActive = currentTrack?.id === track.id;
+              const isActive = isActiveTrack(currentTrack, track);
               const isCurrentPlaying = isActive && isPlaying;
               return (
                 <div key={`tab-song-${track.id}`}
                   onClick={() => handlePlayAction(track, currentChannelDetails.topSongs)}
                   className={`group/row flex items-center gap-4 px-2 py-2.5 rounded-sm hover:bg-white/5 transition-colors cursor-pointer ${isActive ? 'bg-white/5' : ''}`}>
                   <div className="w-12 flex items-center justify-center text-sm text-zinc-500 flex-shrink-0">
-                    <span className="group-hover/row:hidden">{idx + 1}</span>
-                    <button onClick={(e) => { e.stopPropagation(); handlePlayAction(track, currentChannelDetails.topSongs); }}
-                      className="hidden group-hover/row:flex items-center justify-center text-white">
-                      {isCurrentPlaying ? <Pause className="w-4 h-4 fill-current text-white" /> : <Play className="w-4 h-4 fill-current ml-0.5 text-white" />}
-                    </button>
+                    {isActive ? (
+                      <>
+                        <div className="group-hover/row:hidden flex items-center justify-center">
+                          <PlayingEqualizer isPlaying={isPlaying} />
+                        </div>
+                        <button onClick={(e) => { e.stopPropagation(); handlePlayAction(track, currentChannelDetails.topSongs); }}
+                          className="hidden group-hover/row:flex items-center justify-center text-white">
+                          {isCurrentPlaying ? <Pause className="w-4 h-4 fill-current text-[#ff0000]" /> : <Play className="w-4 h-4 fill-current ml-0.5 text-white" />}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="group-hover/row:hidden">{idx + 1}</span>
+                        <button onClick={(e) => { e.stopPropagation(); handlePlayAction(track, currentChannelDetails.topSongs); }}
+                          className="hidden group-hover/row:flex items-center justify-center text-white">
+                          <Play className="w-4 h-4 fill-current ml-0.5 text-white" />
+                        </button>
+                      </>
+                    )}
                   </div>
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <TrackCover track={track} contextTracks={currentChannelDetails.topSongs} sizeClass="w-10 h-10 rounded" />
@@ -599,7 +613,7 @@ export const ArtistView: React.FC = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-6">
             {currentChannelDetails.videos?.map((track: Track) => {
-              const isActive = currentTrack?.id === track.id;
+              const isActive = isActiveTrack(currentTrack, track);
               return (
                 <div key={`tab-vid-${track.id}`}
                   onClick={() => handlePlayAction(track, currentChannelDetails.videos)}

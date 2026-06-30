@@ -3,7 +3,7 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { Track } from '@/types/music-player';
 import { Play, Pause, Music, Trash2, X, Disc, Heart } from 'lucide-react';
 import { TrackCover } from '../TrackCover';
-import { ExplicitBadge, ArtistLinks, PlayingEqualizer } from './shared';
+import { ExplicitBadge, ArtistLinks, PlayingEqualizer, isActiveTrack } from './shared';
 
 export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) => {
   const {
@@ -105,7 +105,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
             </div>
           ) : (
             likedTracks.map((track, i) => {
-              const isActive = currentTrack?.id === track.id;
+              const isActive = isActiveTrack(currentTrack, track);
               const isCurrentPlaying = isActive && isPlaying;
               return (
                 <div
@@ -253,7 +253,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
               </div>
             ) : (
               activePlaylist.tracks.map((track, i) => {
-                const isActive = currentTrack?.id === track.id;
+                const isActive = isActiveTrack(currentTrack, track);
                 const isCurrentPlaying = isActive && isPlaying;
                 return (
                   <div
@@ -431,7 +431,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
               <div className="py-20 text-center text-xs text-zinc-500 italic">No tracks found.</div>
             ) : (
               ytPlaylistDetails.tracks.map((track: Track, i: number) => {
-                const isActive = currentTrack?.id === track.id;
+                const isActive = isActiveTrack(currentTrack, track);
                 const isCurrentPlaying = isActive && isPlaying;
                 return (
                   <div

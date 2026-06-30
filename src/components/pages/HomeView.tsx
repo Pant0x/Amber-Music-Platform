@@ -3,7 +3,7 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { Track } from '@/types/music-player';
 import { Disc } from 'lucide-react';
 import { TrackCover } from '../TrackCover';
-import { Carousel, ArtistLinks } from './shared';
+import { Carousel, ArtistLinks, isActiveTrack } from './shared';
 
 const MOOD_CHIPS = [
   { id: 'focus', label: 'Focus' },
@@ -113,7 +113,7 @@ export const HomeView: React.FC = () => {
               {quickPicksGroups.map((group, groupIdx) => (
                 <div key={`qp-group-${groupIdx}`} className="flex-shrink-0 w-[calc(100%-24px)] md:w-[calc(50%-24px)] lg:w-[calc(33.33%-24px)] xl:w-[calc(25%-24px)] space-y-3 snap-start">
                   {group.map((track) => {
-                    const isActive = usePlayerStore.getState().currentTrack?.id === track.id;
+                    const isActive = isActiveTrack(usePlayerStore.getState().currentTrack, track);
                     return (
                       <div
                         key={`qp-${track.id}`}

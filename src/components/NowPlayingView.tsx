@@ -563,7 +563,7 @@ const lyricsCache = new Map<string, any>();
           <div className="flex-1 overflow-hidden relative">
 
             {/* TAB: UP NEXT */}
-            {nowPlayingTab === 'upnext' && (
+            {(nowPlayingTab === 'upnext' || nowPlayingTab === 'player') && (
               <div className="absolute inset-0 flex flex-col overflow-hidden p-4 animate-fade-in">
                 <div className="flex items-center justify-between pb-3 border-b border-white/5 mb-3 flex-shrink-0">
                   <div className="flex items-center gap-4">
