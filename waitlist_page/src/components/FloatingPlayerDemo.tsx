@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { Play, Pause, SkipForward, SkipBack, Volume2, Maximize2, Mic2 } from 'lucide-react';
 
 const DEMO_SONGS = [
@@ -9,61 +9,70 @@ const DEMO_SONGS = [
     title: "KICK OUT",
     artist: "Travis Scott",
     cover: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?q=80&w=400&auto=format&fit=crop&grayscale=true",
-    duration: "3:42",
+    audioSrc: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/50/de/cf/50decf79-548e-cb82-d9c3-389b805f3d99/mzaf_12127657751890989044.plus.aac.p.m4a",
+    duration: 30, // Preview length
     lyrics: [
-      { time: 10, text: "Yeah, yeah" },
-      { time: 25, text: "Kick out the doors" },
-      { time: 40, text: "Let me in" },
-      { time: 55, text: "They said I couldn't" },
-      { time: 70, text: "Now they wanna be friends" }
+      { time: 0, text: "(Intro beat)" },
+      { time: 8, text: "Yeah, yeah" },
+      { time: 14, text: "Kick out the doors" },
+      { time: 18, text: "Let me in" },
+      { time: 24, text: "They said I couldn't" },
+      { time: 28, text: "Now they wanna be friends" }
     ]
   },
   {
     title: "Any Colour You Like",
     artist: "Pink Floyd",
     cover: "https://images.unsplash.com/photo-1614680376593-902f74cf0d41?q=80&w=400&auto=format&fit=crop",
-    duration: "3:25",
+    audioSrc: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/80/68/b6/8068b607-52bb-f9ab-8cc6-ef60fa9935cb/mzaf_17094260784476895805.plus.aac.p.m4a",
+    duration: 30,
     lyrics: [
-      { time: 5, text: "(Instrumental intro)" },
-      { time: 30, text: "(Synthesizer solo)" },
-      { time: 60, text: "Any colour you like" },
-      { time: 80, text: "They're all the same" }
+      { time: 0, text: "(Instrumental intro)" },
+      { time: 10, text: "(Synthesizer solo)" },
+      { time: 20, text: "Any colour you like" },
+      { time: 28, text: "They're all the same" }
     ]
   },
   {
     title: "Deep Fried Frenz",
     artist: "MF DOOM",
     cover: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?q=80&w=400&auto=format&fit=crop",
-    duration: "4:59",
+    audioSrc: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/6f/4e/76/6f4e7602-521c-cf4a-69e4-295a3b1ddc58/mzaf_12666244896266325876.plus.aac.p.m4a",
+    duration: 30,
     lyrics: [
+      { time: 0, text: "(Beat starts)" },
       { time: 5, text: "Friends, how many of us have them?" },
-      { time: 25, text: "Friends, ones we can depend on" },
-      { time: 40, text: "Before we go any further" },
-      { time: 55, text: "Let's be friends" }
+      { time: 12, text: "Friends, ones we can depend on" },
+      { time: 19, text: "Before we go any further" },
+      { time: 25, text: "Let's be friends" }
     ]
   },
   {
     title: "Save Your Tears",
     artist: "The Weeknd",
     cover: "https://images.unsplash.com/photo-1493225457124-a1a2a2f52ba3?q=80&w=400&auto=format&fit=crop",
-    duration: "3:35",
+    audioSrc: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/8b/38/17/8b3817e4-c0e9-7e02-2654-3e2ecee93603/mzaf_18415642125637540903.plus.aac.p.m4a",
+    duration: 30,
     lyrics: [
-      { time: 5, text: "I saw you dancing in a crowded room" },
-      { time: 25, text: "You look so happy when I'm not with you" },
-      { time: 40, text: "But then you saw me, caught you by surprise" },
-      { time: 55, text: "A single teardrop falling from your eye" }
+      { time: 0, text: "(Beat drops)" },
+      { time: 6, text: "I saw you dancing in a crowded room" },
+      { time: 13, text: "You look so happy when I'm not with you" },
+      { time: 19, text: "But then you saw me, caught you by surprise" },
+      { time: 26, text: "A single teardrop falling from your eye" }
     ]
   },
   {
     title: "No Pole",
     artist: "Don Toliver",
     cover: "https://images.unsplash.com/photo-1563298723-dcfebaa392e3?q=80&w=400&auto=format&fit=crop",
-    duration: "3:12",
+    audioSrc: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/0d/4f/0f/0d4f0f87-a930-c4c9-99e8-0edce8e4f91a/mzaf_7455232474434756947.plus.aac.p.m4a",
+    duration: 30,
     lyrics: [
-      { time: 5, text: "I'm in the hills, I'm out of my mind" },
-      { time: 25, text: "You know I'm looking for a good time" },
-      { time: 40, text: "Ain't got no pole, but she slide" },
-      { time: 55, text: "Ride with me through the night" }
+      { time: 0, text: "(Intro)" },
+      { time: 7, text: "I'm in the hills, I'm out of my mind" },
+      { time: 14, text: "You know I'm looking for a good time" },
+      { time: 21, text: "Ain't got no pole, but she slide" },
+      { time: 28, text: "Ride with me through the night" }
     ]
   }
 ];
@@ -73,36 +82,59 @@ export const FloatingPlayerDemo = () => {
   const [progress, setProgress] = useState(0); 
   const [currentSongIdx, setCurrentSongIdx] = useState(0);
   const [showLyrics, setShowLyrics] = useState(true);
+  
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const { scrollY } = useScroll();
 
   const currentSong = DEMO_SONGS[currentSongIdx];
 
-  // Simulate progress bar moving
+  // Map scroll position to audio volume (low at top, high when scrolled down to player)
+  const volumeRange = useTransform(scrollY, [0, 400], [0.1, 1.0]);
+
+  // Update audio element volume dynamically when scrolling
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setProgress(p => {
-          if (p >= 100) {
-            handleNext(undefined as any);
-            return 0;
-          }
-          return p + 0.5;
-        });
-      }, 500);
+    return volumeRange.onChange((v) => {
+      if (audioRef.current) {
+        audioRef.current.volume = v;
+      }
+    });
+  }, [volumeRange]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        // Ensure volume is correct on play
+        audioRef.current.volume = volumeRange.get();
+        audioRef.current.play().catch(() => setIsPlaying(false));
+      } else {
+        audioRef.current.pause();
+      }
     }
-    return () => clearInterval(interval);
-  }, [isPlaying, currentSongIdx]);
+  }, [isPlaying, currentSongIdx, volumeRange]);
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setProgress(audioRef.current.currentTime);
+    }
+  };
+
+  const handleAudioEnded = () => {
+    handleNext(undefined as any);
+  };
 
   const handleNext = (e: React.MouseEvent) => {
     e?.stopPropagation();
-    setProgress(0);
     setCurrentSongIdx((prev) => (prev + 1) % DEMO_SONGS.length);
   };
 
   const handlePrev = (e: React.MouseEvent) => {
     e?.stopPropagation();
-    setProgress(0);
     setCurrentSongIdx((prev) => (prev - 1 + DEMO_SONGS.length) % DEMO_SONGS.length);
+  };
+
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsPlaying(!isPlaying);
   };
 
   // Find active lyric line based on progress
@@ -113,12 +145,21 @@ export const FloatingPlayerDemo = () => {
 
   return (
     <div className="mt-16 w-full max-w-2xl mx-auto relative group z-20">
+      
+      {/* Hidden Real Audio Element */}
+      <audio 
+        ref={audioRef}
+        src={currentSong.audioSrc}
+        onTimeUpdate={handleTimeUpdate}
+        onEnded={handleAudioEnded}
+      />
+
       <motion.div 
         initial={{ opacity: 0, y: 50, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.8, delay: 0.5, type: 'spring', bounce: 0.4 }}
         className="cursor-pointer relative"
-        onClick={() => setIsPlaying(!isPlaying)}
+        onClick={togglePlay}
       >
         {/* Floating Aura */}
         <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-red-500/20 rounded-[2rem] blur-xl opacity-50 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none"></div>
@@ -181,10 +222,10 @@ export const FloatingPlayerDemo = () => {
               <div className="h-1.5 flex-1 bg-white/10 rounded-full overflow-hidden relative">
                 <motion.div 
                   className="absolute top-0 left-0 h-full bg-gradient-to-r from-red-500 to-indigo-500 rounded-full"
-                  style={{ width: `${progress}%` }}
+                  style={{ width: `${(progress / currentSong.duration) * 100}%` }}
                 ></motion.div>
               </div>
-              <span className="text-xs font-mono text-zinc-500">{currentSong.duration}</span>
+              <span className="text-xs font-mono text-zinc-500">0:30</span>
             </div>
           </div>
 
@@ -206,7 +247,10 @@ export const FloatingPlayerDemo = () => {
             <div className="flex items-center gap-2 text-zinc-500 w-full justify-center">
                <Volume2 className="w-4 h-4" />
                <div className="w-16 h-1 bg-white/20 rounded-full overflow-hidden">
-                 <div className="w-2/3 h-full bg-zinc-400 rounded-full"></div>
+                 <motion.div 
+                   className="h-full bg-zinc-400 rounded-full"
+                   style={{ width: useTransform(volumeRange, [0.1, 1.0], ['10%', '100%']) }}
+                 ></motion.div>
                </div>
                <Mic2 
                  className={`w-4 h-4 ml-2 transition-colors cursor-pointer ${showLyrics ? 'text-indigo-400' : 'hover:text-white'}`}
@@ -281,6 +325,39 @@ export const FloatingPlayerDemo = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Up Next Queue UI */}
+      <div className="w-full max-w-xl mx-auto mt-6 bg-[#0a0a0a]/80 backdrop-blur-md rounded-2xl border border-white/5 p-4">
+        <h4 className="text-xs font-bold text-zinc-500 tracking-widest uppercase mb-4 px-2">Up Next Demo Queue</h4>
+        <div className="space-y-1">
+          {DEMO_SONGS.map((song, idx) => {
+            const isPlayingThis = idx === currentSongIdx;
+            return (
+              <div 
+                key={idx}
+                onClick={(e) => { e.stopPropagation(); setCurrentSongIdx(idx); setProgress(0); setIsPlaying(true); }}
+                className={`flex items-center gap-4 p-2 rounded-xl transition-colors cursor-pointer ${isPlayingThis ? 'bg-white/10' : 'hover:bg-white/5'}`}
+              >
+                <div className="relative w-10 h-10 rounded-md overflow-hidden shrink-0">
+                  <img src={song.cover} alt={song.title} className={`w-full h-full object-cover ${idx === 0 ? 'grayscale' : ''}`} />
+                  {isPlayingThis && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <div className="w-1 h-3 bg-red-500 animate-pulse mx-0.5 rounded-full"></div>
+                      <div className="w-1 h-2 bg-red-500 animate-pulse mx-0.5 rounded-full delay-75"></div>
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-bold truncate ${isPlayingThis ? 'text-red-400' : 'text-white'}`}>{song.title}</p>
+                  <p className="text-xs text-zinc-500 truncate">{song.artist}</p>
+                </div>
+                <div className="text-xs font-mono text-zinc-600">0:30</div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
     </div>
   );
 };
