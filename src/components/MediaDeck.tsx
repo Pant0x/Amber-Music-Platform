@@ -326,7 +326,7 @@ export const MediaDeck: React.FC = () => {
       const resolveTrack = async () => {
         try {
           const res = await fetch(
-            `/api/youtube/resolve?title=${encodeURIComponent(currentTrack.title)}&artist=${encodeURIComponent(currentTrack.channelTitle)}&mode=${playbackMode}`
+            `/api/youtube/resolve?title=${encodeURIComponent(currentTrack.title)}&artist=${encodeURIComponent(currentTrack.channelTitle)}&mode=${playbackMode}&explicit=${currentTrack.isExplicit || false}`
           );
           if (res.ok) {
             const data = await res.json();

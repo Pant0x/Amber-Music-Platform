@@ -6,7 +6,6 @@ import { TrackCover } from '../TrackCover';
 import { Carousel, ArtistLinks } from './shared';
 
 export const ExploreView: React.FC = () => {
-  const { hideExplicit } = usePlayerStore();
   const [exploreCharts, setExploreCharts] = useState<Track[]>([]);
   const [exploreNewReleases, setExploreNewReleases] = useState<Track[]>([]);
   const [exploreLoading, setExploreLoading] = useState(false);
@@ -68,7 +67,7 @@ export const ExploreView: React.FC = () => {
             <div className="space-y-4 pt-4">
               <h2 className="text-xl font-bold text-white tracking-tight">New releases</h2>
               <Carousel>
-                {(exploreNewReleases.filter(t => hideExplicit ? !t.isExplicit : !/\b(clean|censored|radio\s+edit)\b/i.test(t.title))).map((track) => (
+                {exploreNewReleases.map((track) => (
                   <div
                     key={`new-rel-${track.id}`}
                     onClick={() => usePlayerStore.getState().playTrack(track, exploreNewReleases)}
@@ -88,7 +87,7 @@ export const ExploreView: React.FC = () => {
             <div className="space-y-4 pt-4">
               <h2 className="text-xl font-bold text-white tracking-tight">Top charts</h2>
               <Carousel>
-                {(exploreCharts.filter(t => hideExplicit ? !t.isExplicit : !/\b(clean|censored|radio\s+edit)\b/i.test(t.title))).map((track) => (
+                {exploreCharts.map((track) => (
                   <div
                     key={`chart-${track.id}`}
                     onClick={() => usePlayerStore.getState().playTrack(track, exploreCharts)}
