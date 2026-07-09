@@ -435,15 +435,6 @@ export const usePlayerStore = create<PlayerState>()(
         get().pushNavState('channel', null, idOrName);
         set({ activeTab: 'channel', currentChannelDetails: null, currentChannelId: idOrName });
         
-        const router = get().router;
-        if (router && typeof window !== 'undefined') {
-          const currentPath = window.location.pathname;
-          const targetPath = `/artist/${encodeURIComponent(idOrName)}`;
-          if (currentPath !== targetPath) {
-            router.push(targetPath);
-          }
-        }
-        
         await get().fetchChannelDetails(idOrName, isName);
       },
 
