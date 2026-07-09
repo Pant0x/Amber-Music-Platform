@@ -285,6 +285,29 @@ export async function GET(request: Request) {
       return true;
     }).map((s) => ({ ...s, playbackMode: 'song' }));
 
+    // Deduplicate clean vs explicit versions of the same song, favoring explicit/uncensored
+    const dedupedSongs: any[] = [];
+    songs.forEach((song) => {
+      const cleanTitle = song.title.toLowerCase().replace(/\b(clean|censored|radio\s+edit|explicit)\b/gi, '').replace(/\[.*\]|\(.*\)/g, '').trim();
+      const cleanArtist = song.channelTitle.toLowerCase().trim();
+      
+      const dupIdx = dedupedSongs.findIndex((s) => {
+        const sCleanTitle = s.title.toLowerCase().replace(/\b(clean|censored|radio\s+edit|explicit)\b/gi, '').replace(/\[.*\]|\(.*\)/g, '').trim();
+        const sCleanArtist = s.channelTitle.toLowerCase().trim();
+        return sCleanTitle === cleanTitle && sCleanArtist === cleanArtist;
+      });
+
+      if (dupIdx !== -1) {
+        const existing = dedupedSongs[dupIdx];
+        if (song.isExplicit && !existing.isExplicit) {
+          dedupedSongs[dupIdx] = song; // Prefer the explicit/uncensored version
+        }
+      } else {
+        dedupedSongs.push(song);
+      }
+    });
+    songs = dedupedSongs;
+
     videos = videos.filter((v) => {
       if (!v || !v.title) return false;
       // avoid very short/shorts content and clearly non-music cinematic pieces
