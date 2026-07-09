@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Registering",
-  description: "Join the waitlist for Pantooty Music.",
+  description: "Join the waitlist for your ad-free music experience.",
 };
 
 export default function RootLayout({
