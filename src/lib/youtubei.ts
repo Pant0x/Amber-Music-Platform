@@ -270,7 +270,7 @@ export async function ytMusicSearch(query: string, params?: string) {
       const browseId = item.navigationEndpoint?.browseEndpoint?.browseId || titleRun?.navigationEndpoint?.browseEndpoint?.browseId;
       const typeText = subtitleRuns[0]?.text?.toLowerCase() || '';
 
-      const isExplicit = parseExplicitBadge(item.badges);
+      const isExplicit = parseExplicitBadge(item.badges) || parseExplicitBadge(item.subtitleBadges);
 
       if (title) {
         if (typeText === 'song') {

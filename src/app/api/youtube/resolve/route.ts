@@ -13,8 +13,10 @@ export async function GET(request: Request) {
     }
 
     const mode = searchParams.get('mode') || 'song';
-
-    const query = mode === 'video' ? `${artist} ${title} Official Video` : `${artist} - Topic ${title}`;
+    const isExplicitRequest = searchParams.get('explicit') === 'true';
+    const query = mode === 'video' 
+      ? `${artist} ${title} Official Video` 
+      : `${artist} - Topic ${title}${isExplicitRequest ? ' Explicit' : ''}`;
     console.log(`[Resolve API] Searching YouTube Music for (${mode}): "${query}"`);
     const searchData = await ytMusicSearch(query);
 
