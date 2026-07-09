@@ -18,7 +18,8 @@ export const HomeView: React.FC = () => {
     history,
     searchHistory,
     selectedMood,
-    setSelectedMood
+    setSelectedMood,
+    hideExplicit
   } = usePlayerStore();
 
   const [recommendations, setRecommendations] = useState<Track[]>([]);
@@ -115,7 +116,7 @@ export const HomeView: React.FC = () => {
         ) : (() => {
           // Split recommendations.slice(0, 16) into groups of 4 for vertical rows inside horizontal column groups
           const quickPicksGroups = [];
-          const recSlice = recommendations.slice(0, 16);
+          const recSlice = (hideExplicit ? recommendations.filter(t => !t.isExplicit) : recommendations).slice(0, 16);
           for (let i = 0; i < recSlice.length; i += 4) {
             quickPicksGroups.push(recSlice.slice(i, i + 4));
           }
@@ -164,6 +165,7 @@ export const HomeView: React.FC = () => {
           <Carousel>
             {history
               .filter((v, i, a) => a.findIndex(t => t.id === v.id) === i)
+              .filter(t => !hideExplicit || !t.isExplicit)
               .slice(0, 12)
               .map((track) => (
                 <div
@@ -181,11 +183,11 @@ export const HomeView: React.FC = () => {
       )}
 
       {/* Shelves B: Mixed For You */}
-      {recommendations.length > 8 && (
+      {(hideExplicit ? recommendations.filter(t => !t.isExplicit) : recommendations).length > 8 && (
         <div className="space-y-4 pt-2">
           <h2 className="text-xl font-bold text-white tracking-tight">Mixed for you</h2>
           <Carousel>
-            {recommendations.slice(8, 20).map((track) => (
+            {(hideExplicit ? recommendations.filter(t => !t.isExplicit) : recommendations).slice(8, 20).map((track) => (
               <div
                 key={`mix-${track.id}`}
                 onClick={() => usePlayerStore.getState().playTrack(track, recommendations)}

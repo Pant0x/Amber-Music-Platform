@@ -23,7 +23,9 @@ export const Header: React.FC = () => {
     playlists,
     likedTracks,
     subscribedChannels,
-    history
+    history,
+    hideExplicit,
+    toggleHideExplicit
   } = usePlayerStore();
 
   const [mounted, setMounted] = useState(false);
@@ -308,8 +310,22 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. RIGHT SIDE: Profile Avatar */}
+      {/* 3. RIGHT SIDE: Safe Mode Toggle + Profile Avatar */}
       <div className="flex items-center gap-4 flex-shrink-0">
+        {/* Safe Mode Toggle */}
+        <div className="hidden sm:flex items-center gap-2">
+          <span className={`text-[10px] font-bold uppercase tracking-wider transition-colors ${hideExplicit ? 'text-red-400' : 'text-zinc-500'}`}>
+            Safe
+          </span>
+          <button
+            onClick={toggleHideExplicit}
+            className={`relative w-9 h-5 rounded-full transition-colors ${hideExplicit ? 'bg-red-500/80' : 'bg-zinc-700'}`}
+            title={hideExplicit ? 'Safe Mode ON — explicit content hidden' : 'Safe Mode OFF — explicit content shown'}
+          >
+            <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${hideExplicit ? 'translate-x-4' : 'translate-x-0'}`} />
+          </button>
+        </div>
+
         {/* Mobile Search Button */}
         <button
           onClick={() => {

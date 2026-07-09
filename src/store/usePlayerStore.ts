@@ -76,6 +76,10 @@ interface PlayerState {
   toggleLikeTrack: (track: Track) => void;
   toggleSubscribeChannel: (channelId: string) => void;
 
+  // Safe Mode (Explicit Content Filter)
+  hideExplicit: boolean;
+  toggleHideExplicit: () => void;
+
   // Queue & Panel State
   showQueuePanel: boolean;
   toggleQueuePanel: () => void;
@@ -554,7 +558,11 @@ export const usePlayerStore = create<PlayerState>()(
           ? state.subscribedChannels.filter(id => id !== channelId)
           : [...state.subscribedChannels, channelId];
         return { subscribedChannels: updated };
-      })
+      }),
+
+      // Safe Mode
+      hideExplicit: false,
+      toggleHideExplicit: () => set((state) => ({ hideExplicit: !state.hideExplicit }))
     }),
     {
       name: 'yt-music-storage-v1',
@@ -576,7 +584,8 @@ export const usePlayerStore = create<PlayerState>()(
         subscribedChannels: state.subscribedChannels,
         displayName: state.displayName,
         avatarUrl: state.avatarUrl,
-        isMinimized: state.isMinimized
+        isMinimized: state.isMinimized,
+        hideExplicit: state.hideExplicit
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

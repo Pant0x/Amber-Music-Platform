@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { Track } from '@/types/music-player';
 import { ExplicitBadge } from './pages/shared';
@@ -212,36 +212,64 @@ export const NowPlayingView: React.FC = () => {
     }
   }, [currentTrack?.id, nowPlayingTab]);
 
-  // 3. Scroll Synced Lyric Line into View
+  // 3. Active Lyric Line — synced uses timestamp, unsynced uses scroll position
+  const [unsyncedActiveIndex, setUnsyncedActiveIndex] = useState(-1);
+
+  const handleLyricScroll = useCallback(() => {
+    const container = lyricsContainerRef.current;
+    if (!container || !lyricsData?.lines || lyricsData.isSynced) return;
+    const containerCenter = container.scrollTop + container.clientHeight / 2;
+    const lines = container.querySelectorAll('[data-lyric-line]');
+    let closestIdx = -1;
+    let closestDist = Infinity;
+    lines.forEach((el, idx) => {
+      const rect = el.getBoundingClientRect();
+      const lineMid = rect.top + rect.height / 2 - container.getBoundingClientRect().top;
+      const dist = Math.abs(lineMid - containerCenter);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closestIdx = idx;
+      }
+    });
+    setUnsyncedActiveIndex(closestIdx);
+  }, [lyricsData, lyricsContainerRef]);
+
   const activeLineIndex = React.useMemo(() => {
-    if (!lyricsData?.lines || !lyricsData.isSynced) return -1;
-    
-    const lines = lyricsData.lines;
-    let low = 0;
-    let high = lines.length - 1;
-    let bestMatch = -1;
+    if (!lyricsData?.lines) return -1;
+    if (lyricsData.isSynced) {
+      const lines = lyricsData.lines;
+      let low = 0;
+      let high = lines.length - 1;
+      let bestMatch = -1;
 
-    while (low <= high) {
-      const mid = Math.floor((low + high) / 2);
-      const line = lines[mid];
-      
-      if (line.time === -999) {
-        // Fallback to linear scan if invalid times break binary search
-        return lines.findIndex((l, idx) => {
-          const nextL = lines[idx + 1];
-          return l.time !== -999 && playedSeconds >= l.time && (!nextL || playedSeconds < nextL.time);
-        });
-      }
+      while (low <= high) {
+        const mid = Math.floor((low + high) / 2);
+        const line = lines[mid];
+        
+        if (line.time === -999) {
+          return lines.findIndex((l, idx) => {
+            const nextL = lines[idx + 1];
+            return l.time !== -999 && playedSeconds >= l.time && (!nextL || playedSeconds < nextL.time);
+          });
+        }
 
-      if (playedSeconds >= line.time) {
-        bestMatch = mid;
-        low = mid + 1;
-      } else {
-        high = mid - 1;
+        if (playedSeconds >= line.time) {
+          bestMatch = mid;
+          low = low + 1;
+        } else {
+          high = mid - 1;
+        }
       }
+      return bestMatch;
     }
-    return bestMatch;
-  }, [lyricsData, playedSeconds]);
+    return unsyncedActiveIndex;
+  }, [lyricsData, playedSeconds, unsyncedActiveIndex]);
+
+  useEffect(() => {
+    if (lyricsData?.lines && !lyricsData.isSynced) {
+      handleLyricScroll();
+    }
+  }, [lyricsData, handleLyricScroll]);
 
   useEffect(() => {
     if (activeLyricRef.current && lyricsContainerRef.current) {
@@ -975,17 +1003,16 @@ export const NowPlayingView: React.FC = () => {
                 ) : lyricsData ? (
                   <div
                     ref={lyricsContainerRef}
-                    className={`flex-1 overflow-y-auto space-y-5 custom-scrollbar pr-2 text-center select-text ${
-                      lyricsData.isSynced ? 'py-[20vh]' : 'py-8'
-                    }`}
+                    onScroll={handleLyricScroll}
+                    className="flex-1 overflow-y-auto space-y-5 custom-scrollbar pr-2 text-center select-text py-[20vh]"
                   >
                     {lyricsData.lines.map((line, idx) => {
-                      const isSynced = lyricsData.isSynced;
-                      const isActive = isSynced && idx === activeLineIndex;
-                      const isClickable = isSynced && line.time !== -999;
+                      const isActive = idx === activeLineIndex;
+                      const isClickable = lyricsData.isSynced && line.time !== -999;
                       return (
                         <p
                           key={`lyric-line-${idx}`}
+                          data-lyric-line
                           ref={isActive ? activeLyricRef : null}
                           onClick={() => {
                             if (isClickable) {
@@ -997,11 +1024,9 @@ export const NowPlayingView: React.FC = () => {
                               ? 'cursor-pointer hover:text-white hover:scale-[1.02] active:scale-95' 
                               : 'cursor-default'
                           } ${
-                            !isSynced
-                              ? 'text-zinc-300 text-base lg:text-lg opacity-90'
-                              : isActive
-                                ? 'text-white text-lg lg:text-xl font-extrabold opacity-100 scale-[1.04] blur-none'
-                                : 'text-zinc-500 text-sm lg:text-base opacity-40 blur-[0.4px] hover:opacity-75 hover:blur-none'
+                            isActive
+                              ? 'text-white text-lg lg:text-xl font-extrabold opacity-100 scale-[1.04] blur-none'
+                              : 'text-zinc-500 text-sm lg:text-base opacity-40 blur-[0.4px] hover:opacity-75 hover:blur-none'
                           } ${line.text.startsWith('[') ? 'text-zinc-400/80 italic font-medium tracking-wide border-t border-white/5 pt-2 mt-4' : ''}`}
                         >
                           {line.text}

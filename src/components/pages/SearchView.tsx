@@ -25,7 +25,8 @@ export const SearchView: React.FC = () => {
     history,
     searchHistory,
     selectedMood,
-    addSearchQueryToHistory
+    addSearchQueryToHistory,
+    hideExplicit
   } = usePlayerStore();
 
   const [loading, setLoading] = useState(false);
@@ -252,7 +253,7 @@ export const SearchView: React.FC = () => {
                 <h3 className="text-xl font-bold text-white tracking-tight">Recommended for you</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {landingRecs.map((track, idx) => {
+                {(hideExplicit ? landingRecs.filter(t => !t.isExplicit) : landingRecs).map((track, idx) => {
                   const isActive = isActiveTrack(currentTrack, track);
                   return (
                     <div
@@ -312,7 +313,7 @@ export const SearchView: React.FC = () => {
               {(searchTopResult || searchSongs.length > 0) && (
                 <div className="grid grid-cols-1 lg:grid-cols-[minmax(300px,1fr)_minmax(0,2fr)] gap-6">
                   {/* Top Result Card */}
-                  {searchTopResult && (
+                  {searchTopResult && (!hideExplicit || !searchTopResult.isExplicit) && (
                     <div
                       onClick={() => {
                         if (searchTopResult.type === 'channel') {
@@ -360,7 +361,7 @@ export const SearchView: React.FC = () => {
                     <div>
                       <h3 className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-3">Songs</h3>
                       <div className="space-y-0.5">
-                        {searchSongs.slice(0, 4).map((track, i) => {
+                        {(hideExplicit ? searchSongs.filter(t => !t.isExplicit) : searchSongs).slice(0, 4).map((track, i) => {
                           const isActive = isActiveTrack(currentTrack, track);
                           const isCurrentPlaying = isActive && isPlaying;
                           return (
@@ -523,7 +524,7 @@ export const SearchView: React.FC = () => {
           {/* Songs filter — full song list */}
           {searchFilter === 'songs' && (
             <div className="space-y-1">
-              {searchSongs.map((track, i) => {
+              {(hideExplicit ? searchSongs.filter(t => !t.isExplicit) : searchSongs).map((track, i) => {
                 const isActive = isActiveTrack(currentTrack, track);
                 const isCurrentPlaying = isActive && isPlaying;
                 return (
