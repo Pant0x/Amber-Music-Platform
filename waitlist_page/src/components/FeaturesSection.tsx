@@ -8,7 +8,7 @@ const features = [
   {
     icon: <Cloud className="w-6 h-6 text-indigo-400" />,
     title: "The Ultimate Cloud Vault",
-    description: "Upload your own audio and local files, and instantly sync them across all devices to listen anywhere. Enjoy seamless Playlist Transfers from other platforms.",
+    description: "Upload your own audio and local files, and instantly sync them across all devices to listen anywhere & Share them with your friends. Enjoy seamless Playlist Transfers from other platforms.",
     className: "md:col-span-2 lg:col-span-3",
   },
   {
@@ -20,7 +20,7 @@ const features = [
   {
     icon: <MessageSquare className="w-6 h-6 text-blue-400" />,
     title: "Built for the Culture",
-    description: "Deep Discord integration showcasing live artist info. Lightning-fast Genius API lyrics for unreleased tracks, and dedicated spotlight channels.",
+    description: "Deep Discord integration showcasing live artist info. Lightning-fast lyrics for unreleased tracks, and dedicated spotlight channels.",
     className: "md:col-span-2 lg:col-span-3",
   },
   {
