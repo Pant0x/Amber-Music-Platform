@@ -18,43 +18,51 @@ export async function GET(request: Request) {
     console.log(`[Resolve API] Searching YouTube Music for (${mode}): "${query}"`);
     const searchData = await ytMusicSearch(query);
 
+    const getBestMatch = (items: any[]) => {
+      if (!items || items.length === 0) return null;
+      const firstItem = items[0];
+      const baseTitle = firstItem.title.toLowerCase().replace(/\b(clean|censored|radio\s+edit|explicit)\b/gi, '').replace(/\[.*\]|\(.*\)/g, '').trim();
+      
+      const explicitMatch = items.slice(0, 5).find((i: any) => {
+        const iTitle = i.title.toLowerCase().replace(/\b(clean|censored|radio\s+edit|explicit)\b/gi, '').replace(/\[.*\]|\(.*\)/g, '').trim();
+        return iTitle === baseTitle && i.isExplicit;
+      });
+      if (explicitMatch) return explicitMatch;
+
+      const uncensoredMatch = items.slice(0, 5).find((i: any) => {
+        const iTitle = i.title.toLowerCase().replace(/\b(clean|censored|radio\s+edit|explicit)\b/gi, '').replace(/\[.*\]|\(.*\)/g, '').trim();
+        return iTitle === baseTitle && !/\b(clean|censored|radio\s+edit)\b/i.test(i.title);
+      });
+      return uncensoredMatch || firstItem;
+    };
+
     let videoId = '';
     
     if (mode === 'video') {
       if (searchData.videos && searchData.videos.length > 0) {
-        const explicitVideo = searchData.videos.find((v: any) => v.isExplicit);
-        const uncensoredVideo = searchData.videos.find((v: any) => !/\b(clean|censored|radio\s+edit)\b/i.test(v.title));
-        videoId = explicitVideo ? explicitVideo.id : (uncensoredVideo ? uncensoredVideo.id : searchData.videos[0].id);
-        console.log(`[Resolve API] Found video clip match: "${explicitVideo ? explicitVideo.title : (uncensoredVideo ? uncensoredVideo.title : searchData.videos[0].title)}" with videoId: ${videoId}`);
+        const match = getBestMatch(searchData.videos);
+        videoId = match.id;
+        console.log(`[Resolve API] Found video clip match: "${match.title}" with videoId: ${videoId}`);
       } else if (searchData.topResult && (searchData.topResult.type === 'video' || searchData.topResult.resultType === 'video')) {
         videoId = searchData.topResult.id;
         console.log(`[Resolve API] Found top result video match: "${searchData.topResult.title}" with videoId: ${videoId}`);
       } else if (searchData.songs && searchData.songs.length > 0) {
-        const explicitSong = searchData.songs.find((s: any) => s.isExplicit);
-        const uncensoredSong = searchData.songs.find((s: any) => !/\b(clean|censored|radio\s+edit)\b/i.test(s.title));
-        videoId = explicitSong ? explicitSong.id : (uncensoredSong ? uncensoredSong.id : searchData.songs[0].id);
-        console.log(`[Resolve API] Fallback to song match for video: "${explicitSong ? explicitSong.title : (uncensoredSong ? uncensoredSong.title : searchData.songs[0].title)}" with videoId: ${videoId}`);
+        const match = getBestMatch(searchData.songs);
+        videoId = match.id;
+        console.log(`[Resolve API] Fallback to song match for video: "${match.title}" with videoId: ${videoId}`);
       }
     } else {
       if (searchData.songs && searchData.songs.length > 0) {
-        const explicitSong = searchData.songs.find((s: any) => s.isExplicit);
-        const uncensoredSong = searchData.songs.find((s: any) => !/\b(clean|censored|radio\s+edit)\b/i.test(s.title));
-        videoId = explicitSong ? explicitSong.id : (uncensoredSong ? uncensoredSong.id : searchData.songs[0].id);
-        console.log(`[Resolve API] Found song match: "${explicitSong ? explicitSong.title : (uncensoredSong ? uncensoredSong.title : searchData.songs[0].title)}" with videoId: ${videoId}`);
+        const match = getBestMatch(searchData.songs);
+        videoId = match.id;
+        console.log(`[Resolve API] Found song match: "${match.title}" with videoId: ${videoId}`);
       } else if (searchData.topResult && (searchData.topResult.type === 'music' || searchData.topResult.resultType === 'song')) {
         videoId = searchData.topResult.id;
         console.log(`[Resolve API] Found top result match: "${searchData.topResult.title}" with videoId: ${videoId}`);
       } else if (searchData.videos && searchData.videos.length > 0) {
-        // Find a video that lacks "Music Video", "Director", "Official Video" in the title
-        const pureVideo = searchData.videos.find((v: any) => {
-          const titleLower = v.title.toLowerCase();
-          return !titleLower.includes('music video') && 
-                 !titleLower.includes('director') && 
-                 !titleLower.includes('official video') &&
-                 !/\b(clean|censored|radio\s+edit)\b/i.test(v.title);
-        });
-        videoId = pureVideo ? pureVideo.id : searchData.videos[0].id;
-        console.log(`[Resolve API] Fallback to video match: "${pureVideo ? pureVideo.title : searchData.videos[0].title}" with videoId: ${videoId}`);
+        const match = getBestMatch(searchData.videos);
+        videoId = match.id;
+        console.log(`[Resolve API] Fallback to video match: "${match.title}" with videoId: ${videoId}`);
       }
     }
 

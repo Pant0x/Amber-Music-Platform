@@ -3,7 +3,7 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { Track } from '@/types/music-player';
 import { Disc } from 'lucide-react';
 import { TrackCover } from '../TrackCover';
-import { Carousel, ArtistLinks, isActiveTrack } from './shared';
+import { Carousel, ArtistLinks, isActiveTrack, ExplicitBadge } from './shared';
 
 const MOOD_CHIPS = [
   { id: 'focus', label: 'Focus' },
@@ -138,7 +138,7 @@ export const HomeView: React.FC = () => {
                         
                         <div className="min-w-0 flex-1">
                           <p className={`text-xs font-bold truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
-                            {track.title}
+                            {track.title}{track.isExplicit && <ExplicitBadge />}
                           </p>
                           <p className="text-[11px] text-zinc-400 truncate mt-0.5"><ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} /></p>
                         </div>

@@ -5,7 +5,11 @@ import { cleanVisualName, splitArtistNames } from '@/utils/text';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-export const ExplicitBadge = () => null;
+export const ExplicitBadge = () => (
+  <span className="inline-flex items-center justify-center bg-zinc-600/80 text-white text-[9px] font-bold px-1 py-0.5 rounded-sm mx-1.5 leading-none h-[14px]">
+    E
+  </span>
+);
 
 export const Carousel: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = 'gap-4' }) => {
   const containerRef = React.useRef<HTMLDivElement>(null);
