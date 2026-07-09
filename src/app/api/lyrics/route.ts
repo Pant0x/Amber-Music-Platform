@@ -37,6 +37,29 @@ async function getGeniusAccessToken() {
   return null;
 }
 
+function cleanSongTitleForLyrics(t: string): string {
+  return t.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\([^)]*(feat|ft|with|prod|video|audio|visualizer|lyric|explicit|clean|leak)[^)]*\)/gi, '')
+    .replace(/\[[^\]]*(feat|ft|with|prod|video|audio|visualizer|lyric|explicit|clean|leak)[^\]]*\]/gi, '')
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function isCorrectLyricsMatch(requestedTitle: string, matchedTitle: string): boolean {
+  const cleanReq = cleanSongTitleForLyrics(requestedTitle);
+  const cleanMat = cleanSongTitleForLyrics(matchedTitle);
+  return cleanMat.includes(cleanReq) || cleanReq.includes(cleanMat);
+}
+
+function isArtistLyricsMatch(requestedArtist: string, matchedArtist: string): boolean {
+  if (!requestedArtist || !matchedArtist) return true;
+  const cleanReq = requestedArtist.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const cleanMat = matchedArtist.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return cleanMat.includes(cleanReq) || cleanReq.includes(cleanMat);
+}
+
 // Scrape Genius Web Page
 async function fetchLyricsFromGenius(artist: string, title: string): Promise<string | null> {
   const token = await getGeniusAccessToken();
@@ -53,7 +76,19 @@ async function fetchLyricsFromGenius(artist: string, title: string): Promise<str
     const hits = searchData.response?.hits || [];
     if (hits.length === 0) return null;
 
-    const bestSong = hits[0].result;
+    // Filter hits by title and artist match
+    const matchedHit = hits.find((h: any) => 
+      h.result && 
+      isCorrectLyricsMatch(title, h.result.title) && 
+      isArtistLyricsMatch(artist, h.result.primary_artist?.name)
+    );
+    
+    if (!matchedHit) {
+      console.log(`[Genius Lyrics] No verified match for "${artist} - ${title}" in search hits.`);
+      return null;
+    }
+
+    const bestSong = matchedHit.result;
     const songUrl = bestSong?.url;
     if (!songUrl) return null;
 
