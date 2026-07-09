@@ -22,6 +22,46 @@ function isCorrectMatch(requestedTitle: string, matchedTitle: string): boolean {
   return cleanMat.includes(cleanReq) || cleanReq.includes(cleanMat);
 }
 
+const ALLOWED_GENERIC_CHANNELS = [
+  'vevo', 'lyrical lemonade', 'cole bennett', 'ovo sound', 'spinnin', 'atlantic',
+  'ultra', 'sony', 'universal', 'warner', 'records', 'music', 'cactus jack', 'grade a',
+  'opium', 'interscope', 'def jam', 'republic', 'columbia', 'rca', 'epic', 'various artists', 'topic'
+];
+
+function isArtistMatch(requestedArtist: string, channelTitle: string): boolean {
+  if (!requestedArtist || !channelTitle) return true; // fallback
+
+  const cleanArtist = requestedArtist.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const cleanChannel = channelTitle.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  // Split requested artists by separators like ",", "&", "and", "feat", etc.
+  const individualArtists = cleanArtist
+    .split(/,|\s+&\s+|\s+and\s+|\s+feat\.?\s+/i)
+    .map(name => name.trim())
+    .filter(Boolean);
+
+  if (individualArtists.length === 0) return true;
+
+  // 1. Direct match with channel name
+  const isDirect = individualArtists.some(artistName => {
+    if (artistName.length <= 2) {
+      const regex = new RegExp(`\\b${artistName}\\b`, 'i');
+      return regex.test(cleanChannel);
+    }
+    return cleanChannel.includes(artistName);
+  });
+
+  if (isDirect) return true;
+
+  // 2. Allowed generic channels check
+  const isGeneric = ALLOWED_GENERIC_CHANNELS.some(keyword => cleanChannel.includes(keyword));
+  if (isGeneric) return true;
+
+  return false;
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -50,8 +90,8 @@ export async function GET(request: Request) {
     const searchData = await ytMusicSearch(query);
 
     const getBestMatch = (items: any[]) => {
-      // Filter out items that are not correct title matches
-      const validItems = items.filter(i => isCorrectMatch(title, i.title));
+      // Filter out items that are not correct title matches or artist matches
+      const validItems = items.filter(i => isCorrectMatch(title, i.title) && isArtistMatch(artist, i.channelTitle));
       if (!validItems || validItems.length === 0) return null;
       
       const firstItem = validItems[0];
@@ -81,7 +121,7 @@ export async function GET(request: Request) {
         }
       }
       if (!videoId && searchData.topResult && (searchData.topResult.type === 'video' || searchData.topResult.resultType === 'video')) {
-        if (isCorrectMatch(title, searchData.topResult.title)) {
+        if (isCorrectMatch(title, searchData.topResult.title) && isArtistMatch(artist, searchData.topResult.channelTitle || searchData.topResult.author)) {
           videoId = searchData.topResult.id;
           console.log(`[Resolve API] Found top result video match: "${searchData.topResult.title}" with videoId: ${videoId}`);
         }
@@ -102,7 +142,7 @@ export async function GET(request: Request) {
         }
       }
       if (!videoId && searchData.topResult && (searchData.topResult.type === 'music' || searchData.topResult.resultType === 'song')) {
-        if (isCorrectMatch(title, searchData.topResult.title)) {
+        if (isCorrectMatch(title, searchData.topResult.title) && isArtistMatch(artist, searchData.topResult.channelTitle || searchData.topResult.author)) {
           videoId = searchData.topResult.id;
           console.log(`[Resolve API] Found top result match: "${searchData.topResult.title}" with videoId: ${videoId}`);
         }
