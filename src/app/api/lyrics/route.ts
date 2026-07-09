@@ -165,12 +165,21 @@ async function fetchOfficialYTMusicLyrics(videoId: string, title: string, artist
     const searchData = await ytMusicSearch(query);
     const song = searchData.songs?.[0];
     if (song && song.id) {
-      console.log(`[API Lyrics] Found official song ID: ${song.id} ("${song.title}" by "${song.channelTitle}")`);
-      const browseId = await getYTMusicLyricsBrowseId(song.id);
-      if (browseId) {
-        console.log(`[API Lyrics] Found browseId for searched song: ${browseId}`);
-        const lyrics = await getYTMusicLyrics(browseId);
-        if (lyrics) return lyrics;
+      // Very basic sanity check: if the returned song title is completely unrelated, skip it
+      const sTitle = song.title.toLowerCase();
+      const qTitle = title.toLowerCase();
+      // If none of the words from the requested title are in the found song title, it's likely a bad match for an unreleased song
+      const queryWords = qTitle.split(/\s+/).filter(w => w.length > 2);
+      const isBadMatch = queryWords.length > 0 && !queryWords.some(w => sTitle.includes(w));
+      
+      if (!isBadMatch) {
+        console.log(`[API Lyrics] Found official song ID: ${song.id} ("${song.title}" by "${song.channelTitle}")`);
+        const browseId = await getYTMusicLyricsBrowseId(song.id);
+        if (browseId) {
+          console.log(`[API Lyrics] Found browseId for searched song: ${browseId}`);
+          const lyrics = await getYTMusicLyrics(browseId);
+          if (lyrics) return lyrics;
+        }
       }
     }
   } catch (err) {
@@ -200,12 +209,12 @@ export async function GET(request: Request) {
       }
     }
 
-    // Clean metadata from names
     const cleanTitle = title
-      .replace(/\(feat\.?[^\)]*\)/gi, '')
-      .replace(/\(with[^\)]*\)/gi, '')
+      .replace(/\([^)]*(feat|ft|with|prod|video|audio|visualizer|lyric|explicit|clean|leak)[^)]*\)/gi, '')
       .replace(/\[[^\]]*\]/g, '')
-      .replace(/- Remix/gi, '')
+      .replace(/-.*(remix|edit|mix|video|audio|explicit|clean).*/gi, '')
+      .replace(/\b(official|music video|audio|visualizer|explicit|leak)\b/gi, '')
+      .replace(/\s+/g, ' ')
       .trim();
     const cleanArtist = artist.replace(/ - Topic/g, '').trim();
 
