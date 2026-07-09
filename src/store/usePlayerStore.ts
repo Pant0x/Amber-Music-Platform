@@ -131,7 +131,7 @@ export const usePlayerStore = create<PlayerState>()(
       // Playback Initial State
       currentTrack: null,
       isPlaying: false,
-      volume: 0.8,
+      volume: 1,
       queue: [],
       history: [],
       repeatMode: 'none',
