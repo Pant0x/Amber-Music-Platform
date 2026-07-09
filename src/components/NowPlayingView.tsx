@@ -284,9 +284,7 @@ export const NowPlayingView: React.FC = () => {
 
       {/* Header bar */}
       <header className="h-16 px-6 flex items-center justify-between z-10 flex-shrink-0 border-b border-white/5 bg-[#030303]/40 backdrop-blur-md">
-        <button onClick={() => setShowNowPlaying(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors flex-shrink-0">
-          <Shrink className="w-5 h-5" />
-        </button>
+        <div className="w-10"></div> {/* Spacer for flex balance */}
 
         {/* Video vs Song Toggle Pill */}
         <div className="flex bg-zinc-900/80 border border-white/5 p-1 rounded-full text-xs font-bold shadow-lg">

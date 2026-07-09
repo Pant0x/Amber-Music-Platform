@@ -766,14 +766,17 @@ export const MediaDeck: React.FC = () => {
         </div>
 
         <button 
-          onClick={() => setIsMinimized(!isMinimized)} 
-          className={`hover:text-white transition-colors p-1 ${isMinimized ? 'text-[#ff0000]' : ''}`} 
-          title={isMinimized ? "Expand player" : "Minimize player"}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowNowPlaying(!showNowPlaying);
+          }} 
+          className={`hover:text-white transition-colors p-1 ${showNowPlaying ? 'text-[#ff0000]' : ''}`} 
+          title={showNowPlaying ? "Minimize player" : "Expand player"}
         >
-          {isMinimized ? (
-            <Maximize2 className="w-4.5 h-4.5" />
-          ) : (
+          {showNowPlaying ? (
             <Minimize2 className="w-4.5 h-4.5" />
+          ) : (
+            <Maximize2 className="w-4.5 h-4.5" />
           )}
         </button>
       </div>
