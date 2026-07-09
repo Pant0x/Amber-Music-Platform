@@ -302,32 +302,47 @@ export const NowPlayingView: React.FC = () => {
     }
   }, [lyricsData, handleLyricScroll]);
 
-  // Auto-scroll active lyric into center on every line change
+  // Scroll state: auto-follow vs user-scrolling
+  const userScrollingRef = useRef(false);
+  const lastScrollTimeRef = useRef(Date.now());
+
+  // Reset auto-follow when new lyrics arrive (new track)
+  useEffect(() => {
+    userScrollingRef.current = false;
+  }, [lyricsData]);
+
+  const handleUserScroll = useCallback(() => {
+    userScrollingRef.current = true;
+    lastScrollTimeRef.current = Date.now();
+    if (!lyricsData?.isSynced) {
+      handleLyricScroll();
+    }
+  }, [handleLyricScroll, lyricsData]);
+
+  // Auto-follow: scroll active lyric into center when it changes, unless user is scrolling
   useEffect(() => {
     if (activeLineIndex < 0 || !lyricsData?.lines) return;
+    if (userScrollingRef.current) return;
     const container = lyricsContainerRef.current;
     const element = activeLyricRef.current;
     if (!container || !element) return;
     
-    const elementOffsetTop = element.offsetTop;
-    const elementHeight = element.clientHeight;
-    const containerHeight = container.clientHeight;
-
-    container.scrollTo({
-      top: elementOffsetTop - containerHeight / 2 + elementHeight / 2,
-      behavior: 'auto'
-    });
+    // Reset user scroll whenever lyrics data changes (new track loaded)
+    const isNewLyricsData = !userScrollingRef.current;
+    
+    const top = element.offsetTop - container.clientHeight / 2 + element.clientHeight / 2;
+    const currentScrollTop = container.scrollTop;
+    
+    // Only scroll if we're not already near the target
+    if (isNewLyricsData || Math.abs(currentScrollTop - top) > 50) {
+      container.scrollTo({
+        top,
+        behavior: 'auto'
+      });
+    }
   }, [activeLineIndex, lyricsData]);
 
-  // Scroll-inactivity timer: re-center to current lyric after 15s of no manual scroll
-  const lastScrollTimeRef = useRef(Date.now());
-  const userScrollingRef = useRef(false);
-  const handleUserScroll = useCallback(() => {
-    userScrollingRef.current = true;
-    lastScrollTimeRef.current = Date.now();
-    handleLyricScroll();
-  }, [handleLyricScroll]);
-
+  // Re-enable auto-follow after 15s of no scroll activity
   useEffect(() => {
     if (!lyricsData?.lines) return;
     const interval = setInterval(() => {
@@ -337,11 +352,8 @@ export const NowPlayingView: React.FC = () => {
         const container = lyricsContainerRef.current;
         const element = activeLyricRef.current;
         if (container && element) {
-          const elementOffsetTop = element.offsetTop;
-          const elementHeight = element.clientHeight;
-          const containerHeight = container.clientHeight;
           container.scrollTo({
-            top: elementOffsetTop - containerHeight / 2 + elementHeight / 2,
+            top: element.offsetTop - container.clientHeight / 2 + element.clientHeight / 2,
             behavior: 'auto'
           });
         }
