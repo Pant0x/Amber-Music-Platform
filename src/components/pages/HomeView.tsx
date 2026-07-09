@@ -116,7 +116,7 @@ export const HomeView: React.FC = () => {
         ) : (() => {
           // Split recommendations.slice(0, 16) into groups of 4 for vertical rows inside horizontal column groups
           const quickPicksGroups = [];
-          const recSlice = (hideExplicit ? recommendations.filter(t => !t.isExplicit) : recommendations).slice(0, 16);
+          const recSlice = (recommendations.filter(t => hideExplicit ? !t.isExplicit : !/\b(clean|censored|radio\s+edit)\b/i.test(t.title))).slice(0, 16);
           for (let i = 0; i < recSlice.length; i += 4) {
             quickPicksGroups.push(recSlice.slice(i, i + 4));
           }
@@ -165,7 +165,7 @@ export const HomeView: React.FC = () => {
           <Carousel>
             {history
               .filter((v, i, a) => a.findIndex(t => t.id === v.id) === i)
-              .filter(t => !hideExplicit || !t.isExplicit)
+              .filter(t => hideExplicit ? !t.isExplicit : !/\b(clean|censored|radio\s+edit)\b/i.test(t.title))
               .slice(0, 12)
               .map((track) => (
                 <div
@@ -183,11 +183,11 @@ export const HomeView: React.FC = () => {
       )}
 
       {/* Shelves B: Mixed For You */}
-      {(hideExplicit ? recommendations.filter(t => !t.isExplicit) : recommendations).length > 8 && (
+      {(recommendations.filter(t => hideExplicit ? !t.isExplicit : !/\b(clean|censored|radio\s+edit)\b/i.test(t.title))).length > 8 && (
         <div className="space-y-4 pt-2">
           <h2 className="text-xl font-bold text-white tracking-tight">Mixed for you</h2>
           <Carousel>
-            {(hideExplicit ? recommendations.filter(t => !t.isExplicit) : recommendations).slice(8, 20).map((track) => (
+            {(recommendations.filter(t => hideExplicit ? !t.isExplicit : !/\b(clean|censored|radio\s+edit)\b/i.test(t.title))).slice(8, 20).map((track) => (
               <div
                 key={`mix-${track.id}`}
                 onClick={() => usePlayerStore.getState().playTrack(track, recommendations)}

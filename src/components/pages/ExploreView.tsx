@@ -68,7 +68,7 @@ export const ExploreView: React.FC = () => {
             <div className="space-y-4 pt-4">
               <h2 className="text-xl font-bold text-white tracking-tight">New releases</h2>
               <Carousel>
-                {(hideExplicit ? exploreNewReleases.filter(t => !t.isExplicit) : exploreNewReleases).map((track) => (
+                {(exploreNewReleases.filter(t => hideExplicit ? !t.isExplicit : !/\b(clean|censored|radio\s+edit)\b/i.test(t.title))).map((track) => (
                   <div
                     key={`new-rel-${track.id}`}
                     onClick={() => usePlayerStore.getState().playTrack(track, exploreNewReleases)}
@@ -88,7 +88,7 @@ export const ExploreView: React.FC = () => {
             <div className="space-y-4 pt-4">
               <h2 className="text-xl font-bold text-white tracking-tight">Top charts</h2>
               <Carousel>
-                {(hideExplicit ? exploreCharts.filter(t => !t.isExplicit) : exploreCharts).map((track) => (
+                {(exploreCharts.filter(t => hideExplicit ? !t.isExplicit : !/\b(clean|censored|radio\s+edit)\b/i.test(t.title))).map((track) => (
                   <div
                     key={`chart-${track.id}`}
                     onClick={() => usePlayerStore.getState().playTrack(track, exploreCharts)}
