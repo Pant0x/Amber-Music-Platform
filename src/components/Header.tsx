@@ -129,7 +129,7 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header className="h-16 w-full bg-[#030303] border-b border-white/5 px-6 flex items-center justify-between select-none z-30 flex-shrink-0">
+    <header className="h-16 w-full bg-[#030303] border-b border-white/5 px-6 flex items-center justify-between select-none relative z-50 flex-shrink-0">
 
       {/* 1. LEFT SIDE: Brand Logo & Navigation Chevrons */}
       <div className="flex items-center gap-6 flex-shrink-0">
