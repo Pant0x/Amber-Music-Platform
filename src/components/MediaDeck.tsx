@@ -74,10 +74,11 @@ export const MediaDeck: React.FC = () => {
     else if (activeTab === 'playlist' && currentPlaylistId) targetPath = `/playlist/${currentPlaylistId}`;
     else if (activeTab === 'channel' && currentChannelId) targetPath = `/artist/${currentChannelId}`;
     
-    if (targetPath && pathname !== targetPath) {
+    // Only route if targetPath differs from current browser path
+    if (targetPath && window.location.pathname !== targetPath) {
       router.push(targetPath);
     }
-  }, [activeTab, currentPlaylistId, currentChannelId, router, pathname]);
+  }, [activeTab, currentPlaylistId, currentChannelId, router]);
 
   const playerRef = useRef<any>(null);
   const [progress, setProgress] = useState({ played: 0, playedSeconds: 0, loaded: 0 });
