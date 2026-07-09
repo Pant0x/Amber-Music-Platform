@@ -1072,50 +1072,48 @@ export const NowPlayingView: React.FC = () => {
 
             {/* TAB: LYRICS */}
             {nowPlayingTab === 'lyrics' && (
-              <div className="absolute inset-0 flex flex-col overflow-hidden">
-                <div className="flex-1 p-6 relative">
-                  {lyricsLoading ? (
-                    <LyricSkeleton />
-                  ) : lyricsData ? (
-                    <div
-                      ref={lyricsContainerRef}
-                      onScroll={handleUserScroll}
-                      className="h-full overflow-y-auto space-y-5 custom-scrollbar pr-2 text-center select-text py-[20vh]"
-                    >
-                      {lyricsData.lines.map((line, idx) => {
-                        const isActive = idx === activeLineIndex;
-                        const isClickable = lyricsData.isSynced && line.time !== -999;
-                        return (
-                          <p
-                            key={`lyric-line-${idx}`}
-                            data-lyric-line
-                            ref={isActive ? activeLyricRef : null}
-                            onClick={() => {
-                              if (isClickable) {
-                                setSeekTrigger(line.time);
-                              }
-                            }}
-                            className={`px-4 transition-all duration-300 leading-relaxed font-semibold ${
-                              isClickable 
-                                ? 'cursor-pointer hover:text-white hover:scale-[1.02] active:scale-95' 
-                                : 'cursor-default'
-                            } ${
-                              isActive
-                                ? 'text-white text-lg lg:text-xl font-extrabold opacity-100 scale-[1.04] blur-none'
-                                : 'text-zinc-500 text-sm lg:text-base opacity-40 blur-[0.4px] hover:opacity-75 hover:blur-none'
-                            } ${line.text.startsWith('[') ? 'text-zinc-400/80 italic font-medium tracking-wide border-t border-white/5 pt-2 mt-4' : ''}`}
-                          >
-                            {line.text}
-                          </p>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="h-full flex items-center justify-center text-center p-6">
-                      <p className="text-sm text-zinc-400 font-medium">No lyrics available for this song.</p>
-                    </div>
-                  )}
-                </div>
+              <div className="absolute inset-0 flex flex-col overflow-hidden p-6 animate-fade-in">
+                {lyricsLoading ? (
+                  <LyricSkeleton />
+                ) : lyricsData ? (
+                  <div
+                    ref={lyricsContainerRef}
+                    onScroll={handleUserScroll}
+                    className="flex-1 overflow-y-auto space-y-5 custom-scrollbar pr-2 text-center select-text py-[20vh]"
+                  >
+                    {lyricsData.lines.map((line, idx) => {
+                      const isActive = idx === activeLineIndex;
+                      const isClickable = lyricsData.isSynced && line.time !== -999;
+                      return (
+                        <p
+                          key={`lyric-line-${idx}`}
+                          data-lyric-line
+                          ref={isActive ? activeLyricRef : null}
+                          onClick={() => {
+                            if (isClickable) {
+                              setSeekTrigger(line.time);
+                            }
+                          }}
+                          className={`px-4 transition-all duration-300 leading-relaxed font-semibold ${
+                            isClickable 
+                              ? 'cursor-pointer hover:text-white hover:scale-[1.02] active:scale-95' 
+                              : 'cursor-default'
+                          } ${
+                            isActive
+                              ? 'text-white text-lg lg:text-xl font-extrabold opacity-100 scale-[1.04] blur-none'
+                              : 'text-zinc-500 text-sm lg:text-base opacity-40 blur-[0.4px] hover:opacity-75 hover:blur-none'
+                          } ${line.text.startsWith('[') ? 'text-zinc-400/80 italic font-medium tracking-wide border-t border-white/5 pt-2 mt-4' : ''}`}
+                        >
+                          {line.text}
+                        </p>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
+                    <p className="text-sm text-zinc-400 font-medium">No lyrics available for this song.</p>
+                  </div>
+                )}
               </div>
             )}
 
