@@ -18,7 +18,8 @@ export const HomeView: React.FC = () => {
     history,
     searchHistory,
     selectedMood,
-    setSelectedMood
+    setSelectedMood,
+    hideExplicit
   } = usePlayerStore();
 
   const [recommendations, setRecommendations] = useState<Track[]>([]);
@@ -115,7 +116,7 @@ export const HomeView: React.FC = () => {
         ) : (() => {
           // Split recommendations.slice(0, 16) into groups of 4 for vertical rows inside horizontal column groups
           const quickPicksGroups = [];
-          const recSlice = recommendations.slice(0, 16);
+          const recSlice = (recommendations.filter(t => hideExplicit ? !t.isExplicit : !/\b(clean|censored|radio\s+edit)\b/i.test(t.title))).slice(0, 16);
           for (let i = 0; i < recSlice.length; i += 4) {
             quickPicksGroups.push(recSlice.slice(i, i + 4));
           }
