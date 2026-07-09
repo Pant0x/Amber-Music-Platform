@@ -118,12 +118,19 @@ export const NowPlayingView: React.FC = () => {
     selectedMoodRef.current = selectedMood;
   }, [history, searchHistory, selectedMood]);
 
-  // 1. Fetch Synced Lyrics — instant transition, no flash
-  const [isLyricsTransitioning, setIsLyricsTransitioning] = useState(false);
+  // 1. Fetch Synced Lyrics — instant transition, no flicker, cancel stale requests
+  const lyricsAbortRef = useRef<AbortController | null>(null);
   useEffect(() => {
     if (!currentTrack) return;
-    
+
     const cacheKey = `${currentTrack.id}_${currentTrack.title}_${currentTrack.channelTitle}_${currentTrack.youtubeId || ''}`;
+
+    // Kill any in-flight stale request
+    if (lyricsAbortRef.current) {
+      lyricsAbortRef.current.abort();
+    }
+
+    // Immediately show cached lyrics (even null = no lyrics) — no loading flash
     if (lyricsCache.current.has(cacheKey)) {
       setLyricsData(lyricsCache.current.get(cacheKey));
       setLyricsLoading(false);
@@ -131,55 +138,61 @@ export const NowPlayingView: React.FC = () => {
       return;
     }
 
-    setIsLyricsTransitioning(true);
-    const fetchLyrics = async () => {
-      try {
-        const queryVideoId = currentTrack.youtubeId || currentTrack.id;
-        const res = await fetch(
-          `/api/lyrics?title=${encodeURIComponent(currentTrack.title)}&artist=${encodeURIComponent(currentTrack.channelTitle)}&duration=${encodeURIComponent(currentTrack.duration || '3:00')}&videoId=${encodeURIComponent(queryVideoId)}`
-        );
-        if (res.ok) {
-          const data = await res.json();
-          if (!data || !data.lyrics) {
-            lyricsCache.current.set(cacheKey, null);
-            setLyricsData(null);
-          } else {
-            lyricsCache.current.set(cacheKey, data);
-            setLyricsData(data);
-          }
+    // Mark loading only if no cached data at all
+    setLyricsLoading(true);
+
+    const controller = new AbortController();
+    lyricsAbortRef.current = controller;
+
+    const queryVideoId = currentTrack.youtubeId || currentTrack.id;
+    fetch(`/api/lyrics?title=${encodeURIComponent(currentTrack.title)}&artist=${encodeURIComponent(currentTrack.channelTitle)}&duration=${encodeURIComponent(currentTrack.duration || '3:00')}&videoId=${encodeURIComponent(queryVideoId)}`, {
+      signal: controller.signal
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (controller.signal.aborted) return;
+        if (data?.lyrics) {
+          lyricsCache.current.set(cacheKey, data);
+          setLyricsData(data);
         } else {
           lyricsCache.current.set(cacheKey, null);
           setLyricsData(null);
         }
-      } catch (err) {
+      })
+      .catch(err => {
+        if (err?.name === 'AbortError') return;
         console.error('Failed to load lyrics:', err);
-      } finally {
-        setLyricsLoading(false);
-        setIsLyricsTransitioning(false);
-      }
-    };
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setLyricsLoading(false);
+        }
+      });
 
-    fetchLyrics();
     setIsDisliked(false);
+
+    return () => controller.abort();
   }, [currentTrack?.id, currentTrack?.title, currentTrack?.channelTitle, currentTrack?.youtubeId]);
 
-  // Pre-fetch lyrics for the next track while current is playing
+  // Pre-fetch lyrics for the next 2 tracks in queue for snappy transitions
   useEffect(() => {
-    const nextTrack = queue[0];
-    if (!nextTrack) return;
-    const cacheKey = `${nextTrack.id}_${nextTrack.title}_${nextTrack.channelTitle}_${nextTrack.youtubeId || ''}`;
-    if (!lyricsCache.current.has(cacheKey)) {
-      const queryVideoId = nextTrack.youtubeId || nextTrack.id;
-      fetch(`/api/lyrics?title=${encodeURIComponent(nextTrack.title)}&artist=${encodeURIComponent(nextTrack.channelTitle)}&duration=${encodeURIComponent(nextTrack.duration || '3:00')}&videoId=${encodeURIComponent(queryVideoId)}`)
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
-          if (data?.lyrics) {
-            lyricsCache.current.set(cacheKey, data);
-          }
-        })
-        .catch(() => {});
-    }
-  }, [currentTrack?.id, queue[0]?.id]);
+    const tracksToPrefetch = queue.slice(0, 2);
+    tracksToPrefetch.forEach(nextTrack => {
+      if (!nextTrack) return;
+      const cacheKey = `${nextTrack.id}_${nextTrack.title}_${nextTrack.channelTitle}_${nextTrack.youtubeId || ''}`;
+      if (!lyricsCache.current.has(cacheKey)) {
+        const queryVideoId = nextTrack.youtubeId || nextTrack.id;
+        fetch(`/api/lyrics?title=${encodeURIComponent(nextTrack.title)}&artist=${encodeURIComponent(nextTrack.channelTitle)}&duration=${encodeURIComponent(nextTrack.duration || '3:00')}&videoId=${encodeURIComponent(queryVideoId)}`)
+          .then(r => r.ok ? r.json() : null)
+          .then(data => {
+            if (data?.lyrics) {
+              lyricsCache.current.set(cacheKey, data);
+            }
+          })
+          .catch(() => {});
+      }
+    });
+  }, [currentTrack?.id]);
 
   // 2. Fetch Related Content & Artist Details
   useEffect(() => {
@@ -290,8 +303,6 @@ export const NowPlayingView: React.FC = () => {
   }, [lyricsData, handleLyricScroll]);
 
   // Auto-scroll active lyric into center on every line change
-  const prevTrackIdRef = useRef<string | null>(null);
-  const hasAutoSyncedRef = useRef(false);
   useEffect(() => {
     if (activeLineIndex < 0 || !lyricsData?.lines) return;
     const container = lyricsContainerRef.current;
@@ -308,30 +319,36 @@ export const NowPlayingView: React.FC = () => {
     });
   }, [activeLineIndex, lyricsData]);
 
-  // Auto-sync to correct lyric after 10s of playback (one-time per track)
+  // Scroll-inactivity timer: re-center to current lyric after 15s of no manual scroll
+  const lastScrollTimeRef = useRef(Date.now());
+  const userScrollingRef = useRef(false);
+  const handleUserScroll = useCallback(() => {
+    userScrollingRef.current = true;
+    lastScrollTimeRef.current = Date.now();
+    handleLyricScroll();
+  }, [handleLyricScroll]);
+
   useEffect(() => {
-    if (!currentTrack) return;
-    if (currentTrack.id !== prevTrackIdRef.current) {
-      prevTrackIdRef.current = currentTrack.id;
-      hasAutoSyncedRef.current = false;
-    }
-    if (hasAutoSyncedRef.current || playedSeconds < 10) return;
-    if (!lyricsData?.lines || activeLineIndex < 0) return;
-    
-    hasAutoSyncedRef.current = true;
-    const container = lyricsContainerRef.current;
-    const element = activeLyricRef.current;
-    if (!container || !element) return;
-    
-    const elementOffsetTop = element.offsetTop;
-    const elementHeight = element.clientHeight;
-    const containerHeight = container.clientHeight;
-    
-    container.scrollTo({
-      top: elementOffsetTop - containerHeight / 2 + elementHeight / 2,
-      behavior: 'auto'
-    });
-  }, [playedSeconds, currentTrack?.id, lyricsData, activeLineIndex]);
+    if (!lyricsData?.lines) return;
+    const interval = setInterval(() => {
+      if (!userScrollingRef.current) return;
+      if (Date.now() - lastScrollTimeRef.current >= 15000) {
+        userScrollingRef.current = false;
+        const container = lyricsContainerRef.current;
+        const element = activeLyricRef.current;
+        if (container && element) {
+          const elementOffsetTop = element.offsetTop;
+          const elementHeight = element.clientHeight;
+          const containerHeight = container.clientHeight;
+          container.scrollTo({
+            top: elementOffsetTop - containerHeight / 2 + elementHeight / 2,
+            behavior: 'auto'
+          });
+        }
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [lyricsData, activeLineIndex]);
 
   if (!currentTrack) return null;
 
@@ -1045,12 +1062,12 @@ export const NowPlayingView: React.FC = () => {
             {nowPlayingTab === 'lyrics' && (
               <div className="absolute inset-0 flex flex-col overflow-hidden">
                 <div className="flex-1 p-6 relative">
-                  {lyricsLoading && !lyricsData ? (
+                  {lyricsLoading ? (
                     <LyricSkeleton />
                   ) : lyricsData ? (
                     <div
                       ref={lyricsContainerRef}
-                      onScroll={handleLyricScroll}
+                      onScroll={handleUserScroll}
                       className="h-full overflow-y-auto space-y-5 custom-scrollbar pr-2 text-center select-text py-[20vh]"
                     >
                       {lyricsData.lines.map((line, idx) => {
@@ -1082,9 +1099,7 @@ export const NowPlayingView: React.FC = () => {
                       })}
                     </div>
                   ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
-                      <p className="text-sm text-zinc-400 font-medium">No lyrics available for this song.</p>
-                    </div>
+                    <LyricSkeleton />
                   )}
                 </div>
               </div>
