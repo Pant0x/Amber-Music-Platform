@@ -6,7 +6,7 @@ import { Track } from '@/types/music-player';
 import { ExplicitBadge } from './pages/shared';
 import { cleanVisualName, parseFeaturedArtists, splitArtistNames } from '@/utils/text';
 import {
-  Shrink,
+  ChevronDown,
   Play,
   Pause,
   ThumbsUp,
@@ -394,7 +394,13 @@ export const NowPlayingView: React.FC = () => {
 
       {/* Header bar */}
       <header className="h-16 px-6 flex items-center justify-between z-10 flex-shrink-0 border-b border-white/5 bg-[#030303]/40 backdrop-blur-md">
-        <div className="w-10"></div> {/* Spacer for flex balance */}
+        <button 
+          onClick={() => setShowNowPlaying(false)} 
+          className="p-2 hover:bg-white/10 rounded-full transition-colors flex-shrink-0 text-zinc-400 hover:text-white"
+          title="Minimize player"
+        >
+          <ChevronDown className="w-6 h-6" />
+        </button>
 
         {/* Video vs Song Toggle Pill */}
         <div className="flex bg-zinc-900/80 border border-white/5 p-1 rounded-full text-xs font-bold shadow-lg">
