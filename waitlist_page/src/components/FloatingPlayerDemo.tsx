@@ -2,77 +2,82 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
-import { Play, Pause, SkipForward, SkipBack, Volume2, Maximize2, Mic2 } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Volume2, Mic2 } from 'lucide-react';
 
 const DEMO_SONGS = [
   {
     title: "KICK OUT",
     artist: "Travis Scott",
-    cover: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?q=80&w=400&auto=format&fit=crop&grayscale=true",
-    audioSrc: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/50/de/cf/50decf79-548e-cb82-d9c3-389b805f3d99/mzaf_12127657751890989044.plus.aac.p.m4a",
-    duration: 30, // Preview length
+    cover: "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/30/66/90/306690d4-2a29-402e-e406-6b319ce7731a/886447227169.jpg/600x600bb.jpg",
+    youtubeId: "lqRo0r36nRw",
+    duration: 162, // 2:42
     lyrics: [
       { time: 0, text: "(Intro beat)" },
       { time: 8, text: "Yeah, yeah" },
       { time: 14, text: "Kick out the doors" },
       { time: 18, text: "Let me in" },
       { time: 24, text: "They said I couldn't" },
-      { time: 28, text: "Now they wanna be friends" }
+      { time: 28, text: "Now they wanna be friends" },
+      { time: 33, text: "First year for free, then 50% off!" }
     ]
   },
   {
     title: "Any Colour You Like",
     artist: "Pink Floyd",
-    cover: "https://images.unsplash.com/photo-1614680376593-902f74cf0d41?q=80&w=400&auto=format&fit=crop",
-    audioSrc: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/80/68/b6/8068b607-52bb-f9ab-8cc6-ef60fa9935cb/mzaf_17094260784476895805.plus.aac.p.m4a",
-    duration: 30,
+    cover: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/3e/76/b0/3e76b0e3-762b-2286-a019-8afb19cee541/886445635829.jpg/600x600bb.jpg",
+    youtubeId: "l8pEjmZVx3k",
+    duration: 205, // 3:25
     lyrics: [
-      { time: 0, text: "(Instrumental intro)" },
-      { time: 10, text: "(Synthesizer solo)" },
-      { time: 20, text: "Any colour you like" },
-      { time: 28, text: "They're all the same" }
+      { time: 0, text: "(Trippy synthesizer intro)" },
+      { time: 15, text: "(Wah-wah guitar solo enters)" },
+      { time: 45, text: "(Hammond organ swells)" },
+      { time: 75, text: "(Synthesizer and guitar duel)" }
     ]
   },
   {
     title: "Deep Fried Frenz",
     artist: "MF DOOM",
-    cover: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?q=80&w=400&auto=format&fit=crop",
-    audioSrc: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/6f/4e/76/6f4e7602-521c-cf4a-69e4-295a3b1ddc58/mzaf_12666244896266325876.plus.aac.p.m4a",
-    duration: 30,
+    cover: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/fb/9e/cb/fb9ecb3d-c6a4-1cff-2337-1267b8a3c4b9/artwork.jpg/600x600bb.jpg",
+    youtubeId: "BjoULuCVQiw",
+    duration: 299, // 4:59
     lyrics: [
-      { time: 0, text: "(Beat starts)" },
-      { time: 5, text: "Friends, how many of us have them?" },
-      { time: 12, text: "Friends, ones we can depend on" },
-      { time: 19, text: "Before we go any further" },
-      { time: 25, text: "Let's be friends" }
+      { time: 0, text: "(Intro beat)" },
+      { time: 8, text: "Friends... how many of us have them?" },
+      { time: 14, text: "Friends... ones we can depend on" },
+      { time: 20, text: "Before we go any further, let's be friends" },
+      { time: 26, text: "Yeah, check it. Some write to sheet, some speak to street" },
+      { time: 32, text: "Most don't know who they gonna meet" }
     ]
   },
   {
     title: "Save Your Tears",
     artist: "The Weeknd",
-    cover: "https://images.unsplash.com/photo-1493225457124-a1a2a2f52ba3?q=80&w=400&auto=format&fit=crop",
-    audioSrc: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/8b/38/17/8b3817e4-c0e9-7e02-2654-3e2ecee93603/mzaf_18415642125637540903.plus.aac.p.m4a",
-    duration: 30,
+    cover: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/83/3a/f7/833af71b-2e0c-3303-24f5-8f5c546c073b/20UMGIM21167.rgb.jpg/600x600bb.jpg",
+    youtubeId: "u6lihZAcy4s",
+    duration: 215, // 3:35
     lyrics: [
-      { time: 0, text: "(Beat drops)" },
-      { time: 6, text: "I saw you dancing in a crowded room" },
-      { time: 13, text: "You look so happy when I'm not with you" },
-      { time: 19, text: "But then you saw me, caught you by surprise" },
-      { time: 26, text: "A single teardrop falling from your eye" }
+      { time: 0, text: "(Synth intro)" },
+      { time: 8, text: "I saw you dancing in a crowded room" },
+      { time: 15, text: "You look so happy when I'm not with you" },
+      { time: 22, text: "But then you saw me, caught you by surprise" },
+      { time: 29, text: "A single teardrop falling from your eye" },
+      { time: 36, text: "I don't know why I run away" },
+      { time: 43, text: "I'll make you cry when I run away" }
     ]
   },
   {
     title: "No Pole",
     artist: "Don Toliver",
-    cover: "https://images.unsplash.com/photo-1563298723-dcfebaa392e3?q=80&w=400&auto=format&fit=crop",
-    audioSrc: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/0d/4f/0f/0d4f0f87-a930-c4c9-99e8-0edce8e4f91a/mzaf_7455232474434756947.plus.aac.p.m4a",
-    duration: 30,
+    cover: "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/a5/c2/a5/a5c2a541-9f56-7c98-eb01-3c3198267851/075679823908.jpg/600x600bb.jpg",
+    youtubeId: "fCeiUX59_FM",
+    duration: 192, // 3:12
     lyrics: [
       { time: 0, text: "(Intro)" },
-      { time: 7, text: "I'm in the hills, I'm out of my mind" },
-      { time: 14, text: "You know I'm looking for a good time" },
-      { time: 21, text: "Ain't got no pole, but she slide" },
-      { time: 28, text: "Ride with me through the night" }
+      { time: 6, text: "I'm in the hills, I'm out of my mind" },
+      { time: 12, text: "You know I'm looking for a good time" },
+      { time: 18, text: "Ain't got no pole, but she slide" },
+      { time: 24, text: "Ride with me through the night" },
+      { time: 30, text: "Yeah, we going up, yeah, we taking flight" }
     ]
   }
 ];
@@ -83,7 +88,8 @@ export const FloatingPlayerDemo = () => {
   const [currentSongIdx, setCurrentSongIdx] = useState(0);
   const [showLyrics, setShowLyrics] = useState(true);
   
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const playerRef = useRef<any>(null);
+  const isApiLoaded = useRef<boolean>(false);
   const { scrollY } = useScroll();
 
   const currentSong = DEMO_SONGS[currentSongIdx];
@@ -91,50 +97,154 @@ export const FloatingPlayerDemo = () => {
   // Map scroll position to audio volume (low at top, high when scrolled down to player)
   const volumeRange = useTransform(scrollY, [0, 400], [0.1, 1.0]);
 
-  // Update audio element volume dynamically when scrolling
+  // Handle setting up YouTube Iframe API
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const setupPlayer = () => {
+      const win = window as any;
+      if (!win.YT || !win.YT.Player) return;
+      
+      // If player already exists, just destroy it first to avoid duplicates
+      if (playerRef.current) {
+        try { playerRef.current.destroy(); } catch (e) {}
+      }
+
+      playerRef.current = new win.YT.Player('yt-player-iframe', {
+        height: '0',
+        width: '0',
+        videoId: currentSong.youtubeId,
+        playerVars: {
+          autoplay: 0,
+          controls: 0,
+          disablekb: 1,
+          fs: 0,
+          modestbranding: 1,
+          rel: 0,
+          showinfo: 0,
+          origin: window.location.origin,
+        },
+        events: {
+          onReady: (event: any) => {
+            const vol = volumeRange.get();
+            event.target.setVolume(vol * 100);
+            if (isPlaying) {
+              event.target.playVideo();
+            }
+          },
+          onStateChange: (event: any) => {
+            // YT.PlayerState.PLAYING = 1, PAUSED = 2, ENDED = 0
+            if (event.data === 1) {
+              setIsPlaying(true);
+            } else if (event.data === 2) {
+              setIsPlaying(false);
+            } else if (event.data === 0) {
+              handleNext(undefined as any);
+            }
+          }
+        }
+      });
+    };
+
+    const win = window as any;
+    if (win.YT && win.YT.Player) {
+      setupPlayer();
+    } else {
+      if (!isApiLoaded.current) {
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+        isApiLoaded.current = true;
+      }
+
+      win.onYouTubeIframeAPIReady = () => {
+        setupPlayer();
+      };
+    }
+
+    return () => {
+      // Don't destroy on every song change, only on unmount
+    };
+  }, []);
+
+  // Update volume when scrolling
   useEffect(() => {
     return volumeRange.onChange((v) => {
-      if (audioRef.current) {
-        audioRef.current.volume = v;
+      if (playerRef.current && typeof playerRef.current.setVolume === 'function') {
+        playerRef.current.setVolume(v * 100);
       }
     });
   }, [volumeRange]);
 
+  // Load new video when song changes
   useEffect(() => {
-    if (audioRef.current) {
+    if (playerRef.current && typeof playerRef.current.loadVideoById === 'function') {
+      playerRef.current.loadVideoById({
+        videoId: currentSong.youtubeId,
+        startSeconds: 0,
+      });
       if (isPlaying) {
-        // Ensure volume is correct on play
-        audioRef.current.volume = volumeRange.get();
-        audioRef.current.play().catch(() => setIsPlaying(false));
+        playerRef.current.playVideo();
       } else {
-        audioRef.current.pause();
+        playerRef.current.pauseVideo();
       }
     }
-  }, [isPlaying, currentSongIdx, volumeRange]);
+  }, [currentSongIdx]);
 
-  const handleTimeUpdate = () => {
-    if (audioRef.current) {
-      setProgress(audioRef.current.currentTime);
+  // Track progress while playing
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isPlaying) {
+      interval = setInterval(() => {
+        if (playerRef.current && typeof playerRef.current.getCurrentTime === 'function') {
+          setProgress(playerRef.current.getCurrentTime());
+        }
+      }, 250);
     }
-  };
-
-  const handleAudioEnded = () => {
-    handleNext(undefined as any);
-  };
+    return () => clearInterval(interval);
+  }, [isPlaying]);
 
   const handleNext = (e: React.MouseEvent) => {
     e?.stopPropagation();
+    setProgress(0);
     setCurrentSongIdx((prev) => (prev + 1) % DEMO_SONGS.length);
   };
 
   const handlePrev = (e: React.MouseEvent) => {
     e?.stopPropagation();
+    setProgress(0);
     setCurrentSongIdx((prev) => (prev - 1 + DEMO_SONGS.length) % DEMO_SONGS.length);
   };
 
   const togglePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsPlaying(!isPlaying);
+    if (!playerRef.current) return;
+    
+    if (isPlaying) {
+      playerRef.current.pauseVideo();
+      setIsPlaying(false);
+    } else {
+      playerRef.current.playVideo();
+      setIsPlaying(true);
+    }
+  };
+
+  const handleScrub = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    if (!playerRef.current || typeof playerRef.current.seekTo !== 'function') return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const percentage = clickX / rect.width;
+    const newTime = percentage * currentSong.duration;
+    setProgress(newTime);
+    playerRef.current.seekTo(newTime, true);
+  };
+
+  const formatTime = (time: number) => {
+    const mins = Math.floor(time / 60);
+    const secs = Math.floor(time % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
   // Find active lyric line based on progress
@@ -146,13 +256,8 @@ export const FloatingPlayerDemo = () => {
   return (
     <div className="mt-16 w-full max-w-2xl mx-auto relative group z-20">
       
-      {/* Hidden Real Audio Element */}
-      <audio 
-        ref={audioRef}
-        src={currentSong.audioSrc}
-        onTimeUpdate={handleTimeUpdate}
-        onEnded={handleAudioEnded}
-      />
+      {/* Hidden YouTube Iframe Container */}
+      <div id="yt-player-iframe" className="hidden pointer-events-none absolute w-0 h-0 opacity-0" />
 
       <motion.div 
         initial={{ opacity: 0, y: 50, scale: 0.95 }}
@@ -216,16 +321,21 @@ export const FloatingPlayerDemo = () => {
 
             {/* Scrubber */}
             <div className="w-full flex items-center gap-3">
-              <span className="text-xs font-mono text-zinc-500">
-                {Math.floor(progress / 60)}:{(Math.floor(progress % 60)).toString().padStart(2, '0')}
+              <span className="text-xs font-mono text-zinc-500 w-10">
+                {formatTime(progress)}
               </span>
-              <div className="h-1.5 flex-1 bg-white/10 rounded-full overflow-hidden relative">
+              <div 
+                className="h-1.5 flex-1 bg-white/10 rounded-full overflow-hidden relative cursor-pointer"
+                onClick={handleScrub}
+              >
                 <motion.div 
                   className="absolute top-0 left-0 h-full bg-gradient-to-r from-red-500 to-indigo-500 rounded-full"
-                  style={{ width: `${(progress / currentSong.duration) * 100}%` }}
+                  style={{ width: `${Math.min(100, (progress / currentSong.duration) * 100)}%` }}
                 ></motion.div>
               </div>
-              <span className="text-xs font-mono text-zinc-500">0:30</span>
+              <span className="text-xs font-mono text-zinc-500 w-10 text-right">
+                {formatTime(currentSong.duration)}
+              </span>
             </div>
           </div>
 
@@ -246,7 +356,7 @@ export const FloatingPlayerDemo = () => {
             </div>
             <div className="flex items-center gap-2 text-zinc-500 w-full justify-center">
                <Volume2 className="w-4 h-4" />
-               <div className="w-16 h-1 bg-white/20 rounded-full overflow-hidden">
+               <div className="w-16 h-1 bg-white/20 rounded-full overflow-hidden relative">
                  <motion.div 
                    className="h-full bg-zinc-400 rounded-full"
                    style={{ width: useTransform(volumeRange, [0.1, 1.0], ['10%', '100%']) }}
@@ -325,39 +435,6 @@ export const FloatingPlayerDemo = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Up Next Queue UI */}
-      <div className="w-full max-w-xl mx-auto mt-6 bg-[#0a0a0a]/80 backdrop-blur-md rounded-2xl border border-white/5 p-4">
-        <h4 className="text-xs font-bold text-zinc-500 tracking-widest uppercase mb-4 px-2">Up Next Demo Queue</h4>
-        <div className="space-y-1">
-          {DEMO_SONGS.map((song, idx) => {
-            const isPlayingThis = idx === currentSongIdx;
-            return (
-              <div 
-                key={idx}
-                onClick={(e) => { e.stopPropagation(); setCurrentSongIdx(idx); setProgress(0); setIsPlaying(true); }}
-                className={`flex items-center gap-4 p-2 rounded-xl transition-colors cursor-pointer ${isPlayingThis ? 'bg-white/10' : 'hover:bg-white/5'}`}
-              >
-                <div className="relative w-10 h-10 rounded-md overflow-hidden shrink-0">
-                  <img src={song.cover} alt={song.title} className={`w-full h-full object-cover ${idx === 0 ? 'grayscale' : ''}`} />
-                  {isPlayingThis && (
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <div className="w-1 h-3 bg-red-500 animate-pulse mx-0.5 rounded-full"></div>
-                      <div className="w-1 h-2 bg-red-500 animate-pulse mx-0.5 rounded-full delay-75"></div>
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-bold truncate ${isPlayingThis ? 'text-red-400' : 'text-white'}`}>{song.title}</p>
-                  <p className="text-xs text-zinc-500 truncate">{song.artist}</p>
-                </div>
-                <div className="text-xs font-mono text-zinc-600">0:30</div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-
     </div>
   );
 };

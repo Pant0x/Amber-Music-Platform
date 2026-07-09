@@ -2,12 +2,12 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, CheckCircle2, Loader2, Sparkles } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Loader2, Sparkles, Info } from 'lucide-react';
 
 export const WaitlistForm = () => {
   const [email, setEmail] = useState('');
   const [feature, setFeature] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'existing' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -16,30 +16,47 @@ export const WaitlistForm = () => {
 
     setStatus('loading');
     
-    // Placeholder for actual Supabase POST request:
-    // const res = await fetch('/api/waitlist', { method: 'POST', body: JSON.stringify({ email, feature }) })
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network request
+      const res = await fetch('/api/waitlist', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, feature }) 
+      });
       
-      setStatus('success');
-      setMessage("You're on the list. We'll be in touch.");
-      setEmail('');
-      setFeature('');
-    } catch (err) {
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to submit');
+      }
+
+      setMessage(data.message);
+      if (data.isNew) {
+        setStatus('success');
+        setEmail('');
+        setFeature('');
+      } else {
+        setStatus('existing');
+      }
+      
+    } catch (err: any) {
       setStatus('error');
-      setMessage("Something went wrong. Please try again.");
+      setMessage(err.message || "Something went wrong. Please try again.");
     }
   };
 
   return (
     <div className="w-full max-w-md mx-auto mt-8">
-      {status === 'success' ? (
+      {status === 'success' || status === 'existing' ? (
         <motion.div 
           initial={{ opacity: 0, y: 10 }} 
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center justify-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 text-white"
         >
-          <CheckCircle2 className="w-5 h-5 text-green-400" />
+          {status === 'success' ? (
+             <CheckCircle2 className="w-5 h-5 text-green-400" />
+          ) : (
+             <Info className="w-5 h-5 text-blue-400" />
+          )}
           <span className="font-medium">{message}</span>
         </motion.div>
       ) : (

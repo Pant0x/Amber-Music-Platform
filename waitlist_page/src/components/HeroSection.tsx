@@ -21,7 +21,7 @@ export const HeroSection = () => {
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-semibold tracking-wider text-white mb-8 shadow-[0_0_30px_rgba(255,255,255,0.05)]"
         >
           <span className="animate-pulse">🔥</span> 
-          WAITING LIST USERS GET THE FIRST YEAR COMPLETELY FREE
+          WAITING LIST USERS GET THE FIRST YEAR FREE, THEN 50% OFF ON MONTHLY SUBSCRIPTION
         </motion.div>
 
         {/* Headlines */}
