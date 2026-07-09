@@ -286,7 +286,7 @@ export const NowPlayingView: React.FC = () => {
 
         if (playedSeconds >= line.time) {
           bestMatch = mid;
-          low = low + 1;
+          low = mid + 1;
         } else {
           high = mid - 1;
         }
@@ -1111,7 +1111,9 @@ export const NowPlayingView: React.FC = () => {
                       })}
                     </div>
                   ) : (
-                    <LyricSkeleton />
+                    <div className="h-full flex items-center justify-center text-center p-6">
+                      <p className="text-sm text-zinc-400 font-medium">No lyrics available for this song.</p>
+                    </div>
                   )}
                 </div>
               </div>
