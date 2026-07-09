@@ -4,40 +4,22 @@ import ytAdapter from '@/lib/yt-music-adapter';
 
 const resolveCache = new Map<string, string>();
 
+function cleanSongTitle(t: string): string {
+  return t.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\([^)]*(feat|ft|with|prod|video|audio|visualizer|lyric|explicit|clean|leak)[^)]*\)/gi, '')
+    .replace(/\[[^\]]*(feat|ft|with|prod|video|audio|visualizer|lyric|explicit|clean|leak)[^\]]*\]/gi, '')
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function isCorrectMatch(requestedTitle: string, matchedTitle: string): boolean {
-  // Clean titles by removing common garbage tags
-  const cleanReq = requestedTitle.toLowerCase()
-    .replace(/\b(feat|ft|with|prod|explicit|clean|official|video|audio|lyrics)\b/g, '')
-    .replace(/[^a-z0-9\s]/g, '')
-    .trim();
-  const cleanMat = matchedTitle.toLowerCase()
-    .replace(/\b(feat|ft|with|prod|explicit|clean|official|video|audio|lyrics)\b/g, '')
-    .replace(/[^a-z0-9\s]/g, '')
-    .trim();
+  const cleanReq = cleanSongTitle(requestedTitle);
+  const cleanMat = cleanSongTitle(matchedTitle);
 
-  // Get words
-  const reqWords = cleanReq.split(/\s+/).filter(w => w.length > 1);
-  if (reqWords.length === 0) return true; // fallback
-
-  // Check if at least 60% of the requested title words are in the matched title
-  let matchCount = 0;
-  for (const word of reqWords) {
-    if (cleanMat.includes(word)) {
-      matchCount++;
-    } else {
-      // Handle simple typos or special characters (e.g. feël vs feel)
-      const cleanMatWords = cleanMat.split(/\s+/);
-      const isClose = cleanMatWords.some(w => {
-        return w.startsWith(word) || word.startsWith(w) || 
-               w.replace(/[ëéèê]/g, 'e').includes(word) ||
-               word.replace(/[ëéèê]/g, 'e').includes(w);
-      });
-      if (isClose) matchCount++;
-    }
-  }
-
-  const score = matchCount / reqWords.length;
-  return score >= 0.6;
+  // Strict phrase containment check: one cleaned title must fully contain the other
+  return cleanMat.includes(cleanReq) || cleanReq.includes(cleanMat);
 }
 
 export async function GET(request: Request) {
