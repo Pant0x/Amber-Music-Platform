@@ -8,9 +8,9 @@ export default function Home() {
       <HeroSection />
       <FeaturesSection />
       <AppDemoMockups />
-      
+
       <footer className="py-8 text-center text-zinc-600 text-sm border-t border-white/5">
-        &copy; {new Date().getFullYear()} Pantooty Music. All rights reserved.
+        &copy; {new Date().getFullYear()} Panto Music. All rights reserved.
       </footer>
     </main>
   );
