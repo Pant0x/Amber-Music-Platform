@@ -96,11 +96,8 @@ export const FloatingPlayerDemo = () => {
           },
           onStateChange: (event: any) => {
             // YT.PlayerState.PLAYING = 1, PAUSED = 2, ENDED = 0
-            if (event.data === 1) {
-              setIsPlaying(true);
-            } else if (event.data === 2) {
-              setIsPlaying(false);
-            } else if (event.data === 0) {
+            // Only trigger handleNext if the video genuinely ended on its own
+            if (event.data === 0) {
               handleNext(undefined as any);
             }
           }
