@@ -168,8 +168,19 @@ export const SearchView: React.FC = () => {
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 py-16 text-xs text-zinc-500 font-semibold">
-          <Disc className="w-5 h-5 animate-spin text-[#ff0000]" /> Resolving search index...
+        <div className="space-y-6">
+          <div className="h-4 w-48 bg-white/5 animate-pulse rounded" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {[...Array(8)].map((_, i) => (
+              <div key={`search-skel-${i}`} className="flex items-center gap-3 p-2 bg-white/5 rounded-md animate-pulse">
+                <div className="w-12 h-12 rounded bg-white/5" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 w-3/4 bg-white/5 rounded" />
+                  <div className="h-2 w-1/2 bg-white/5 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       ) : !searchQuery ? (
         <div className="space-y-10 animate-fade-in pb-16">
@@ -223,8 +234,16 @@ export const SearchView: React.FC = () => {
 
           {/* Recommended for You */}
           {recsLoading ? (
-            <div className="flex items-center gap-2 py-10 text-xs text-zinc-500 font-semibold">
-              <Disc className="w-4 h-4 animate-spin text-[#ff0000]" /> Tailoring recommendations...
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[...Array(6)].map((_, i) => (
+                <div key={`search-rec-skel-${i}`} className="flex items-center gap-3.5 p-2 rounded-xl bg-white/5 animate-pulse">
+                  <div className="w-12 h-12 rounded-lg bg-white/5" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 w-3/4 bg-white/5 rounded" />
+                    <div className="h-2 w-1/2 bg-white/5 rounded" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : landingRecs.length > 0 ? (
             <div className="space-y-4">

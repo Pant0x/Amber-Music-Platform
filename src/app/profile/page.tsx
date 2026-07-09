@@ -487,8 +487,13 @@ export default function ProfilePage() {
 
           <div className="flex overflow-x-auto gap-4 py-2 pr-2 custom-scrollbar">
             {channelsLoading ? (
-              <div className="w-full py-10 flex items-center justify-center">
-                <div className="w-5 h-5 border-2 border-white/10 border-t-white rounded-full animate-spin" />
+              <div className="flex gap-4">
+                {[...Array(5)].map((_, i) => (
+                  <div key={`channel-skel-${i}`} className="flex-shrink-0 w-24 flex flex-col items-center space-y-1.5 animate-pulse">
+                    <div className="w-16 h-16 rounded-full bg-white/5" />
+                    <div className="h-2 w-12 bg-white/5 rounded" />
+                  </div>
+                ))}
               </div>
             ) : resolvedChannels.map((channel) => (
               <div

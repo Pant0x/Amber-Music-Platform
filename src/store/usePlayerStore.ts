@@ -111,6 +111,11 @@ interface PlayerState {
   setIsMinimized: (isMinimized: boolean) => void;
   toggleMinimized: () => void;
   
+  // Repeat State
+  repeatMode: 'none' | 'all' | 'one';
+  setRepeatMode: (mode: 'none' | 'all' | 'one') => void;
+  contextQueue: Track[];
+  
   // Hydration state
   _hasHydrated: boolean;
   setHasHydrated: (state: boolean) => void;
@@ -125,6 +130,9 @@ export const usePlayerStore = create<PlayerState>()(
       volume: 0.8,
       queue: [],
       history: [],
+      repeatMode: 'none',
+      setRepeatMode: (repeatMode) => set({ repeatMode }),
+      contextQueue: [],
 
       // Navigation & Query Initial State
       activeTab: 'home',
@@ -298,6 +306,7 @@ export const usePlayerStore = create<PlayerState>()(
             isPlaying: true,
             history: newHistory,
             queue: newQueue,
+            contextQueue: contextTracks.length > 0 ? contextTracks : state.contextQueue,
             seekTrigger: null // Reset seek on new track
           };
         });
@@ -328,6 +337,9 @@ export const usePlayerStore = create<PlayerState>()(
               ? [state.currentTrack, ...state.history.filter(t => t.id !== state.currentTrack?.id)].slice(0, 50) 
               : state.history
           });
+        } else if (state.repeatMode === 'all' && state.contextQueue.length > 0) {
+          const next = state.contextQueue[0];
+          state.playTrack(next, state.contextQueue);
         } else if (state.isAutoplayEnabled && state.autoplayQueue.length > 0) {
           const next = state.autoplayQueue[0];
           const newAutoplay = state.autoplayQueue.slice(1);
@@ -338,6 +350,8 @@ export const usePlayerStore = create<PlayerState>()(
               ? [state.currentTrack, ...state.history.filter(t => t.id !== state.currentTrack?.id)].slice(0, 50) 
               : state.history
           });
+        } else {
+          set({ isPlaying: false, playedSeconds: 0 });
         }
       },
 

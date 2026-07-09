@@ -34,8 +34,31 @@ export const ExploreView: React.FC = () => {
       <h1 className="text-3xl font-extrabold text-white tracking-tight">Explore</h1>
 
       {exploreLoading ? (
-        <div className="flex items-center gap-2 py-16 text-xs text-zinc-500 font-semibold">
-          <Disc className="w-5 h-5 animate-spin text-[#ff0000]" /> Loading real-time music trends...
+        <div className="space-y-8">
+          <div className="space-y-4 pt-4">
+            <h2 className="text-xl font-bold text-white tracking-tight">New releases</h2>
+            <div className="flex overflow-x-auto no-scrollbar gap-4 pb-2 w-full">
+              {[...Array(6)].map((_, i) => (
+                <div key={`skel-explore-1-${i}`} className="bg-[#0d0d0d] p-3 rounded-lg shadow-lg flex-shrink-0 w-36 sm:w-44 border border-white/5">
+                  <div className="aspect-square w-full rounded-md mb-3 bg-white/5 animate-pulse" />
+                  <div className="h-3 w-3/4 bg-white/5 animate-pulse rounded mb-2" />
+                  <div className="h-2 w-1/2 bg-white/5 animate-pulse rounded" />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="space-y-4 pt-4">
+            <h2 className="text-xl font-bold text-white tracking-tight">Top charts</h2>
+            <div className="flex overflow-x-auto no-scrollbar gap-4 pb-2 w-full">
+              {[...Array(6)].map((_, i) => (
+                <div key={`skel-explore-2-${i}`} className="bg-[#0d0d0d] p-3 rounded-lg shadow-lg flex-shrink-0 w-36 sm:w-44 border border-white/5">
+                  <div className="aspect-square w-full rounded-md mb-3 bg-white/5 animate-pulse" />
+                  <div className="h-3 w-3/4 bg-white/5 animate-pulse rounded mb-2" />
+                  <div className="h-2 w-1/2 bg-white/5 animate-pulse rounded" />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       ) : (
         <div className="space-y-8">

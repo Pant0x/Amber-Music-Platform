@@ -23,6 +23,7 @@ import {
   Repeat,
   Maximize2,
   Minimize2,
+  Repeat1,
   Mic2
 } from 'lucide-react';
 
@@ -50,7 +51,9 @@ export const MediaDeck: React.FC = () => {
     nowPlayingTab,
     setNowPlayingTab,
     navigateBack,
-    navigateForward
+    navigateForward,
+    repeatMode,
+    setRepeatMode
   } = usePlayerStore();
 
   const setStoreDuration = usePlayerStore((s) => s.setDuration);
@@ -85,7 +88,6 @@ export const MediaDeck: React.FC = () => {
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isShuffle, setIsShuffle] = useState(false);
-  const [isRepeat, setIsRepeat] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
   const [videoRect, setVideoRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
 
@@ -406,7 +408,7 @@ export const MediaDeck: React.FC = () => {
   };
 
   const handlePlayerEnded = () => {
-    if (isRepeat) {
+    if (repeatMode === 'one') {
       playerRef.current?.seekTo(0);
       setProgress((prev) => ({ ...prev, played: 0, playedSeconds: 0 }));
       setStorePlayedSeconds(0);
@@ -685,12 +687,15 @@ export const MediaDeck: React.FC = () => {
             <SkipForward className="w-5 h-5 fill-current" />
           </button>
 
-          <button
-            onClick={() => setIsRepeat(!isRepeat)}
-            className={`transition-colors ${isRepeat ? 'text-[#ff0000]' : 'text-zinc-400 hover:text-white'}`}
-            title="Repeat"
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              const nextMode = repeatMode === 'none' ? 'all' : repeatMode === 'all' ? 'one' : 'none';
+              setRepeatMode(nextMode);
+            }}
+            className={`transition-colors p-1 ${repeatMode !== 'none' ? 'text-[#ff0000]' : 'text-zinc-400 hover:text-white'}`}
           >
-            <Repeat className="w-4.5 h-4.5" />
+            {repeatMode === 'one' ? <Repeat1 className="w-5 h-5" /> : <Repeat className="w-5 h-5" />}
           </button>
         </div>
 
