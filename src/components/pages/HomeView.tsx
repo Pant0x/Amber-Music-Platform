@@ -139,11 +139,6 @@ export const HomeView: React.FC = () => {
                         <div className="min-w-0 flex-1">
                           <p className={`text-xs font-bold truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
                             {track.title}
-                            {track.isExplicit && (
-                              <span className="inline-flex items-center justify-center bg-zinc-600/80 text-white text-[9px] font-bold px-1 py-0.5 rounded-sm mx-1.5 leading-none h-[14px]">
-                                E
-                              </span>
-                            )}
                           </p>
                           <p className="text-[11px] text-zinc-400 truncate mt-0.5"><ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} /></p>
                         </div>
