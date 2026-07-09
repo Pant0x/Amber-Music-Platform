@@ -89,25 +89,43 @@ export async function GET(request: Request) {
     console.log(`[Resolve API] Searching YouTube Music for (${mode}): "${query}"`);
     const searchData = await ytMusicSearch(query);
 
-    const getBestMatch = (items: any[]) => {
-      // Filter out items that are not correct title matches or artist matches
-      const validItems = items.filter(i => isCorrectMatch(title, i.title) && isArtistMatch(artist, i.channelTitle));
-      if (!validItems || validItems.length === 0) return null;
-      
-      const firstItem = validItems[0];
+    const findBestInGroup = (group: any[]) => {
+      const firstItem = group[0];
       const baseTitle = firstItem.title.toLowerCase().replace(/\b(clean|censored|radio\s+edit|explicit)\b/gi, '').replace(/\[.*\]|\(.*\)/g, '').trim();
       
-      const explicitMatch = validItems.slice(0, 5).find((i: any) => {
+      const explicitMatch = group.slice(0, 5).find((i: any) => {
         const iTitle = i.title.toLowerCase().replace(/\b(clean|censored|radio\s+edit|explicit)\b/gi, '').replace(/\[.*\]|\(.*\)/g, '').trim();
         return iTitle === baseTitle && i.isExplicit;
       });
       if (explicitMatch) return explicitMatch;
 
-      const uncensoredMatch = validItems.slice(0, 5).find((i: any) => {
+      const uncensoredMatch = group.slice(0, 5).find((i: any) => {
         const iTitle = i.title.toLowerCase().replace(/\b(clean|censored|radio\s+edit|explicit)\b/gi, '').replace(/\[.*\]|\(.*\)/g, '').trim();
         return iTitle === baseTitle && !/\b(clean|censored|radio\s+edit)\b/i.test(i.title);
       });
       return uncensoredMatch || firstItem;
+    };
+
+    const getBestMatch = (items: any[]) => {
+      // Filter out items that are not correct title matches or artist matches
+      const validItems = items.filter(i => isCorrectMatch(title, i.title) && isArtistMatch(artist, i.channelTitle));
+      if (!validItems || validItems.length === 0) return null;
+      
+      if (mode === 'song') {
+        // Enforce Topic channels strictly for songs to guarantee audio releases
+        const topicItems = validItems.filter(i => i.channelTitle.toLowerCase().includes('topic'));
+        if (topicItems.length > 0) {
+          return findBestInGroup(topicItems);
+        }
+      } else if (mode === 'video') {
+        // Enforce non-Topic channels (official artist channel/VEVO) for music videos
+        const clipItems = validItems.filter(i => !i.channelTitle.toLowerCase().includes('topic'));
+        if (clipItems.length > 0) {
+          return findBestInGroup(clipItems);
+        }
+      }
+
+      return findBestInGroup(validItems);
     };
 
     let videoId = '';
