@@ -2,83 +2,43 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
-import { Play, Pause, SkipForward, SkipBack, Volume2, Mic2 } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Volume2 } from 'lucide-react';
 
 const DEMO_SONGS = [
   {
     title: "KICK OUT",
     artist: "Travis Scott",
-    cover: "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/30/66/90/306690d4-2a29-402e-e406-6b319ce7731a/886447227169.jpg/600x600bb.jpg",
+    cover: "/pics/JACKBOYS_2_-_Album_Cover_by_JACKBOYS_&_Travis_Scott.png",
     youtubeId: "lqRo0r36nRw",
-    duration: 162, // 2:42
-    lyrics: [
-      { time: 0, text: "(Intro beat)" },
-      { time: 8, text: "Yeah, yeah" },
-      { time: 14, text: "Kick out the doors" },
-      { time: 18, text: "Let me in" },
-      { time: 24, text: "They said I couldn't" },
-      { time: 28, text: "Now they wanna be friends" },
-      { time: 33, text: "First year for free, then 50% off!" }
-    ]
+    duration: 30 // Play 30 second part
   },
   {
     title: "Any Colour You Like",
     artist: "Pink Floyd",
     cover: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/3e/76/b0/3e76b0e3-762b-2286-a019-8afb19cee541/886445635829.jpg/600x600bb.jpg",
     youtubeId: "l8pEjmZVx3k",
-    duration: 205, // 3:25
-    lyrics: [
-      { time: 0, text: "(Trippy synthesizer intro)" },
-      { time: 15, text: "(Wah-wah guitar solo enters)" },
-      { time: 45, text: "(Hammond organ swells)" },
-      { time: 75, text: "(Synthesizer and guitar duel)" }
-    ]
+    duration: 30
   },
   {
     title: "Deep Fried Frenz",
     artist: "MF DOOM",
-    cover: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/fb/9e/cb/fb9ecb3d-c6a4-1cff-2337-1267b8a3c4b9/artwork.jpg/600x600bb.jpg",
+    cover: "/pics/1900x1900-000000-80-0-0.jpg",
     youtubeId: "BjoULuCVQiw",
-    duration: 299, // 4:59
-    lyrics: [
-      { time: 0, text: "(Intro beat)" },
-      { time: 8, text: "Friends... how many of us have them?" },
-      { time: 14, text: "Friends... ones we can depend on" },
-      { time: 20, text: "Before we go any further, let's be friends" },
-      { time: 26, text: "Yeah, check it. Some write to sheet, some speak to street" },
-      { time: 32, text: "Most don't know who they gonna meet" }
-    ]
+    duration: 30
   },
   {
     title: "Save Your Tears",
     artist: "The Weeknd",
-    cover: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/83/3a/f7/833af71b-2e0c-3303-24f5-8f5c546c073b/20UMGIM21167.rgb.jpg/600x600bb.jpg",
+    cover: "/pics/ab67616d0000b2738863bc11d2aa12b54f5aeb36.jpg",
     youtubeId: "u6lihZAcy4s",
-    duration: 215, // 3:35
-    lyrics: [
-      { time: 0, text: "(Synth intro)" },
-      { time: 8, text: "I saw you dancing in a crowded room" },
-      { time: 15, text: "You look so happy when I'm not with you" },
-      { time: 22, text: "But then you saw me, caught you by surprise" },
-      { time: 29, text: "A single teardrop falling from your eye" },
-      { time: 36, text: "I don't know why I run away" },
-      { time: 43, text: "I'll make you cry when I run away" }
-    ]
+    duration: 30
   },
   {
     title: "No Pole",
     artist: "Don Toliver",
     cover: "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/a5/c2/a5/a5c2a541-9f56-7c98-eb01-3c3198267851/075679823908.jpg/600x600bb.jpg",
     youtubeId: "fCeiUX59_FM",
-    duration: 192, // 3:12
-    lyrics: [
-      { time: 0, text: "(Intro)" },
-      { time: 6, text: "I'm in the hills, I'm out of my mind" },
-      { time: 12, text: "You know I'm looking for a good time" },
-      { time: 18, text: "Ain't got no pole, but she slide" },
-      { time: 24, text: "Ride with me through the night" },
-      { time: 30, text: "Yeah, we going up, yeah, we taking flight" }
-    ]
+    duration: 30
   }
 ];
 
@@ -86,7 +46,6 @@ export const FloatingPlayerDemo = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0); 
   const [currentSongIdx, setCurrentSongIdx] = useState(0);
-  const [showLyrics, setShowLyrics] = useState(true);
   
   const playerRef = useRef<any>(null);
   const isApiLoaded = useRef<boolean>(false);
@@ -94,18 +53,21 @@ export const FloatingPlayerDemo = () => {
 
   const currentSong = DEMO_SONGS[currentSongIdx];
 
-  // Map scroll position to audio volume (low at top, high when scrolled down to player)
-  const volumeRange = useTransform(scrollY, [0, 400], [0.1, 1.0]);
+  // Map scroll position: High (1.0) on Hero/Footer, Low (0.05) when reading features or bento/designed for any screen page
+  const volumeRange = useTransform(
+    scrollY, 
+    [0, 600, 800, 2600, 2900], 
+    [1.0, 1.0, 0.05, 0.05, 1.0]
+  );
 
   // Handle setting up YouTube Iframe API
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    const win = window as any;
 
     const setupPlayer = () => {
-      const win = window as any;
       if (!win.YT || !win.YT.Player) return;
       
-      // If player already exists, just destroy it first to avoid duplicates
       if (playerRef.current) {
         try { playerRef.current.destroy(); } catch (e) {}
       }
@@ -146,7 +108,6 @@ export const FloatingPlayerDemo = () => {
       });
     };
 
-    const win = window as any;
     if (win.YT && win.YT.Player) {
       setupPlayer();
     } else {
@@ -162,10 +123,6 @@ export const FloatingPlayerDemo = () => {
         setupPlayer();
       };
     }
-
-    return () => {
-      // Don't destroy on every song change, only on unmount
-    };
   }, []);
 
   // Update volume when scrolling
@@ -192,18 +149,23 @@ export const FloatingPlayerDemo = () => {
     }
   }, [currentSongIdx]);
 
-  // Track progress while playing
+  // Track progress while playing & skip to next song at 30 seconds
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isPlaying) {
       interval = setInterval(() => {
         if (playerRef.current && typeof playerRef.current.getCurrentTime === 'function') {
-          setProgress(playerRef.current.getCurrentTime());
+          const currentTime = playerRef.current.getCurrentTime();
+          if (currentTime >= 30) {
+            handleNext(undefined as any);
+          } else {
+            setProgress(currentTime);
+          }
         }
       }, 250);
     }
     return () => clearInterval(interval);
-  }, [isPlaying]);
+  }, [isPlaying, currentSongIdx]);
 
   const handleNext = (e: React.MouseEvent) => {
     e?.stopPropagation();
@@ -236,7 +198,7 @@ export const FloatingPlayerDemo = () => {
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const percentage = clickX / rect.width;
-    const newTime = percentage * currentSong.duration;
+    const newTime = percentage * 30; // Max 30s preview
     setProgress(newTime);
     playerRef.current.seekTo(newTime, true);
   };
@@ -246,12 +208,6 @@ export const FloatingPlayerDemo = () => {
     const secs = Math.floor(time % 60);
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
-
-  // Find active lyric line based on progress
-  const activeLyricIdx = currentSong.lyrics.findIndex((lyric, idx) => {
-    const nextLyric = currentSong.lyrics[idx + 1];
-    return progress >= lyric.time && (!nextLyric || progress < nextLyric.time);
-  });
 
   return (
     <div className="mt-16 w-full max-w-2xl mx-auto relative group z-20">
@@ -330,11 +286,11 @@ export const FloatingPlayerDemo = () => {
               >
                 <motion.div 
                   className="absolute top-0 left-0 h-full bg-gradient-to-r from-red-500 to-indigo-500 rounded-full"
-                  style={{ width: `${Math.min(100, (progress / currentSong.duration) * 100)}%` }}
+                  style={{ width: `${Math.min(100, (progress / 30) * 100)}%` }}
                 ></motion.div>
               </div>
               <span className="text-xs font-mono text-zinc-500 w-10 text-right">
-                {formatTime(currentSong.duration)}
+                {formatTime(30)}
               </span>
             </div>
           </div>
@@ -355,86 +311,14 @@ export const FloatingPlayerDemo = () => {
                />
             </div>
             <div className="flex items-center gap-2 text-zinc-500 w-full justify-center">
-               <Volume2 className="w-4 h-4" />
+               <Volume2 className="w-4 h-4 text-zinc-400" />
                <div className="w-16 h-1 bg-white/20 rounded-full overflow-hidden relative">
-                 <motion.div 
-                   className="h-full bg-zinc-400 rounded-full"
-                   style={{ width: useTransform(volumeRange, [0.1, 1.0], ['10%', '100%']) }}
-                 ></motion.div>
+                 <div className="h-full bg-zinc-400 rounded-full w-full"></div>
                </div>
-               <Mic2 
-                 className={`w-4 h-4 ml-2 transition-colors cursor-pointer ${showLyrics ? 'text-indigo-400' : 'hover:text-white'}`}
-                 onClick={(e) => {
-                   e.stopPropagation();
-                   setShowLyrics(!showLyrics);
-                 }}
-               />
             </div>
           </div>
         </div>
       </motion.div>
-
-      {/* Syncing Lyrics Area */}
-      <AnimatePresence>
-        {showLyrics && (
-          <motion.div
-            initial={{ opacity: 0, height: 0, y: -20 }}
-            animate={{ opacity: 1, height: 'auto', y: 0 }}
-            exit={{ opacity: 0, height: 0, y: -20 }}
-            transition={{ duration: 0.4 }}
-            className="w-full max-w-xl mx-auto mt-6 bg-[#0a0a0a]/50 backdrop-blur-md rounded-2xl border border-white/5 p-6 overflow-hidden relative"
-          >
-            {/* Soft glow inside lyrics box */}
-            <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-[#0a0a0a] to-transparent z-10"></div>
-            <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-[#0a0a0a] to-transparent z-10"></div>
-            
-            <div className="relative h-24 flex flex-col items-center justify-center space-y-3 pointer-events-none">
-              <AnimatePresence mode="popLayout">
-                {currentSong.lyrics.map((lyric, idx) => {
-                  const isActive = idx === activeLyricIdx;
-                  const isPast = idx < activeLyricIdx;
-                  const isUpcoming = idx > activeLyricIdx;
-
-                  // Only show active, and one before/after for clean UI
-                  if (Math.abs(idx - activeLyricIdx) > 1 && !(!isActive && activeLyricIdx === -1)) return null;
-
-                  return (
-                    <motion.p
-                      key={`${currentSong.title}-lyric-${idx}`}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ 
-                        opacity: isActive ? 1 : 0.3,
-                        scale: isActive ? 1.05 : 0.95,
-                        y: isPast ? -20 : isUpcoming ? 20 : 0
-                      }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.4 }}
-                      className={`text-center transition-colors duration-500 absolute w-full ${
-                        isActive 
-                          ? 'text-lg md:text-xl font-bold text-white' 
-                          : 'text-sm md:text-base font-medium text-zinc-500'
-                      }`}
-                    >
-                      {lyric.text}
-                    </motion.p>
-                  );
-                })}
-              </AnimatePresence>
-              
-              {/* Fallback if no lyric is active yet */}
-              {activeLyricIdx === -1 && (
-                <motion.p 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.5 }}
-                  className="text-zinc-500 font-medium tracking-widest text-sm absolute"
-                >
-                  (♪ Instrumental ♪)
-                </motion.p>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
