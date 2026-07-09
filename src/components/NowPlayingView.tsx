@@ -21,7 +21,8 @@ import {
   User,
   Check,
   ExternalLink,
-  Share2
+  Share2,
+  ArrowDownToLine
 } from 'lucide-react';
 
 const upgradeThumbnailUrl = (url: string | undefined): string => {
@@ -117,7 +118,8 @@ export const NowPlayingView: React.FC = () => {
     selectedMoodRef.current = selectedMood;
   }, [history, searchHistory, selectedMood]);
 
-  // 1. Fetch Synced Lyrics
+  // 1. Fetch Synced Lyrics — instant transition, no flash
+  const [isLyricsTransitioning, setIsLyricsTransitioning] = useState(false);
   useEffect(() => {
     if (!currentTrack) return;
     
@@ -129,9 +131,8 @@ export const NowPlayingView: React.FC = () => {
       return;
     }
 
+    setIsLyricsTransitioning(true);
     const fetchLyrics = async () => {
-      setLyricsLoading(true);
-      setLyricsData(null); // Clear previous lyrics
       try {
         const queryVideoId = currentTrack.youtubeId || currentTrack.id;
         const res = await fetch(
@@ -139,7 +140,6 @@ export const NowPlayingView: React.FC = () => {
         );
         if (res.ok) {
           const data = await res.json();
-          // Check if data is empty (no lyrics found)
           if (!data || !data.lyrics) {
             lyricsCache.current.set(cacheKey, null);
             setLyricsData(null);
@@ -153,15 +153,33 @@ export const NowPlayingView: React.FC = () => {
         }
       } catch (err) {
         console.error('Failed to load lyrics:', err);
-        setLyricsData(null);
       } finally {
         setLyricsLoading(false);
+        setIsLyricsTransitioning(false);
       }
     };
 
     fetchLyrics();
-    setIsDisliked(false); // Reset dislike for new track
+    setIsDisliked(false);
   }, [currentTrack?.id, currentTrack?.title, currentTrack?.channelTitle, currentTrack?.youtubeId]);
+
+  // Pre-fetch lyrics for the next track while current is playing
+  useEffect(() => {
+    const nextTrack = queue[0];
+    if (!nextTrack) return;
+    const cacheKey = `${nextTrack.id}_${nextTrack.title}_${nextTrack.channelTitle}_${nextTrack.youtubeId || ''}`;
+    if (!lyricsCache.current.has(cacheKey)) {
+      const queryVideoId = nextTrack.youtubeId || nextTrack.id;
+      fetch(`/api/lyrics?title=${encodeURIComponent(nextTrack.title)}&artist=${encodeURIComponent(nextTrack.channelTitle)}&duration=${encodeURIComponent(nextTrack.duration || '3:00')}&videoId=${encodeURIComponent(queryVideoId)}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data?.lyrics) {
+            lyricsCache.current.set(cacheKey, data);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [currentTrack?.id, queue[0]?.id]);
 
   // 2. Fetch Related Content & Artist Details
   useEffect(() => {
@@ -997,48 +1015,68 @@ export const NowPlayingView: React.FC = () => {
 
             {/* TAB: LYRICS */}
             {nowPlayingTab === 'lyrics' && (
-              <div className="absolute inset-0 flex flex-col overflow-hidden p-6 animate-fade-in">
-                {lyricsLoading ? (
-                  <LyricSkeleton />
-                ) : lyricsData ? (
-                  <div
-                    ref={lyricsContainerRef}
-                    onScroll={handleLyricScroll}
-                    className="flex-1 overflow-y-auto space-y-5 custom-scrollbar pr-2 text-center select-text py-[20vh]"
-                  >
-                    {lyricsData.lines.map((line, idx) => {
-                      const isActive = idx === activeLineIndex;
-                      const isClickable = lyricsData.isSynced && line.time !== -999;
-                      return (
-                        <p
-                          key={`lyric-line-${idx}`}
-                          data-lyric-line
-                          ref={isActive ? activeLyricRef : null}
-                          onClick={() => {
-                            if (isClickable) {
-                              setSeekTrigger(line.time);
-                            }
-                          }}
-                          className={`px-4 transition-all duration-300 leading-relaxed font-semibold ${
-                            isClickable 
-                              ? 'cursor-pointer hover:text-white hover:scale-[1.02] active:scale-95' 
-                              : 'cursor-default'
-                          } ${
-                            isActive
-                              ? 'text-white text-lg lg:text-xl font-extrabold opacity-100 scale-[1.04] blur-none'
-                              : 'text-zinc-500 text-sm lg:text-base opacity-40 blur-[0.4px] hover:opacity-75 hover:blur-none'
-                          } ${line.text.startsWith('[') ? 'text-zinc-400/80 italic font-medium tracking-wide border-t border-white/5 pt-2 mt-4' : ''}`}
-                        >
-                          {line.text}
-                        </p>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
-                    <p className="text-sm text-zinc-400 font-medium">No lyrics available for this song.</p>
+              <div className="absolute inset-0 flex flex-col overflow-hidden">
+                {/* Sync button overlay */}
+                {lyricsData && activeLineIndex >= 0 && (
+                  <div className="absolute top-4 right-6 z-20">
+                    <button
+                      onClick={() => {
+                      const container = lyricsContainerRef.current;
+                      const activeEl = activeLyricRef.current;
+                      if (container && activeEl) {
+                        activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      }
+                    }}
+                      className="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 rounded-full p-2 transition-all"
+                      title="Jump to current lyric"
+                    >
+                      <ArrowDownToLine className="w-4 h-4 text-white" />
+                    </button>
                   </div>
                 )}
+                <div className="flex-1 p-6 relative">
+                  {lyricsLoading && !lyricsData ? (
+                    <LyricSkeleton />
+                  ) : lyricsData ? (
+                    <div
+                      ref={lyricsContainerRef}
+                      onScroll={handleLyricScroll}
+                      className="h-full overflow-y-auto space-y-5 custom-scrollbar pr-2 text-center select-text py-[20vh]"
+                    >
+                      {lyricsData.lines.map((line, idx) => {
+                        const isActive = idx === activeLineIndex;
+                        const isClickable = lyricsData.isSynced && line.time !== -999;
+                        return (
+                          <p
+                            key={`lyric-line-${idx}`}
+                            data-lyric-line
+                            ref={isActive ? activeLyricRef : null}
+                            onClick={() => {
+                              if (isClickable) {
+                                setSeekTrigger(line.time);
+                              }
+                            }}
+                            className={`px-4 transition-all duration-300 leading-relaxed font-semibold ${
+                              isClickable 
+                                ? 'cursor-pointer hover:text-white hover:scale-[1.02] active:scale-95' 
+                                : 'cursor-default'
+                            } ${
+                              isActive
+                                ? 'text-white text-lg lg:text-xl font-extrabold opacity-100 scale-[1.04] blur-none'
+                                : 'text-zinc-500 text-sm lg:text-base opacity-40 blur-[0.4px] hover:opacity-75 hover:blur-none'
+                            } ${line.text.startsWith('[') ? 'text-zinc-400/80 italic font-medium tracking-wide border-t border-white/5 pt-2 mt-4' : ''}`}
+                          >
+                            {line.text}
+                          </p>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
+                      <p className="text-sm text-zinc-400 font-medium">No lyrics available for this song.</p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
