@@ -451,7 +451,7 @@ export const MediaDeck: React.FC = () => {
     ) {
       return;
     }
-    setShowNowPlaying(true);
+    setShowNowPlaying(!showNowPlaying);
   };
 
   return (

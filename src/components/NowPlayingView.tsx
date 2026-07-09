@@ -6,7 +6,7 @@ import { Track } from '@/types/music-player';
 import { ExplicitBadge } from './pages/shared';
 import { cleanVisualName, parseFeaturedArtists, splitArtistNames } from '@/utils/text';
 import {
-  ChevronDown,
+  Shrink,
   Play,
   Pause,
   ThumbsUp,
@@ -284,12 +284,8 @@ export const NowPlayingView: React.FC = () => {
 
       {/* Header bar */}
       <header className="h-16 px-6 flex items-center justify-between z-10 flex-shrink-0 border-b border-white/5 bg-[#030303]/40 backdrop-blur-md">
-        <button
-          onClick={() => setShowNowPlaying(false)}
-          className="p-2 rounded-full hover:bg-white/5 text-zinc-400 hover:text-white transition-all duration-200"
-          title="Collapse Panel"
-        >
-          <ChevronDown className="w-6 h-6" />
+        <button onClick={() => setShowNowPlaying(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors flex-shrink-0">
+          <Shrink className="w-5 h-5" />
         </button>
 
         {/* Video vs Song Toggle Pill */}
