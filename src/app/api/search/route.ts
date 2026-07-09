@@ -69,7 +69,7 @@ export async function GET(request: Request) {
     return NextResponse.json(cleanTopicGlobally({
       topResult,
       songs: ytMusicData.songs?.slice(0, 20) || [],
-      videos: ytMusicData.videos?.slice(0, 10) || [],
+      videos: ytArtistsData.videos?.slice(0, 10) || ytMusicData.videos?.slice(0, 10) || [],
       artists: artists.slice(0, 10),
       albums: ytMusicData.albums?.slice(0, 10) || [],
       communityPlaylists: ytMusicData.communityPlaylists?.slice(0, 10) || []
@@ -175,10 +175,11 @@ export async function GET(request: Request) {
   try {
     const spotifyApi = await getSpotifyApi();
 
-    // Perform Spotify search and YouTube Music search in parallel
-    const [spotifyRes, ytRes] = await Promise.allSettled([
+    // Perform Spotify search and YouTube Music searches in parallel
+    const [spotifyRes, ytAudioRes, ytVideoRes] = await Promise.allSettled([
       spotifyApi.search(query, ['track', 'artist', 'album', 'playlist'], { limit: 20 }),
-      ytMusicSearch(getSearchQueryWithAudioSuffix(query))
+      ytMusicSearch(getSearchQueryWithAudioSuffix(query)),
+      ytMusicSearch(query)
     ]);
 
     // Check if Spotify search failed completely
@@ -267,11 +268,10 @@ export async function GET(request: Request) {
     }
 
     // Process YouTube Music search results for videos
-    if (ytRes.status === 'fulfilled') {
-      const ytData = ytRes.value;
-      if (ytData.videos) {
-        videos = ytData.videos;
-      }
+    if (ytVideoRes.status === 'fulfilled' && ytVideoRes.value.videos?.length > 0) {
+      videos = ytVideoRes.value.videos;
+    } else if (ytAudioRes.status === 'fulfilled' && ytAudioRes.value.videos) {
+      videos = ytAudioRes.value.videos;
     }
 
     // Strict filtering: prefer songs (official audio) and exclude live/remix/cover from songs unless query suggests it

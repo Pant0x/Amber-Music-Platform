@@ -12,8 +12,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Missing title or artist parameters' }, { status: 400 });
     }
 
-    const query = `${artist} - Topic ${title}`;
-    console.log(`[Resolve API] Searching YouTube Music for: "${query}"`);
+    const mode = searchParams.get('mode') || 'song';
+
+    const query = mode === 'video' ? `${artist} ${title} Official Video` : `${artist} - Topic ${title}`;
+    console.log(`[Resolve API] Searching YouTube Music for (${mode}): "${query}"`);
     // Try node-youtube-music adapter first (server-side). If unavailable, fallback to internal parser.
     let searchData: any = null;
     try {
@@ -28,22 +30,35 @@ export async function GET(request: Request) {
 
     let videoId = '';
     
-    if (searchData.songs && searchData.songs.length > 0) {
-      videoId = searchData.songs[0].id;
-      console.log(`[Resolve API] Found song match: "${searchData.songs[0].title}" by "${searchData.songs[0].channelTitle}" with videoId: ${videoId}`);
-    } else if (searchData.topResult && (searchData.topResult.type === 'music' || searchData.topResult.resultType === 'song')) {
-      videoId = searchData.topResult.id;
-      console.log(`[Resolve API] Found top result match: "${searchData.topResult.title}" with videoId: ${videoId}`);
-    } else if (searchData.videos && searchData.videos.length > 0) {
-      // Find a video that lacks "Music Video", "Director", "Official Video" in the title
-      const pureVideo = searchData.videos.find((v: any) => {
-        const titleLower = v.title.toLowerCase();
-        return !titleLower.includes('music video') && 
-               !titleLower.includes('director') && 
-               !titleLower.includes('official video');
-      });
-      videoId = pureVideo ? pureVideo.id : searchData.videos[0].id;
-      console.log(`[Resolve API] Fallback to video match: "${pureVideo ? pureVideo.title : searchData.videos[0].title}" with videoId: ${videoId}`);
+    if (mode === 'video') {
+      if (searchData.videos && searchData.videos.length > 0) {
+        videoId = searchData.videos[0].id;
+        console.log(`[Resolve API] Found video clip match: "${searchData.videos[0].title}" with videoId: ${videoId}`);
+      } else if (searchData.topResult && (searchData.topResult.type === 'video' || searchData.topResult.resultType === 'video')) {
+        videoId = searchData.topResult.id;
+        console.log(`[Resolve API] Found top result video match: "${searchData.topResult.title}" with videoId: ${videoId}`);
+      } else if (searchData.songs && searchData.songs.length > 0) {
+        videoId = searchData.songs[0].id;
+        console.log(`[Resolve API] Fallback to song match for video: "${searchData.songs[0].title}" with videoId: ${videoId}`);
+      }
+    } else {
+      if (searchData.songs && searchData.songs.length > 0) {
+        videoId = searchData.songs[0].id;
+        console.log(`[Resolve API] Found song match: "${searchData.songs[0].title}" by "${searchData.songs[0].channelTitle}" with videoId: ${videoId}`);
+      } else if (searchData.topResult && (searchData.topResult.type === 'music' || searchData.topResult.resultType === 'song')) {
+        videoId = searchData.topResult.id;
+        console.log(`[Resolve API] Found top result match: "${searchData.topResult.title}" with videoId: ${videoId}`);
+      } else if (searchData.videos && searchData.videos.length > 0) {
+        // Find a video that lacks "Music Video", "Director", "Official Video" in the title
+        const pureVideo = searchData.videos.find((v: any) => {
+          const titleLower = v.title.toLowerCase();
+          return !titleLower.includes('music video') && 
+                 !titleLower.includes('director') && 
+                 !titleLower.includes('official video');
+        });
+        videoId = pureVideo ? pureVideo.id : searchData.videos[0].id;
+        console.log(`[Resolve API] Fallback to video match: "${pureVideo ? pureVideo.title : searchData.videos[0].title}" with videoId: ${videoId}`);
+      }
     }
 
     if (!videoId) {

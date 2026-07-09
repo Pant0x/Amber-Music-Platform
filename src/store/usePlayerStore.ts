@@ -252,7 +252,19 @@ export const usePlayerStore = create<PlayerState>()(
       toggleNowPlaying: () => set((state) => ({ showNowPlaying: !state.showNowPlaying })),
       setIsMinimized: (isMinimized: boolean) => set({ isMinimized }),
       toggleMinimized: () => set((state) => ({ isMinimized: !state.isMinimized })),
-      setPlaybackMode: (playbackMode) => set({ playbackMode }),
+      setPlaybackMode: (playbackMode) => set((state) => {
+        const currentTrack = state.currentTrack;
+        if (currentTrack) {
+          return {
+            playbackMode,
+            currentTrack: {
+              ...currentTrack,
+              youtubeId: undefined // Force re-resolution for the new playbackMode
+            }
+          };
+        }
+        return { playbackMode };
+      }),
       setNowPlayingTab: (nowPlayingTab) => set({ nowPlayingTab }),
       playedSeconds: 0,
       duration: 0,

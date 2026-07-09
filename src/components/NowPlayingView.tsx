@@ -344,16 +344,21 @@ export const NowPlayingView: React.FC = () => {
 
   // Auto-follow: scroll active lyric into center when it changes, unless user is scrolling
   useEffect(() => {
+    if (nowPlayingTab !== 'lyrics') return;
     if (activeLineIndex < 0 || !lyricsData?.lines) return;
     if (userScrollingRef.current) return;
     
-    // Smooth scroll active line to center
-    scrollToActiveLyric('smooth');
-  }, [activeLineIndex, lyricsData, scrollToActiveLyric]);
+    // Smooth scroll active line to center with a minor delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      scrollToActiveLyric('smooth');
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [activeLineIndex, lyricsData, scrollToActiveLyric, nowPlayingTab]);
 
   // Re-enable auto-follow after 15s of no scroll activity
   useEffect(() => {
-    if (!lyricsData?.lines) return;
+    if (nowPlayingTab !== 'lyrics' || !lyricsData?.lines) return;
     const interval = setInterval(() => {
       if (!userScrollingRef.current) return;
       if (Date.now() - lastScrollTimeRef.current >= 15000) {
@@ -362,7 +367,7 @@ export const NowPlayingView: React.FC = () => {
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, [lyricsData, activeLineIndex, scrollToActiveLyric]);
+  }, [lyricsData, activeLineIndex, scrollToActiveLyric, nowPlayingTab]);
 
   if (!currentTrack) return null;
 
@@ -1081,7 +1086,7 @@ export const NowPlayingView: React.FC = () => {
                   <div
                     ref={lyricsContainerRef}
                     onScroll={handleUserScroll}
-                    className="flex-1 overflow-y-auto space-y-5 custom-scrollbar pr-2 text-center select-text py-[20vh]"
+                    className="flex-1 overflow-y-auto overflow-x-hidden space-y-5 custom-scrollbar pr-2 text-center select-text py-[20vh]"
                   >
                     {lyricsData.lines.map((line, idx) => {
                       const isActive = idx === activeLineIndex;

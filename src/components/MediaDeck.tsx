@@ -318,13 +318,15 @@ export const MediaDeck: React.FC = () => {
   useEffect(() => {
     if (!currentTrack) return;
     
-    if (currentTrack.origin === 'spotify' && !currentTrack.youtubeId) {
-      console.log(`[MediaDeck] Resolving YouTube stream for Spotify track: "${currentTrack.title}" by "${currentTrack.channelTitle}"`);
+    const needsResolve = currentTrack.origin === 'spotify' ? !currentTrack.youtubeId : (currentTrack.origin === 'youtube' && !currentTrack.youtubeId);
+    
+    if (needsResolve) {
+      console.log(`[MediaDeck] Resolving stream (${playbackMode}) for: "${currentTrack.title}" by "${currentTrack.channelTitle}"`);
       
       const resolveTrack = async () => {
         try {
           const res = await fetch(
-            `/api/youtube/resolve?title=${encodeURIComponent(currentTrack.title)}&artist=${encodeURIComponent(currentTrack.channelTitle)}`
+            `/api/youtube/resolve?title=${encodeURIComponent(currentTrack.title)}&artist=${encodeURIComponent(currentTrack.channelTitle)}&mode=${playbackMode}`
           );
           if (res.ok) {
             const data = await res.json();
@@ -333,18 +335,27 @@ export const MediaDeck: React.FC = () => {
               setYoutubeIdForCurrentTrack(data.videoId);
             } else {
               console.error('[MediaDeck] Failed to resolve: no videoId returned');
+              if (currentTrack.origin === 'youtube') {
+                setYoutubeIdForCurrentTrack(currentTrack.id);
+              }
             }
           } else {
             console.error('[MediaDeck] Failed to resolve: HTTP error', res.status);
+            if (currentTrack.origin === 'youtube') {
+              setYoutubeIdForCurrentTrack(currentTrack.id);
+            }
           }
         } catch (err) {
-          console.error('[MediaDeck] Error resolving Spotify track:', err);
+          console.error('[MediaDeck] Error resolving track:', err);
+          if (currentTrack.origin === 'youtube') {
+            setYoutubeIdForCurrentTrack(currentTrack.id);
+          }
         }
       };
 
       resolveTrack();
     }
-  }, [currentTrack?.id, currentTrack?.youtubeId, setYoutubeIdForCurrentTrack]);
+  }, [currentTrack?.id, currentTrack?.youtubeId, setYoutubeIdForCurrentTrack, playbackMode]);
 
   // Background Spotify metadata enrichment for YouTube tracks
   useEffect(() => {
@@ -473,11 +484,11 @@ export const MediaDeck: React.FC = () => {
           opacity: 1,
           pointerEvents: 'auto'
         } : {
-          left: 0,
-          top: 0,
-          width: 0,
-          height: 0,
-          opacity: 0,
+          left: '-9999px',
+          top: '-9999px',
+          width: '200px',
+          height: '200px',
+          opacity: 0.01,
           pointerEvents: 'none'
         }}
       >
