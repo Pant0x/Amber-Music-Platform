@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { ytMusicSearch } from '@/lib/youtubei';
 import ytAdapter from '@/lib/yt-music-adapter';
 
+const resolveCache = new Map<string, string>();
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -14,6 +16,15 @@ export async function GET(request: Request) {
 
     const mode = searchParams.get('mode') || 'song';
     const isExplicitRequest = searchParams.get('explicit') === 'true';
+    
+    // Check resolve cache
+    const cacheKey = `${artist.toLowerCase().trim()}_${title.toLowerCase().trim()}_${mode}_${isExplicitRequest}`;
+    if (resolveCache.has(cacheKey)) {
+      const cachedVideoId = resolveCache.get(cacheKey);
+      console.log(`[Resolve API] Cache HIT for key: "${cacheKey}" -> videoId: ${cachedVideoId}`);
+      return NextResponse.json({ videoId: cachedVideoId });
+    }
+
     const query = mode === 'video' 
       ? `${artist} ${title} Official Video` 
       : `${artist} - Topic ${title}${isExplicitRequest ? ' Explicit' : ''}`;
@@ -72,6 +83,9 @@ export async function GET(request: Request) {
       console.log(`[Resolve API] No matches found, returning fallback empty`);
       return NextResponse.json({ videoId: null });
     }
+
+    // Populate resolve cache
+    resolveCache.set(cacheKey, videoId);
 
     return NextResponse.json({ videoId });
   } catch (error: any) {

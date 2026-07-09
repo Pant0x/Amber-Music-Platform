@@ -53,7 +53,8 @@ export const MediaDeck: React.FC = () => {
     navigateBack,
     navigateForward,
     repeatMode,
-    setRepeatMode
+    setRepeatMode,
+    queue
   } = usePlayerStore();
 
   const setStoreDuration = usePlayerStore((s) => s.setDuration);
@@ -358,6 +359,36 @@ export const MediaDeck: React.FC = () => {
     }
   }, [currentTrack?.id, currentTrack?.youtubeId, setYoutubeIdForCurrentTrack, playbackMode]);
 
+  // Pre-resolve next track in queue for instant playback on transition
+  useEffect(() => {
+    if (queue.length === 0) return;
+    const nextTrack = queue[0];
+    if (nextTrack.origin === 'spotify' && !nextTrack.youtubeId) {
+      console.log(`[MediaDeck] Pre-resolving next track in queue: "${nextTrack.title}"`);
+      const resolveNext = async () => {
+        try {
+          const explicitParam = nextTrack.isExplicit ? '&explicit=true' : '';
+          const res = await fetch(
+            `/api/youtube/resolve?title=${encodeURIComponent(nextTrack.title)}&artist=${encodeURIComponent(nextTrack.channelTitle)}&mode=${playbackMode}${explicitParam}`
+          );
+          if (res.ok) {
+            const data = await res.json();
+            if (data.videoId) {
+              console.log(`[MediaDeck] Successfully pre-resolved next track to: ${data.videoId}`);
+              usePlayerStore.setState((state) => {
+                const newQueue = state.queue.map((t, idx) => idx === 0 ? { ...t, youtubeId: data.videoId } : t);
+                return { queue: newQueue };
+              });
+            }
+          }
+        } catch (e) {
+          console.error('[MediaDeck] Failed to pre-resolve next track:', e);
+        }
+      };
+      resolveNext();
+    }
+  }, [queue[0]?.id, queue[0]?.youtubeId]);
+
   // Background Spotify metadata enrichment for YouTube tracks
   useEffect(() => {
     if (!currentTrack || currentTrack.isEnriched) return;
@@ -584,7 +615,6 @@ export const MediaDeck: React.FC = () => {
                 <>
                   <h4 className="text-sm font-bold text-white truncate max-w-[150px] group-hover/card:text-zinc-200 transition-colors flex items-center gap-1">
                     {parsed.title}
-                    {currentTrack.isExplicit && <ExplicitBadge />}
                   </h4>
                   {parsed.featured.length > 0 && (
                     <p className="text-[10px] text-zinc-500 truncate max-w-[150px] font-medium leading-none mb-0.5">
