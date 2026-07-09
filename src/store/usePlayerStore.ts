@@ -114,8 +114,6 @@ interface PlayerState {
   // Hydration state
   _hasHydrated: boolean;
   setHasHydrated: (state: boolean) => void;
-  router: any | null;
-  setRouter: (router: any) => void;
 }
 
 export const usePlayerStore = create<PlayerState>()(
@@ -127,8 +125,6 @@ export const usePlayerStore = create<PlayerState>()(
       volume: 0.8,
       queue: [],
       history: [],
-      router: null,
-      setRouter: (router) => set({ router }),
 
       // Navigation & Query Initial State
       activeTab: 'home',
@@ -287,11 +283,13 @@ export const usePlayerStore = create<PlayerState>()(
             ? [state.currentTrack, ...state.history.filter(t => t.id !== state.currentTrack?.id)].slice(0, 50)
             : state.history;
 
-          let newQueue = state.queue;
+          let newQueue: Track[] = [];
           if (contextTracks.length > 0) {
-            const idx = contextTracks.findIndex(t => t.id === track.id);
+            const idx = contextTracks.findIndex((t: Track) => t.id === track.id);
             if (idx !== -1) {
               newQueue = contextTracks.slice(idx + 1);
+            } else {
+              newQueue = contextTracks;
             }
           }
 
@@ -299,7 +297,8 @@ export const usePlayerStore = create<PlayerState>()(
             currentTrack: track,
             isPlaying: true,
             history: newHistory,
-            queue: newQueue
+            queue: newQueue,
+            seekTrigger: null // Reset seek on new track
           };
         });
 
@@ -364,46 +363,16 @@ export const usePlayerStore = create<PlayerState>()(
       setActiveTab: (activeTab) => {
         get().pushNavState(activeTab, get().currentPlaylistId, get().currentChannelId);
         set({ activeTab, showNowPlaying: false });
-        const router = get().router;
-        if (router && typeof window !== 'undefined') {
-          const currentPath = window.location.pathname;
-          let targetPath = '';
-          if (activeTab === 'home') targetPath = '/';
-          else if (activeTab === 'explore') targetPath = '/explore';
-          else if (activeTab === 'library') targetPath = '/library';
-          else if (activeTab === 'liked') targetPath = '/liked';
-          else if (activeTab === 'search') targetPath = '/search';
-          
-          if (targetPath && currentPath !== targetPath) {
-            router.push(targetPath);
-          }
-        }
       },
       setSearchQuery: (searchQuery) => set({ searchQuery }),
       setSelectedMood: (selectedMood) => set({ selectedMood }),
       setCurrentPlaylistId: (currentPlaylistId) => {
         get().pushNavState(get().activeTab, currentPlaylistId, get().currentChannelId);
         set({ currentPlaylistId, showNowPlaying: false });
-        const router = get().router;
-        if (currentPlaylistId && router && typeof window !== 'undefined') {
-          const currentPath = window.location.pathname;
-          const targetPath = `/playlist/${encodeURIComponent(currentPlaylistId)}`;
-          if (currentPath !== targetPath) {
-            router.push(targetPath);
-          }
-        }
       },
       setCurrentChannelId: (currentChannelId) => {
         get().pushNavState(get().activeTab, get().currentPlaylistId, currentChannelId);
         set({ currentChannelId, showNowPlaying: false });
-        const router = get().router;
-        if (currentChannelId && router && typeof window !== 'undefined') {
-          const currentPath = window.location.pathname;
-          const targetPath = `/artist/${encodeURIComponent(currentChannelId)}`;
-          if (currentPath !== targetPath) {
-            router.push(targetPath);
-          }
-        }
       },
 
       // Search History Actions

@@ -76,19 +76,21 @@ export const PlaybackProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
   };
 
-  const playTrack = (track: Track) => {
+  const playTrack = (track: Track, isFromQueue = false) => {
     setCurrentTrack(track);
     setIsPlaying(true);
     addToHistory(track);
 
-    // Sync context playlist: make sure this track is loaded in current play context
-    setPlaylist((prev) => {
-      const exists = prev.some((t) => t.id === track.id);
-      if (!exists) {
-        return [...prev, track];
-      }
-      return prev;
-    });
+    if (!isFromQueue) {
+      // Sync context playlist: make sure this track is loaded in current play context
+      setPlaylist((prev) => {
+        const exists = prev.some((t) => t.id === track.id);
+        if (!exists) {
+          return [...prev, track];
+        }
+        return prev;
+      });
+    }
 
     setProgressState({
       played: 0,
@@ -96,6 +98,10 @@ export const PlaybackProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       loaded: 0,
       loadedSeconds: 0,
     });
+    
+    // Reset seek state so new tracks don't start midway
+    setSeekFraction(0);
+    setSeekTrigger(0);
   };
 
   const togglePlay = () => {
@@ -183,7 +189,7 @@ export const PlaybackProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         localStorage.setItem('yt_queue', JSON.stringify(updated));
         return updated;
       });
-      playTrack(next);
+      playTrack(next, true);
       return;
     }
 

@@ -23,30 +23,50 @@ export const DatabaseSync: React.FC = () => {
     }
   }, [isHydrated, fetchDatabaseData]);
 
-  // 2. State Watcher: Sync local changes to DB (debounced by 1.5 seconds)
+  const lastSyncHash = useRef<string>('');
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // 2. State Watcher: Sync local changes to DB (debounced by 5 seconds)
   useEffect(() => {
     if (!isHydrated || !initialLoadRef.current) return;
 
+    const payloadString = JSON.stringify({
+      display_name: displayName,
+      avatar_url: avatarUrl,
+      liked_tracks: likedTracks,
+      subscribed_channels: subscribedChannels,
+      playlists: playlists,
+      history: history
+    });
+
+    if (payloadString === lastSyncHash.current) {
+      return; // No changes to sync
+    }
+
     const timer = setTimeout(async () => {
       try {
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+        
+        abortControllerRef.current = new AbortController();
+
         await fetch('/api/user/sync', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({
-            display_name: displayName,
-            avatar_url: avatarUrl,
-            liked_tracks: likedTracks,
-            subscribed_channels: subscribedChannels,
-            playlists: playlists,
-            history: history
-          })
+          body: payloadString,
+          signal: abortControllerRef.current.signal
         });
-      } catch (err) {
-        console.error('[Sync Component] Failed to save state to database:', err);
+        
+        lastSyncHash.current = payloadString;
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          console.error('[Sync Component] Failed to save state to database:', err);
+        }
       }
-    }, 1500);
+    }, 5000);
 
     return () => clearTimeout(timer);
   }, [playlists, likedTracks, subscribedChannels, history, displayName, avatarUrl, isHydrated]);

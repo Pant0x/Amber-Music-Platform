@@ -20,28 +20,46 @@ export const AlbumCoverPlayOverlay: React.FC<AlbumCoverPlayOverlayProps> = ({ it
   const { playTrack } = usePlayerStore();
   const [loading, setLoading] = useState(false);
 
+  const abortControllerRef = React.useRef<AbortController | null>(null);
+
   const handlePlayClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
     
-    // If it's a single track/song card
-    if (item.type === 'music' || (!item.id.startsWith('VL') && !item.id.startsWith('PL') && !item.id.startsWith('MPRE'))) {
+    // Check if it's a single track by type instead of brittle ID prefixes
+    const isPlaylistOrAlbum = item.type === 'playlist' || item.type === 'album' || item.type === 'artist' || 
+                              (!item.type && (item.id.startsWith('VL') || item.id.startsWith('PL') || item.id.startsWith('MPRE') || item.id.startsWith('OLAK5uy_')));
+    
+    if (!isPlaylistOrAlbum) {
       const track: Track = {
         id: item.id,
         title: item.title,
         thumbnailUrl: item.thumbnailUrl || '',
         channelTitle: item.channelTitle || 'Unknown Artist',
         publishedAt: '',
-        type: item.type as any,
+        type: (item.type as any) || 'music',
         origin: 'youtube'
       };
-      playTrack(track, contextTracks || [track]);
+      playTrack(track, contextTracks?.length ? contextTracks : [track]);
+      return;
+    }
+
+    // If we already have the tracks (e.g. Liked Music or a local custom playlist), play them directly
+    if (contextTracks && contextTracks.length > 0) {
+      playTrack(contextTracks[0], contextTracks);
       return;
     }
 
     // Otherwise, fetch album/playlist tracks dynamically
     setLoading(true);
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
     try {
-      const res = await fetch(`/api/youtube/playlist?id=${item.id}`);
+      const res = await fetch(`/api/youtube/playlist?id=${item.id}`, {
+        signal: abortControllerRef.current.signal
+      });
       if (res.ok) {
         const data = await res.json();
         const tracks = data.tracks || [];
@@ -49,12 +67,22 @@ export const AlbumCoverPlayOverlay: React.FC<AlbumCoverPlayOverlayProps> = ({ it
           playTrack(tracks[0], tracks);
         }
       }
-    } catch (err) {
-      console.error('Failed to play album tracks:', err);
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        console.error('Failed to play album tracks:', err);
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  React.useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   return (
     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center z-10">

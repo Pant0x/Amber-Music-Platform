@@ -4,13 +4,8 @@ import React from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { Trash, X, Play, ListMusic, History } from 'lucide-react';
 import { Track } from '@/types/music-player';
-import { cleanVisualName, parseFeaturedArtists } from '@/utils/text';
-
-const ExplicitBadge = () => (
-  <span className="inline-flex items-center justify-center bg-zinc-600/80 text-white text-[9px] font-bold px-1 py-0.5 rounded-sm mx-1.5 leading-none h-[14px]">
-    E
-  </span>
-);
+import { cleanVisualName, parseFeaturedArtists, splitArtistNames } from '@/utils/text';
+import { ExplicitBadge } from './pages/shared';
 
 export const QueuePanel: React.FC = () => {
   const {
@@ -28,8 +23,8 @@ export const QueuePanel: React.FC = () => {
 
   if (!showQueuePanel) return null;
 
-  const handleTrackClick = (track: Track) => {
-    playTrack(track);
+  const handleTrackClick = (track: Track, context?: Track[]) => {
+    playTrack(track, context);
   };
 
   return (
@@ -170,7 +165,7 @@ export const QueuePanel: React.FC = () => {
                   className="group/item flex items-center justify-between p-2 rounded-md hover:bg-[#1a1a1a] transition-colors"
                 >
                   <div
-                    onClick={() => handleTrackClick(track)}
+                    onClick={() => handleTrackClick(track, queue)}
                     className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
                   >
                     <span className="text-xs font-bold text-zinc-500 w-4 text-center group-hover/item:text-white">
@@ -272,7 +267,7 @@ export const QueuePanel: React.FC = () => {
                 .map((track) => (
                   <div
                     key={`hist-${track.id}`}
-                    onClick={() => handleTrackClick(track)}
+                    onClick={() => handleTrackClick(track, history)}
                     className="flex items-center gap-3 p-2 rounded-md hover:bg-[#1a1a1a] transition-colors cursor-pointer group"
                   >
                     <img
@@ -348,3 +343,4 @@ export const QueuePanel: React.FC = () => {
     </aside>
   );
 };
+

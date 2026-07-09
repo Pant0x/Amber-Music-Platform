@@ -338,7 +338,8 @@ const runYoutubeChannelFallback = async (artistId: string | null, name: string |
         const { data: matchedRows, error: dbErr } = await supabase
           .from('listen_history')
           .select('metadata')
-          .not('metadata', 'is', null);
+          .not('metadata', 'is', null)
+          .limit(500);
 
         if (!dbErr && matchedRows) {
           const artistNameLower = profile.title.toLowerCase();
@@ -650,7 +651,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         const { data: matchedRows, error: dbErr } = await supabase
           .from('listen_history')
           .select('metadata')
-          .not('metadata', 'is', null);
+          .not('metadata', 'is', null)
+          .limit(500);
 
         if (!dbErr && matchedRows) {
           const artistNameLower = profile.title.toLowerCase();

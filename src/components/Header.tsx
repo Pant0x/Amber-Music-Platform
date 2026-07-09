@@ -146,7 +146,13 @@ export const Header: React.FC = () => {
           {mounted && (
             <>
               <button
-                onClick={() => router.back()}
+                onClick={() => {
+                  if (window.history.length > 1) {
+                    router.back();
+                  } else {
+                    router.push('/');
+                  }
+                }}
                 className="p-1.5 rounded-full transition-colors hover:bg-white/10 text-zinc-400 hover:text-white"
                 title="Back"
                 aria-label="Back"

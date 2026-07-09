@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getSpotifyApi } from '@/lib/spotify';
 import { ytMusicSearch, cleanArtistName, upgradeThumbnailUrl, cleanTopicGlobally } from '@/lib/youtubei';
 
+export const revalidate = 3600; // Cache for 1 hour to prevent Spotify rate limits
+
 const runYoutubeExploreFallback = async () => {
   console.log('[Explore API] Falling back to YouTube Music Explore data...');
   try {

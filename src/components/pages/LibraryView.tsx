@@ -2,8 +2,10 @@ import React from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { Heart, Music } from 'lucide-react';
 import { AlbumCoverPlayOverlay } from '../AlbumCoverPlayOverlay';
+import { useRouter } from 'next/navigation';
 
 export const LibraryView: React.FC = () => {
+  const router = useRouter();
   const {
     playlists,
     likedTracks,
@@ -22,8 +24,7 @@ export const LibraryView: React.FC = () => {
           {/* Liked songs card */}
           <div
             onClick={() => {
-              setActiveTab('liked');
-              setCurrentPlaylistId(null);
+              router.push('/liked');
             }}
             className="group bg-[#0d0d0d] hover:bg-[#1a1a1a] p-4 rounded-lg transition-all duration-200 cursor-pointer shadow-lg relative border border-white/5"
           >
@@ -40,8 +41,7 @@ export const LibraryView: React.FC = () => {
             <div
               key={pl.id}
               onClick={() => {
-                setCurrentPlaylistId(pl.id);
-                setActiveTab('playlist');
+                router.push(`/playlist/${pl.id}`);
               }}
               className="group bg-[#0d0d0d] hover:bg-[#1a1a1a] p-4 rounded-lg transition-all duration-200 cursor-pointer shadow-lg relative border border-white/5"
             >

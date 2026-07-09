@@ -81,8 +81,16 @@ export async function GET(request: Request) {
 // POST: sync/save client IP data
 export async function POST(request: Request) {
   try {
+    const rawBody = await request.text();
+    
+    // Size validation: Prevent payloads larger than ~2MB
+    if (rawBody.length > 2 * 1024 * 1024) {
+      console.warn('[User Sync API] Payload too large, rejecting.');
+      return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
+    }
+
     const ip = getClientIp(request);
-    const body = await request.json();
+    const body = JSON.parse(rawBody);
     const { display_name, avatar_url, liked_tracks, subscribed_channels, playlists, history } = body;
 
     let supabase;

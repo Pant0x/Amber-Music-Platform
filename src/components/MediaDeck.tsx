@@ -4,8 +4,10 @@ import React, { useRef, useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { createPortal } from 'react-dom';
 import { usePlayerStore } from '@/store/usePlayerStore';
-import { cleanVisualName, parseFeaturedArtists } from '@/utils/text';
+import { useRouter, usePathname } from 'next/navigation';
+import { cleanVisualName, parseFeaturedArtists, splitArtistNames } from '@/utils/text';
 import { recordListen } from '@/lib/recordListen';
+import { ExplicitBadge } from './pages/shared';
 import {
   Play,
   Pause,
@@ -25,12 +27,6 @@ import {
 } from 'lucide-react';
 
 const ReactPlayer = dynamic(() => import('react-player/youtube'), { ssr: false }) as any;
-
-const ExplicitBadge = () => (
-  <span className="inline-flex items-center justify-center bg-zinc-600/80 text-white text-[9px] font-bold px-1 py-0.5 rounded-sm mx-1.5 leading-none h-[14px]">
-    E
-  </span>
-);
 
 export const MediaDeck: React.FC = () => {
   const {
@@ -61,6 +57,27 @@ export const MediaDeck: React.FC = () => {
   const setStorePlayedSeconds = usePlayerStore((s) => s.setPlayedSeconds);
   const setYoutubeIdForCurrentTrack = usePlayerStore((s) => s.setYoutubeIdForCurrentTrack);
   const enrichCurrentTrack = usePlayerStore((s) => s.enrichCurrentTrack);
+  const activeTab = usePlayerStore((s) => s.activeTab);
+  const currentPlaylistId = usePlayerStore((s) => s.currentPlaylistId);
+  const currentChannelId = usePlayerStore((s) => s.currentChannelId);
+  
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    let targetPath = '';
+    if (activeTab === 'home') targetPath = '/';
+    else if (activeTab === 'explore') targetPath = '/explore';
+    else if (activeTab === 'library') targetPath = '/library';
+    else if (activeTab === 'liked') targetPath = '/liked';
+    else if (activeTab === 'search') targetPath = '/search';
+    else if (activeTab === 'playlist' && currentPlaylistId) targetPath = `/playlist/${currentPlaylistId}`;
+    else if (activeTab === 'channel' && currentChannelId) targetPath = `/artist/${currentChannelId}`;
+    
+    if (targetPath && pathname !== targetPath) {
+      router.push(targetPath);
+    }
+  }, [activeTab, currentPlaylistId, currentChannelId, router, pathname]);
 
   const playerRef = useRef<any>(null);
   const [progress, setProgress] = useState({ played: 0, playedSeconds: 0, loaded: 0 });
@@ -579,7 +596,7 @@ export const MediaDeck: React.FC = () => {
             <p className="text-[11px] text-zinc-400 truncate mt-0.5 font-medium">
               {(() => {
                 const artistNames = currentTrack.channelTitle
-                  ? currentTrack.channelTitle.split(/,|\s+&\s+|\s+and\s+/i).map((n: string) => n.trim()).filter(Boolean)
+                  ? splitArtistNames(currentTrack.channelTitle)
                   : [];
                 if (artistNames.length === 0) return 'Unknown Artist';
                 return artistNames.map((name: string, idx: number) => {
@@ -758,3 +775,4 @@ export const MediaDeck: React.FC = () => {
     </footer>
   );
 };
+

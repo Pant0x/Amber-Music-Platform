@@ -46,7 +46,7 @@ export const VideoPlayerView: React.FC = () => {
 
   useEffect(() => {
     if (seekTrigger > 0 && playerRef.current) {
-      playerRef.current.seekTo(seekFraction);
+      playerRef.current.seekTo(seekFraction, 'fraction');
     }
   }, [seekTrigger, seekFraction]);
 

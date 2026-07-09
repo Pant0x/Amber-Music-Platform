@@ -7,7 +7,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { QueuePanel } from '@/components/QueuePanel';
 import { NowPlayingView } from '@/components/NowPlayingView';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
-import { RouterRegister } from '@/components/RouterRegister';
+
 import { DatabaseSync } from '@/components/DatabaseSync';
 import { ShareResolver } from '@/components/ShareResolver';
 import { ShareModal } from '@/components/ShareModal';
@@ -73,7 +73,7 @@ export default function RootLayout({
           </div>
         </div>
         <MediaDeck />
-        <RouterRegister />
+
         <DatabaseSync />
         <Suspense fallback={null}>
           <ShareResolver />

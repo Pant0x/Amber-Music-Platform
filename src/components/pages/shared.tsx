@@ -1,7 +1,7 @@
 import React from 'react';
 import { Track } from '@/types/music-player';
 import { usePlayerStore } from '@/store/usePlayerStore';
-import { cleanVisualName } from '@/utils/text';
+import { cleanVisualName, splitArtistNames } from '@/utils/text';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -24,9 +24,12 @@ export const Carousel: React.FC<{ children: React.ReactNode; className?: string 
     }
   };
 
+  const firstChildKey = (React.Children.toArray(children)[0] as React.ReactElement)?.key;
+  
   React.useEffect(() => {
     const el = containerRef.current;
     if (el) {
+      el.scrollLeft = 0; // Reset scroll on new content
       el.addEventListener('scroll', checkScroll);
       checkScroll();
       // Wait for images to load
@@ -36,7 +39,7 @@ export const Carousel: React.FC<{ children: React.ReactNode; className?: string 
         clearTimeout(timer);
       };
     }
-  }, [children]);
+  }, [firstChildKey]);
 
   const scroll = (direction: 'left' | 'right') => {
     const el = containerRef.current;
@@ -91,9 +94,7 @@ export const ArtistLinks: React.FC<ArtistLinksProps> = ({
   extraClass = ""
 }) => {
   const router = useRouter();
-  const artistNames = channelTitle
-    ? channelTitle.split(/,|\s+&\s+|\s+and\s+/i).map((n: string) => n.trim()).filter(Boolean)
-    : [];
+  const artistNames = splitArtistNames(channelTitle);
   if (artistNames.length === 0) return <span className="text-zinc-500">Unknown Artist</span>;
 
   return (

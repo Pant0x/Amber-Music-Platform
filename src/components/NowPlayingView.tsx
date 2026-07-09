@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { Track } from '@/types/music-player';
-import { cleanVisualName, parseFeaturedArtists } from '@/utils/text';
+import { ExplicitBadge } from './pages/shared';
+import { cleanVisualName, parseFeaturedArtists, splitArtistNames } from '@/utils/text';
 import {
   ChevronDown,
   Play,
@@ -34,12 +35,6 @@ const upgradeThumbnailUrl = (url: string | undefined): string => {
   }
   return url;
 };
-
-const ExplicitBadge = () => (
-  <span className="inline-flex items-center justify-center bg-zinc-600/80 text-white text-[9px] font-bold px-1 py-0.5 rounded-sm mx-1.5 leading-none h-[14px]">
-    E
-  </span>
-);
 
 const LyricSkeleton = () => (
   <div className="flex-1 overflow-y-auto space-y-6 py-8 px-6 animate-pulse select-none custom-scrollbar">
@@ -111,15 +106,24 @@ export const NowPlayingView: React.FC = () => {
     if (currentTrack && isLiked) toggleLikeTrack(currentTrack);
   };
 
-const lyricsCache = new Map<string, any>();
+  const lyricsCache = useRef(new Map<string, any>());
+  const historyRef = useRef(history);
+  const searchHistoryRef = useRef(searchHistory);
+  const selectedMoodRef = useRef(selectedMood);
+
+  useEffect(() => {
+    historyRef.current = history;
+    searchHistoryRef.current = searchHistory;
+    selectedMoodRef.current = selectedMood;
+  }, [history, searchHistory, selectedMood]);
 
   // 1. Fetch Synced Lyrics
   useEffect(() => {
     if (!currentTrack) return;
     
     const cacheKey = `${currentTrack.id}_${currentTrack.title}_${currentTrack.channelTitle}_${currentTrack.youtubeId || ''}`;
-    if (lyricsCache.has(cacheKey)) {
-      setLyricsData(lyricsCache.get(cacheKey));
+    if (lyricsCache.current.has(cacheKey)) {
+      setLyricsData(lyricsCache.current.get(cacheKey));
       setLyricsLoading(false);
       setIsDisliked(false);
       return;
@@ -137,14 +141,14 @@ const lyricsCache = new Map<string, any>();
           const data = await res.json();
           // Check if data is empty (no lyrics found)
           if (!data || !data.lyrics) {
-            lyricsCache.set(cacheKey, null);
+            lyricsCache.current.set(cacheKey, null);
             setLyricsData(null);
           } else {
-            lyricsCache.set(cacheKey, data);
+            lyricsCache.current.set(cacheKey, data);
             setLyricsData(data);
           }
         } else {
-          lyricsCache.set(cacheKey, null);
+          lyricsCache.current.set(cacheKey, null);
           setLyricsData(null);
         }
       } catch (err) {
@@ -170,9 +174,9 @@ const lyricsCache = new Map<string, any>();
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            history: history.slice(0, 10),
-            searchHistory,
-            mood: selectedMood
+            history: historyRef.current.slice(0, 10),
+            searchHistory: searchHistoryRef.current,
+            mood: selectedMoodRef.current
           })
         });
         if (res.ok) {
@@ -209,13 +213,35 @@ const lyricsCache = new Map<string, any>();
   }, [currentTrack?.id, nowPlayingTab]);
 
   // 3. Scroll Synced Lyric Line into View
-  const activeLineIndex = lyricsData?.lines && lyricsData.isSynced
-    ? lyricsData.lines.findIndex((line, idx) => {
-        const nextLine = lyricsData.lines[idx + 1];
-        // Ensure we check that current playedSeconds matches current line and is before next line
-        return line.time !== -999 && playedSeconds >= line.time && (!nextLine || playedSeconds < nextLine.time);
-      })
-    : -1;
+  const activeLineIndex = React.useMemo(() => {
+    if (!lyricsData?.lines || !lyricsData.isSynced) return -1;
+    
+    const lines = lyricsData.lines;
+    let low = 0;
+    let high = lines.length - 1;
+    let bestMatch = -1;
+
+    while (low <= high) {
+      const mid = Math.floor((low + high) / 2);
+      const line = lines[mid];
+      
+      if (line.time === -999) {
+        // Fallback to linear scan if invalid times break binary search
+        return lines.findIndex((l, idx) => {
+          const nextL = lines[idx + 1];
+          return l.time !== -999 && playedSeconds >= l.time && (!nextL || playedSeconds < nextL.time);
+        });
+      }
+
+      if (playedSeconds >= line.time) {
+        bestMatch = mid;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+    return bestMatch;
+  }, [lyricsData, playedSeconds]);
 
   useEffect(() => {
     if (activeLyricRef.current && lyricsContainerRef.current) {
@@ -1153,3 +1179,4 @@ const lyricsCache = new Map<string, any>();
     </div>
   );
 };
+

@@ -41,6 +41,14 @@ export const SearchView: React.FC = () => {
   const [landingTrends, setLandingTrends] = useState<any[]>([]);
   const [recsLoading, setRecsLoading] = useState(false);
 
+  const historyRef = React.useRef(history);
+  const searchHistoryRef = React.useRef(searchHistory);
+
+  useEffect(() => {
+    historyRef.current = history;
+    searchHistoryRef.current = searchHistory;
+  }, [history, searchHistory]);
+
   useEffect(() => {
     if (searchQuery) return;
 
@@ -51,8 +59,8 @@ export const SearchView: React.FC = () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            history: history.map(t => ({ id: t.id, title: t.title, channelTitle: t.channelTitle })),
-            searchHistory,
+            history: historyRef.current.map(t => ({ id: t.id, title: t.title, channelTitle: t.channelTitle })),
+            searchHistory: searchHistoryRef.current,
             mood: selectedMood
           })
         }).then(r => r.ok ? r.json() : null).catch(() => null);
@@ -76,7 +84,7 @@ export const SearchView: React.FC = () => {
     };
 
     fetchLandingData();
-  }, [searchQuery, history.length, searchHistory.length, selectedMood]);
+  }, [searchQuery, selectedMood]);
 
   const handlePlayAction = (track: Track, contextTracks: Track[] = []) => {
     if (currentTrack?.id === track.id) {
@@ -85,6 +93,8 @@ export const SearchView: React.FC = () => {
       playTrack(track, contextTracks);
     }
   };
+
+  const abortControllerRef = React.useRef<AbortController | null>(null);
 
   // Sync Search results
   useEffect(() => {
@@ -101,8 +111,15 @@ export const SearchView: React.FC = () => {
 
     const timer = setTimeout(async () => {
       setLoading(true);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}&t=${Date.now()}`);
+        const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}&t=${Date.now()}`, {
+          signal: abortControllerRef.current.signal
+        });
         if (res.ok) {
           const data = await res.json();
           setSearchTopResult(data.topResult || null);
@@ -112,8 +129,10 @@ export const SearchView: React.FC = () => {
           setSearchAlbums(data.albums || []);
           setSearchPlaylists(data.communityPlaylists || []);
         }
-      } catch (e) {
-        console.error('Search query failure:', e);
+      } catch (e: any) {
+        if (e.name !== 'AbortError') {
+          console.error('Search query failure:', e);
+        }
       } finally {
         setLoading(false);
       }

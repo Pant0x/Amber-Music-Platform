@@ -8,6 +8,14 @@ export function cleanVisualName(name: string): string {
   return cleaned.trim();
 }
 
+export function splitArtistNames(nameStr: string): string[] {
+  if (!nameStr) return [];
+  return nameStr
+    .split(/,|\s+&\s+|\s+and\s+/i)
+    .map(name => name.trim())
+    .filter(Boolean);
+}
+
 export interface ParsedTitle {
   title: string;
   featured: string[];
@@ -20,10 +28,7 @@ export function parseFeaturedArtists(title: string): ParsedTitle {
   if (match) {
     const featString = match[1].trim();
     const cleanedTitle = title.replace(featRegex, '').replace(/\s*[-–—]\s*$/, '').trim();
-    const featured = featString
-      .split(/,|\s+&\s+|\s+and\s+/i)
-      .map(name => name.trim())
-      .filter(Boolean);
+    const featured = splitArtistNames(featString);
     return {
       title: cleanedTitle,
       featured

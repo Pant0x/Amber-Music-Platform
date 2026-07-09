@@ -5,9 +5,16 @@ let tokenExpirationTime = 0;
 
 export async function getSpotifyApi(): Promise<SpotifyWebApi> {
   if (!spotifyApiInstance) {
+    const clientId = process.env.SPOTIFY_CLIENT_ID;
+    const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+    
+    if (!clientId || !clientSecret) {
+      throw new Error("Missing SPOTIFY_CLIENT_ID or SPOTIFY_CLIENT_SECRET in environment variables.");
+    }
+    
     spotifyApiInstance = new SpotifyWebApi({
-      clientId: process.env.SPOTIFY_CLIENT_ID || '13d23838b1d34500ad6567a12b176b87',
-      clientSecret: process.env.SPOTIFY_CLIENT_SECRET || '294076627db14a59b64ad82b49e1b302'
+      clientId,
+      clientSecret
     });
   }
 

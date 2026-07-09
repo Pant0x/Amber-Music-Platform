@@ -1,3 +1,4 @@
+import { splitArtistNames } from '@/utils/text';
 export function cleanArtistName(name: string): string {
   if (!name) return '';
   let cleaned = name.replace(/\s*[-–—]\s*(?:Album|Single|EP)\s+by\s+.+$/i, '');
@@ -800,4 +801,5 @@ export async function ytMusicGetNext(videoId: string) {
     return [];
   }
 }
+
 
