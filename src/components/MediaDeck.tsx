@@ -319,7 +319,13 @@ export const MediaDeck: React.FC = () => {
   useEffect(() => {
     if (!currentTrack) return;
     
-    const needsResolve = currentTrack.origin === 'spotify' && !currentTrack.youtubeId;
+    const isSongModeMatch = playbackMode === 'song' && (currentTrack.type === 'music' || !currentTrack.type);
+    const isVideoModeMatch = playbackMode === 'video' && currentTrack.type === 'video';
+    const modeMatchesTrackType = isSongModeMatch || isVideoModeMatch;
+
+    const needsResolve = currentTrack.origin === 'spotify'
+      ? !currentTrack.youtubeId
+      : (!currentTrack.youtubeId && !modeMatchesTrackType);
     
     if (needsResolve) {
       console.log(`[MediaDeck] Resolving stream (${playbackMode}) for: "${currentTrack.title}" by "${currentTrack.channelTitle}"`);
