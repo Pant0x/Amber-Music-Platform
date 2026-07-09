@@ -289,21 +289,49 @@ export const NowPlayingView: React.FC = () => {
     }
   }, [lyricsData, handleLyricScroll]);
 
+  // Auto-scroll active lyric into center on every line change
+  const prevTrackIdRef = useRef<string | null>(null);
+  const hasAutoSyncedRef = useRef(false);
   useEffect(() => {
-    if (activeLyricRef.current && lyricsContainerRef.current) {
-      const container = lyricsContainerRef.current;
-      const element = activeLyricRef.current;
-      
-      const elementOffsetTop = element.offsetTop;
-      const elementHeight = element.clientHeight;
-      const containerHeight = container.clientHeight;
+    if (activeLineIndex < 0 || !lyricsData?.lines) return;
+    const container = lyricsContainerRef.current;
+    const element = activeLyricRef.current;
+    if (!container || !element) return;
+    
+    const elementOffsetTop = element.offsetTop;
+    const elementHeight = element.clientHeight;
+    const containerHeight = container.clientHeight;
 
-      container.scrollTo({
-        top: elementOffsetTop - containerHeight / 2 + elementHeight / 2,
-        behavior: 'smooth'
-      });
+    container.scrollTo({
+      top: elementOffsetTop - containerHeight / 2 + elementHeight / 2,
+      behavior: 'auto'
+    });
+  }, [activeLineIndex, lyricsData]);
+
+  // Auto-sync to correct lyric after 10s of playback (one-time per track)
+  useEffect(() => {
+    if (!currentTrack) return;
+    if (currentTrack.id !== prevTrackIdRef.current) {
+      prevTrackIdRef.current = currentTrack.id;
+      hasAutoSyncedRef.current = false;
     }
-  }, [activeLineIndex]);
+    if (hasAutoSyncedRef.current || playedSeconds < 10) return;
+    if (!lyricsData?.lines || activeLineIndex < 0) return;
+    
+    hasAutoSyncedRef.current = true;
+    const container = lyricsContainerRef.current;
+    const element = activeLyricRef.current;
+    if (!container || !element) return;
+    
+    const elementOffsetTop = element.offsetTop;
+    const elementHeight = element.clientHeight;
+    const containerHeight = container.clientHeight;
+    
+    container.scrollTo({
+      top: elementOffsetTop - containerHeight / 2 + elementHeight / 2,
+      behavior: 'auto'
+    });
+  }, [playedSeconds, currentTrack?.id, lyricsData, activeLineIndex]);
 
   if (!currentTrack) return null;
 
@@ -1016,24 +1044,6 @@ export const NowPlayingView: React.FC = () => {
             {/* TAB: LYRICS */}
             {nowPlayingTab === 'lyrics' && (
               <div className="absolute inset-0 flex flex-col overflow-hidden">
-                {/* Sync button overlay */}
-                {lyricsData && activeLineIndex >= 0 && (
-                  <div className="absolute top-4 right-6 z-20">
-                    <button
-                      onClick={() => {
-                      const container = lyricsContainerRef.current;
-                      const activeEl = activeLyricRef.current;
-                      if (container && activeEl) {
-                        activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                      }
-                    }}
-                      className="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 rounded-full p-2 transition-all"
-                      title="Jump to current lyric"
-                    >
-                      <ArrowDownToLine className="w-4 h-4 text-white" />
-                    </button>
-                  </div>
-                )}
                 <div className="flex-1 p-6 relative">
                   {lyricsLoading && !lyricsData ? (
                     <LyricSkeleton />
