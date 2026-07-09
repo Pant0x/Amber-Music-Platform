@@ -56,20 +56,25 @@ export const AlbumCoverPlayOverlay: React.FC<AlbumCoverPlayOverlayProps> = ({ it
     }
     abortControllerRef.current = new AbortController();
 
+    const isArtist = item.type === 'artist' || item.id.startsWith('UC') || item.id === 'german-fairuz';
+    const fetchUrl = isArtist 
+      ? `/api/youtube/channel/${encodeURIComponent(item.id)}`
+      : `/api/youtube/playlist?id=${item.id}`;
+
     try {
-      const res = await fetch(`/api/youtube/playlist?id=${item.id}`, {
+      const res = await fetch(fetchUrl, {
         signal: abortControllerRef.current.signal
       });
       if (res.ok) {
         const data = await res.json();
-        const tracks = data.tracks || [];
+        const tracks = isArtist ? (data.topSongs || []) : (data.tracks || []);
         if (tracks.length > 0) {
           playTrack(tracks[0], tracks);
         }
       }
     } catch (err: any) {
       if (err.name !== 'AbortError') {
-        console.error('Failed to play album tracks:', err);
+        console.error(isArtist ? 'Failed to play artist top tracks:' : 'Failed to play album tracks:', err);
       }
     } finally {
       setLoading(false);

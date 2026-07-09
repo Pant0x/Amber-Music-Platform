@@ -405,19 +405,9 @@ export const SearchView: React.FC = () => {
                         onClick={() => viewChannel(artist.title, artist.id)}
                         className="group flex-shrink-0 w-[150px] bg-[#0d0d0d] hover:bg-[#1a1a1a] p-4 rounded-xl transition-all duration-200 cursor-pointer text-center border border-white/5 hover:border-white/10"
                       >
-                        <div className="w-[100px] h-[100px] rounded-full overflow-hidden bg-[#1f1f1f] mx-auto mb-3 shadow-lg group-hover:shadow-xl transition-shadow relative">
+                        <div className="w-[100px] h-[100px] rounded-full overflow-hidden bg-[#1f1f1f] mx-auto mb-3 shadow-lg group-hover:shadow-xl transition-all duration-300 relative group">
                           <img src={artist.thumbnailUrl || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover" />
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              playArtistRadio(artist.id || artist.title);
-                            }}
-                            className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full"
-                          >
-                            <div className="w-9 h-9 rounded-full bg-[#ff0000] flex items-center justify-center text-white shadow-lg hover:scale-110 active:scale-95 transition-transform">
-                              <Shuffle className="w-4 h-4 fill-none text-white" />
-                            </div>
-                          </button>
+                          <AlbumCoverPlayOverlay item={{ id: artist.id || artist.title, title: artist.title, type: 'artist' }} />
                         </div>
                         <h4 className="text-xs font-bold text-white truncate">{artist.title}</h4>
                         <p className="text-[10px] text-zinc-500 mt-0.5">{artist.subtitle || 'Artist'}</p>
