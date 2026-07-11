@@ -21,14 +21,14 @@ export const GlobalThemeSetter: React.FC = () => {
   useEffect(() => {
     // Default fallback values (deep warm dark red/pink theme matching image 1)
     const defaults = {
-      dominant: 'rgba(239, 35, 60, 0.05)',
-      glow: 'rgba(239, 35, 60, 0.25)',
+      dominant: 'rgba(239, 35, 60, 0.1)',
+      glow: 'rgba(239, 35, 60, 0.35)',
       accent: 'rgb(239, 35, 60)',
       accentHover: 'rgba(239, 35, 60, 0.8)',
-      border: 'rgba(239, 35, 60, 0.12)',
-      sidebarBg: '#120d0d',
-      mainBg: '#080808',
-      playerBg: '#0a0909'
+      border: 'rgba(239, 35, 60, 0.2)',
+      sidebarBg: 'linear-gradient(to bottom, rgba(239, 35, 60, 0.12), #090606)',
+      mainBg: 'linear-gradient(to bottom, rgba(239, 35, 60, 0.1), #040303)',
+      playerBg: 'linear-gradient(to bottom, rgba(239, 35, 60, 0.15), #070505)'
     };
 
     const applyTheme = (theme: typeof defaults) => {
@@ -77,14 +77,14 @@ export const GlobalThemeSetter: React.FC = () => {
         }
 
         applyTheme({
-          dominant: `rgba(${r}, ${g}, ${b}, 0.06)`,
-          glow: `rgba(${r}, ${g}, ${b}, 0.32)`,
+          dominant: `rgba(${r}, ${g}, ${b}, 0.1)`,
+          glow: `rgba(${r}, ${g}, ${b}, 0.45)`,
           accent: `rgb(${ar}, ${ag}, ${ab})`,
           accentHover: `rgba(${ar}, ${ag}, ${ab}, 0.8)`,
-          border: `rgba(${r}, ${g}, ${b}, 0.15)`,
-          sidebarBg: `linear-gradient(to bottom, rgba(${r}, ${g}, ${b}, 0.08), #090606)`,
-          mainBg: `linear-gradient(to bottom, rgba(${r}, ${g}, ${b}, 0.03), #040303)`,
-          playerBg: `linear-gradient(to bottom, rgba(${r}, ${g}, ${b}, 0.12), #070505)`
+          border: `rgba(${r}, ${g}, ${b}, 0.22)`,
+          sidebarBg: `linear-gradient(to bottom, rgba(${r}, ${g}, ${b}, 0.15), #090606)`,
+          mainBg: `linear-gradient(to bottom, rgba(${r}, ${g}, ${b}, 0.1), #040303)`,
+          playerBg: `linear-gradient(to bottom, rgba(${r}, ${g}, ${b}, 0.18), #070505)`
         });
       } catch (e) {
         console.warn('CORS blocked global color extraction, using fallback');

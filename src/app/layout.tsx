@@ -40,7 +40,10 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="h-[100dvh] w-screen bg-[#030303] text-zinc-300 font-sans select-none overflow-hidden flex flex-col">
+      <body 
+        className="h-[100dvh] w-screen text-zinc-300 font-sans select-none overflow-hidden flex flex-col transition-all duration-1000"
+        style={{ background: 'var(--theme-main-bg, #030303)' }}
+      >
         {/* Main 2-Panel horizontal layout container */}
         <div className="flex-1 flex min-w-0 overflow-hidden relative">
           

@@ -42,7 +42,7 @@ export const Sidebar: React.FC = () => {
       
       {/* Brand Header */}
       <div className="flex items-center gap-3 px-2 py-3 mb-2 flex-shrink-0">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#ff0055] to-[#ff4081] flex items-center justify-center text-white shadow-lg shadow-red-500/20">
+        <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-zinc-950 shadow-md">
           <Cloud className="w-5 h-5 fill-current" />
         </div>
         <div>

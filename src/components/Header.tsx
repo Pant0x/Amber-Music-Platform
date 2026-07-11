@@ -303,7 +303,7 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. RIGHT SIDE: Profile Avatar */}
+      {/* 3. RIGHT SIDE: Mobile Search Button Only */}
       <div className="flex items-center gap-4 flex-shrink-0">
 
         {/* Mobile Search Button */}
@@ -318,23 +318,6 @@ export const Header: React.FC = () => {
         >
           <Search className="w-5 h-5" />
         </button>
-
-        <div
-          onClick={() => {
-            setShowNowPlaying(false);
-            router.push('/profile');
-          }}
-          className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold cursor-pointer hover:scale-105 transition-transform uppercase select-none relative overflow-hidden shadow-md ${
-            avatarUrl && avatarUrl.startsWith('bg-') ? avatarUrl : 'bg-[#0055ff]'
-          }`}
-          title={`Profile: ${displayName || 'Anonymous Listener'}`}
-        >
-          {avatarUrl && (avatarUrl.startsWith('http') || avatarUrl.startsWith('/')) ? (
-            <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
-          ) : (
-            displayName ? displayName.charAt(0) : 'A'
-          )}
-        </div>
       </div>
 
     </header>
