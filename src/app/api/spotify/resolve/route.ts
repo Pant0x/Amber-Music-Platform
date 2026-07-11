@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getSpotifyApi } from '@/lib/spotify';
 import { cleanArtistName } from '@/lib/youtubei';
 
+const spotifyResolveCache = new Map<string, any>();
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -10,6 +12,13 @@ export async function GET(request: Request) {
 
     if (!title) {
       return NextResponse.json({ error: 'Missing title parameter' }, { status: 400 });
+    }
+
+    const cacheKey = `${artist?.toLowerCase().trim() || ''}_${title.toLowerCase().trim()}`;
+    if (spotifyResolveCache.has(cacheKey)) {
+      const cached = spotifyResolveCache.get(cacheKey);
+      console.log(`[Spotify Resolve API] Cache HIT for key: "${cacheKey}"`);
+      return NextResponse.json(cached);
     }
 
     // Clean up typical YouTube titles if they have feat keywords so we search Spotify cleanly
@@ -94,8 +103,18 @@ export async function GET(request: Request) {
     }
 
     if (!enrichedData) {
-      return NextResponse.json({ enriched: false });
+      const fallbackResult = { enriched: false };
+      if (spotifyResolveCache.size > 500) {
+        spotifyResolveCache.clear();
+      }
+      spotifyResolveCache.set(cacheKey, fallbackResult);
+      return NextResponse.json(fallbackResult);
     }
+
+    if (spotifyResolveCache.size > 500) {
+      spotifyResolveCache.clear();
+    }
+    spotifyResolveCache.set(cacheKey, enrichedData);
 
     return NextResponse.json(enrichedData);
   } catch (error: any) {

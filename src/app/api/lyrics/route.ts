@@ -77,12 +77,12 @@ async function fetchLyricsFromGenius(artist: string, title: string): Promise<str
     if (hits.length === 0) return null;
 
     // Filter hits by title and artist match
-    const matchedHit = hits.find((h: any) => 
-      h.result && 
-      isCorrectLyricsMatch(title, h.result.title) && 
+    const matchedHit = hits.find((h: any) =>
+      h.result &&
+      isCorrectLyricsMatch(title, h.result.title) &&
       isArtistLyricsMatch(artist, h.result.primary_artist?.name)
     );
-    
+
     if (!matchedHit) {
       console.log(`[Genius Lyrics] No verified match for "${artist} - ${title}" in search hits.`);
       return null;
@@ -143,28 +143,28 @@ async function fetchLyricsFromGenius(artist: string, title: string): Promise<str
 function parseLrc(lrcText: string): { text: string; time: number }[] {
   const lines = lrcText.split('\n');
   const result: { text: string; time: number }[] = [];
-  
+
   // Format: [01:23.45] lyric text or [01:23.456]
   const timeRegex = /^\[(\d{2}):(\d{2})(?:\.(\d{2,3}))?\](.*)$/;
-  
+
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed) {
       result.push({ text: '', time: -999 });
       continue;
     }
-    
+
     const match = trimmed.match(timeRegex);
     if (match) {
       const minutes = parseInt(match[1], 10);
       const seconds = parseInt(match[2], 10);
       const msStr = match[3] || '0';
       const milliseconds = parseInt(msStr, 10);
-      
+
       const fractionalPart = milliseconds / Math.pow(10, msStr.length);
       const totalSeconds = minutes * 60 + seconds + fractionalPart;
       const text = match[4].trim();
-      
+
       result.push({ text, time: Math.round(totalSeconds * 10) / 10 });
     } else {
       // Ignore LRC header metadata like [ar: Travis Scott]
@@ -206,7 +206,7 @@ async function fetchOfficialYTMusicLyrics(videoId: string, title: string, artist
       // If none of the words from the requested title are in the found song title, it's likely a bad match for an unreleased song
       const queryWords = qTitle.split(/\s+/).filter(w => w.length > 2);
       const isBadMatch = queryWords.length > 0 && !queryWords.some(w => sTitle.includes(w));
-      
+
       if (!isBadMatch) {
         console.log(`[API Lyrics] Found official song ID: ${song.id} ("${song.title}" by "${song.channelTitle}")`);
         const browseId = await getYTMusicLyricsBrowseId(song.id);
@@ -223,6 +223,8 @@ async function fetchOfficialYTMusicLyrics(videoId: string, title: string, artist
   return null;
 }
 
+const lyricsCache = new Map<string, { lyrics: string; lines: any[]; isSynced: boolean }>();
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -230,6 +232,14 @@ export async function GET(request: Request) {
     const artist = searchParams.get('artist') || 'Unknown Artist';
     const durationStr = searchParams.get('duration') || '3:00';
     const videoId = searchParams.get('videoId') || '';
+
+    // Cache Lookup
+    const cacheKey = videoId || `spotify_${artist.toLowerCase().trim()}_${title.toLowerCase().trim()}`;
+    if (lyricsCache.has(cacheKey)) {
+      const cached = lyricsCache.get(cacheKey)!;
+      console.log(`[API Lyrics] Cache HIT for key: "${cacheKey}"`);
+      return NextResponse.json(cached);
+    }
 
     // Parse duration to seconds
     let totalSeconds = 180;
@@ -276,7 +286,7 @@ export async function GET(request: Request) {
           'User-Agent': 'PantootyMusicPlayer/1.0.0 (https://github.com/better-lyrics/better-lyrics)'
         }
       });
-      
+
       if (lrcRes.ok) {
         const lrcData = await lrcRes.json();
         if (lrcData.syncedLyrics) {
@@ -300,7 +310,7 @@ export async function GET(request: Request) {
             'User-Agent': 'PantootyMusicPlayer/1.0.0 (https://github.com/better-lyrics/better-lyrics)'
           }
         });
-        
+
         if (searchRes.ok) {
           const searchData = await searchRes.json();
           if (searchData && searchData.length > 0) {
@@ -351,7 +361,7 @@ export async function GET(request: Request) {
         if (trimmed.length === 0) {
           return { text: '', time: -999 };
         }
-        
+
         const timeStamp = Math.round((startOffset + currentIndex * interval) * 10) / 10;
         currentIndex++;
 
@@ -362,11 +372,21 @@ export async function GET(request: Request) {
       });
     }
 
-    return NextResponse.json({
+    const result = {
       lyrics: lyricsText,
       lines: syncedLines,
       isSynced: isSynced
-    });
+    };
+
+    if (lyricsText) {
+      if (lyricsCache.size > 200) {
+        lyricsCache.clear();
+      }
+      // Populate cache
+      lyricsCache.set(cacheKey, result);
+    }
+
+    return NextResponse.json(result);
   } catch (error: any) {
     console.error('Unified Lyrics Endpoint Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

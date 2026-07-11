@@ -121,12 +121,20 @@ const runYoutubePlaylistFallback = async (playlistId: string) => {
       metadata.channelId = tracks[0].artistId;
     }
 
-    return NextResponse.json(cleanTopicGlobally({ metadata, tracks }));
+    const result = cleanTopicGlobally({ metadata, tracks });
+    if (playlistCache.size > 100) {
+      playlistCache.clear();
+    }
+    playlistCache.set(playlistId, result);
+
+    return NextResponse.json(result);
   } catch (err) {
     console.error('[Playlist API Fallback] Failed to fetch YouTube playlist details:', err);
     return NextResponse.json({ error: 'Failed to retrieve playlist details' }, { status: 500 });
   }
 };
+
+const playlistCache = new Map<string, any>();
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -134,6 +142,12 @@ export async function GET(request: Request) {
 
   if (!playlistId) {
     return NextResponse.json({ error: 'Missing playlist or album ID' }, { status: 400 });
+  }
+
+  if (playlistCache.has(playlistId)) {
+    const cached = playlistCache.get(playlistId);
+    console.log(`[Playlist API] Cache HIT for playlistId: "${playlistId}"`);
+    return NextResponse.json(cached);
   }
 
   // Route non-Spotify IDs directly to YouTube
@@ -186,7 +200,12 @@ export async function GET(request: Request) {
         };
       }).filter(Boolean);
 
-      return NextResponse.json(cleanTopicGlobally({ metadata, tracks }));
+      const playlistResult = cleanTopicGlobally({ metadata, tracks });
+      if (playlistCache.size > 100) {
+        playlistCache.clear();
+      }
+      playlistCache.set(playlistId, playlistResult);
+      return NextResponse.json(playlistResult);
     } catch (playlistError) {
       console.log(`[Playlist API] Fetch as playlist failed, trying as album: ${playlistId}`);
       
@@ -226,7 +245,12 @@ export async function GET(request: Request) {
         };
       });
 
-      return NextResponse.json(cleanTopicGlobally({ metadata, tracks }));
+      const albumResult = cleanTopicGlobally({ metadata, tracks });
+      if (playlistCache.size > 100) {
+        playlistCache.clear();
+      }
+      playlistCache.set(playlistId, albumResult);
+      return NextResponse.json(albumResult);
     }
   } catch (error: any) {
     console.error('[Playlist API] Spotify failed, triggering YouTube playlist fallback:', error);

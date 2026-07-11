@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
+const suggestionsCache = new Map<string, string[]>();
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -10,6 +12,20 @@ export async function GET(request: Request) {
     if (!query || !query.trim()) {
       return NextResponse.json([]);
     }
+
+    const cleanQuery = query.trim().toLowerCase();
+    if (suggestionsCache.has(cleanQuery)) {
+      const cached = suggestionsCache.get(cleanQuery);
+      return NextResponse.json(cached);
+    }
+
+    const returnWithCache = (list: string[]) => {
+      if (suggestionsCache.size > 500) {
+        suggestionsCache.clear();
+      }
+      suggestionsCache.set(cleanQuery, list);
+      return NextResponse.json(list);
+    };
 
     const serpApiKey = process.env.SERPAPI_API_KEY;
     if (serpApiKey) {
@@ -20,8 +36,8 @@ export async function GET(request: Request) {
         if (res.ok) {
           const data = await res.json();
           if (data.suggestions && Array.isArray(data.suggestions)) {
-            const list = data.suggestions.map((s: any) => s.value);
-            return NextResponse.json(list.slice(0, 8));
+            const list = data.suggestions.map((s: any) => s.value).slice(0, 8);
+            return returnWithCache(list);
           }
         }
       } catch (err) {
@@ -38,16 +54,17 @@ export async function GET(request: Request) {
     });
 
     if (!res.ok) {
-      return NextResponse.json([]);
+      return returnWithCache([]);
     }
 
     const data = await res.json();
     // format is ["query", ["suggestion1", "suggestion2", ...]]
     if (Array.isArray(data) && data.length > 1 && Array.isArray(data[1])) {
-      return NextResponse.json(data[1].slice(0, 8)); // Return top 8 suggestions
+      const list = data[1].slice(0, 8); // Return top 8 suggestions
+      return returnWithCache(list);
     }
 
-    return NextResponse.json([]);
+    return returnWithCache([]);
   } catch (error) {
     console.error('[Suggestions API] Error:', error);
     return NextResponse.json([]);

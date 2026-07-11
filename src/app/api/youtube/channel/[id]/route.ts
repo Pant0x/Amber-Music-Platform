@@ -334,15 +334,16 @@ const runYoutubeChannelFallback = async (artistId: string | null, name: string |
     try {
       const supabase = createSupabaseServerClient();
       if (supabase) {
+        const artistNameLower = profile.title.toLowerCase();
         console.log(`[Artist API Fallback] Fetching local database listen history for artist: "${profile.title}"`);
         const { data: matchedRows, error: dbErr } = await supabase
           .from('listen_history')
           .select('metadata')
           .not('metadata', 'is', null)
+          .ilike('metadata->>channelTitle', `%${artistNameLower}%`)
           .limit(500);
 
         if (!dbErr && matchedRows) {
-          const artistNameLower = profile.title.toLowerCase();
           const artistRegex = new RegExp(`\\b${artistNameLower.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
 
           for (const row of matchedRows) {
@@ -647,15 +648,16 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     try {
       const supabase = createSupabaseServerClient();
       if (supabase) {
+        const artistNameLower = profile.title.toLowerCase();
         console.log(`[Artist API Spotify] Fetching local database listen history for artist: "${profile.title}"`);
         const { data: matchedRows, error: dbErr } = await supabase
           .from('listen_history')
           .select('metadata')
           .not('metadata', 'is', null)
+          .ilike('metadata->>channelTitle', `%${artistNameLower}%`)
           .limit(500);
 
         if (!dbErr && matchedRows) {
-          const artistNameLower = profile.title.toLowerCase();
           const artistRegex = new RegExp(`\\b${artistNameLower.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
 
           for (const row of matchedRows) {
