@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getYTMusicLyricsBrowseId, getYTMusicLyrics, ytMusicSearch } from '@/lib/youtubei';
+import { isCorrectMatch, isArtistMatch } from '@/lib/match-utils';
 
 let cachedAccessToken: string | null = null;
+let tokenExpiresAt = 0;
 
 async function getGeniusAccessToken() {
-  if (cachedAccessToken) return cachedAccessToken;
+  if (cachedAccessToken && Date.now() < tokenExpiresAt) return cachedAccessToken;
 
   const clientId = process.env.GENIUS_CLIENT_ID;
   const clientSecret = process.env.GENIUS_CLIENT_SECRET;
@@ -29,6 +31,8 @@ async function getGeniusAccessToken() {
     if (res.ok) {
       const data = await res.json();
       cachedAccessToken = data.access_token;
+      // Refresh 10 minutes before expiry (default Genius token lifetime is ~60 min)
+      tokenExpiresAt = Date.now() + 50 * 60 * 1000;
       return cachedAccessToken;
     }
   } catch (err) {
@@ -37,28 +41,6 @@ async function getGeniusAccessToken() {
   return null;
 }
 
-function cleanSongTitleForLyrics(t: string): string {
-  return t.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/\([^)]*(feat|ft|with|prod|video|audio|visualizer|lyric|explicit|clean|leak)[^)]*\)/gi, '')
-    .replace(/\[[^\]]*(feat|ft|with|prod|video|audio|visualizer|lyric|explicit|clean|leak)[^\]]*\]/gi, '')
-    .replace(/[^a-z0-9\s]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function isCorrectLyricsMatch(requestedTitle: string, matchedTitle: string): boolean {
-  const cleanReq = cleanSongTitleForLyrics(requestedTitle);
-  const cleanMat = cleanSongTitleForLyrics(matchedTitle);
-  return cleanMat.includes(cleanReq) || cleanReq.includes(cleanMat);
-}
-
-function isArtistLyricsMatch(requestedArtist: string, matchedArtist: string): boolean {
-  if (!requestedArtist || !matchedArtist) return true;
-  const cleanReq = requestedArtist.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const cleanMat = matchedArtist.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  return cleanMat.includes(cleanReq) || cleanReq.includes(cleanMat);
-}
 
 // Scrape Genius Web Page
 async function fetchLyricsFromGenius(artist: string, title: string): Promise<string | null> {
@@ -79,8 +61,8 @@ async function fetchLyricsFromGenius(artist: string, title: string): Promise<str
     // Filter hits by title and artist match
     const matchedHit = hits.find((h: any) =>
       h.result &&
-      isCorrectLyricsMatch(title, h.result.title) &&
-      isArtistLyricsMatch(artist, h.result.primary_artist?.name)
+      isCorrectMatch(title, h.result.title) &&
+      isArtistMatch(artist, h.result.primary_artist?.name)
     );
 
     if (!matchedHit) {

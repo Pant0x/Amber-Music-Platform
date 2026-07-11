@@ -340,7 +340,7 @@ const runYoutubeChannelFallback = async (artistId: string | null, name: string |
           .from('listen_history')
           .select('metadata')
           .not('metadata', 'is', null)
-          .ilike('metadata->>channelTitle', `%${artistNameLower}%`)
+          .ilike('metadata->>channelTitle', `%${artistNameLower.replace(/%/g, '\\%').replace(/_/g, '\\_')}%`)
           .limit(500);
 
         if (!dbErr && matchedRows) {
@@ -654,7 +654,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
           .from('listen_history')
           .select('metadata')
           .not('metadata', 'is', null)
-          .ilike('metadata->>channelTitle', `%${artistNameLower}%`)
+          .ilike('metadata->>channelTitle', `%${artistNameLower.replace(/%/g, '\\%').replace(/_/g, '\\_')}%`)
           .limit(500);
 
         if (!dbErr && matchedRows) {

@@ -1,66 +1,9 @@
 import { NextResponse } from 'next/server';
 import { ytMusicSearch } from '@/lib/youtubei';
 import ytAdapter from '@/lib/yt-music-adapter';
+import { isCorrectMatch, isArtistMatch } from '@/lib/match-utils';
 
 const resolveCache = new Map<string, string>();
-
-function cleanSongTitle(t: string): string {
-  return t.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/\([^)]*(feat|ft|with|prod|video|audio|visualizer|lyric|explicit|clean|leak)[^)]*\)/gi, '')
-    .replace(/\[[^\]]*(feat|ft|with|prod|video|audio|visualizer|lyric|explicit|clean|leak)[^\]]*\]/gi, '')
-    .replace(/[^a-z0-9\s]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function isCorrectMatch(requestedTitle: string, matchedTitle: string): boolean {
-  const cleanReq = cleanSongTitle(requestedTitle);
-  const cleanMat = cleanSongTitle(matchedTitle);
-
-  // Strict phrase containment check: one cleaned title must fully contain the other
-  return cleanMat.includes(cleanReq) || cleanReq.includes(cleanMat);
-}
-
-const ALLOWED_GENERIC_CHANNELS = [
-  'vevo', 'lyrical lemonade', 'cole bennett', 'ovo sound', 'spinnin', 'atlantic',
-  'ultra', 'sony', 'universal', 'warner', 'records', 'music', 'cactus jack', 'grade a',
-  'opium', 'interscope', 'def jam', 'republic', 'columbia', 'rca', 'epic', 'various artists', 'topic'
-];
-
-function isArtistMatch(requestedArtist: string, channelTitle: string): boolean {
-  if (!requestedArtist || !channelTitle) return true; // fallback
-
-  const cleanArtist = requestedArtist.toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const cleanChannel = channelTitle.toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-  // Split requested artists by separators like ",", "&", "and", "feat", etc.
-  const individualArtists = cleanArtist
-    .split(/,|\s+&\s+|\s+and\s+|\s+feat\.?\s+/i)
-    .map(name => name.trim())
-    .filter(Boolean);
-
-  if (individualArtists.length === 0) return true;
-
-  // 1. Direct match with channel name
-  const isDirect = individualArtists.some(artistName => {
-    if (artistName.length <= 2) {
-      const regex = new RegExp(`\\b${artistName}\\b`, 'i');
-      return regex.test(cleanChannel);
-    }
-    return cleanChannel.includes(artistName);
-  });
-
-  if (isDirect) return true;
-
-  // 2. Allowed generic channels check
-  const isGeneric = ALLOWED_GENERIC_CHANNELS.some(keyword => cleanChannel.includes(keyword));
-  if (isGeneric) return true;
-
-  return false;
-}
 
 export async function GET(request: Request) {
   try {

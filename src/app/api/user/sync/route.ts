@@ -93,6 +93,14 @@ export async function POST(request: Request) {
     const body = JSON.parse(rawBody);
     const { display_name, avatar_url, liked_tracks, subscribed_channels, playlists, history } = body;
 
+    // Input validation: sanitize string fields to prevent stored XSS
+    const safeName = typeof display_name === 'string'
+      ? display_name.replace(/<[^>]*>/g, '').trim().slice(0, 100)
+      : 'Anonymous Listener';
+    const safeAvatar = typeof avatar_url === 'string'
+      ? avatar_url.replace(/<[^>]*>/g, '').trim().slice(0, 500)
+      : 'bg-gradient-to-tr from-blue-600 to-indigo-900';
+
     let supabase;
     try {
       supabase = createSupabaseServerClient();
@@ -105,12 +113,12 @@ export async function POST(request: Request) {
       .from('user_ip_data')
       .upsert({
         ip_address: ip,
-        display_name: display_name || 'Anonymous Listener',
-        avatar_url: avatar_url || 'bg-gradient-to-tr from-blue-600 to-indigo-900',
-        liked_tracks: liked_tracks || [],
-        subscribed_channels: subscribed_channels || [],
-        playlists: playlists || [],
-        history: history || [],
+        display_name: safeName || 'Anonymous Listener',
+        avatar_url: safeAvatar || 'bg-gradient-to-tr from-blue-600 to-indigo-900',
+        liked_tracks: Array.isArray(liked_tracks) ? liked_tracks : [],
+        subscribed_channels: Array.isArray(subscribed_channels) ? subscribed_channels : [],
+        playlists: Array.isArray(playlists) ? playlists : [],
+        history: Array.isArray(history) ? history : [],
         updated_at: new Date().toISOString()
       });
 
