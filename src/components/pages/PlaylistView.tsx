@@ -63,7 +63,10 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
   if (mode === 'liked') {
     return (
       <div className="animate-fade-in space-y-6">
-        <div className="flex flex-col md:flex-row items-end gap-6 bg-gradient-to-b from-[#b30000]/40 to-[#030303] -mx-6 p-6 pt-12">
+        <div 
+          className="flex flex-col md:flex-row items-end gap-6 -mx-6 p-6 pt-12 transition-all duration-1000"
+          style={{ backgroundImage: 'linear-gradient(to bottom, rgba(179, 0, 0, 0.2), var(--theme-main-bg, #030303))' }}
+        >
           <div className="w-48 h-48 bg-gradient-to-br from-[#ff0000] to-[#b30000] rounded-lg flex items-center justify-center shadow-2xl border border-white/10 flex-shrink-0 animate-pulse">
             <Heart className="w-20 h-20 text-white fill-current" />
           </div>
@@ -199,7 +202,10 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
     <div className="animate-fade-in space-y-6">
       {activePlaylist ? (
         <div className="animate-fade-in space-y-6">
-          <div className="flex flex-col md:flex-row items-end gap-6 bg-gradient-to-b from-zinc-900/50 to-[#030303] -mx-6 p-6 pt-12">
+          <div 
+            className="flex flex-col md:flex-row items-end gap-6 -mx-6 p-6 pt-12 transition-all duration-1000"
+            style={{ backgroundImage: 'linear-gradient(to bottom, rgba(24, 24, 27, 0.4), var(--theme-main-bg, #030303))' }}
+          >
             <div className="w-48 h-48 bg-[#1f1f1f] rounded-lg flex items-center justify-center shadow-2xl border border-white/10 flex-shrink-0">
               <Music className="w-20 h-20 text-zinc-600" />
             </div>
@@ -341,7 +347,10 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
         </div>
       ) : ytPlaylistLoading ? (
         <div className="animate-pulse space-y-6">
-          <div className="flex flex-col md:flex-row items-end gap-6 bg-gradient-to-b from-zinc-900/10 to-[#030303] -mx-6 p-6 pt-12 border-b border-white/5">
+          <div 
+            className="flex flex-col md:flex-row items-end gap-6 -mx-6 p-6 pt-12 border-b border-white/5 transition-all duration-1000"
+            style={{ backgroundImage: 'linear-gradient(to bottom, rgba(24, 24, 27, 0.1), var(--theme-main-bg, #030303))' }}
+          >
             <div className="w-48 h-48 bg-zinc-900 rounded-lg flex-shrink-0" />
             <div className="flex-1 space-y-3">
               <div className="w-20 h-4 bg-zinc-900 rounded" />
@@ -365,7 +374,10 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
         </div>
       ) : ytPlaylistDetails ? (
         <div className="animate-fade-in space-y-6">
-          <div className="flex flex-col md:flex-row items-end gap-6 bg-gradient-to-b from-zinc-900/40 to-[#030303] -mx-6 p-6 pt-12 border-b border-white/5">
+          <div 
+            className="flex flex-col md:flex-row items-end gap-6 -mx-6 p-6 pt-12 border-b transition-all duration-1000"
+            style={{ backgroundImage: 'linear-gradient(to bottom, rgba(24, 24, 27, 0.3), var(--theme-main-bg, #030303))', borderBottomColor: 'var(--theme-border)' }}
+          >
             {ytPlaylistDetails.metadata?.thumbnailUrl ? (
               <img
                 src={ytPlaylistDetails.metadata.thumbnailUrl || undefined}

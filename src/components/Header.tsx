@@ -129,7 +129,10 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header className="h-16 w-full bg-[#030303] border-b border-white/5 px-6 flex items-center justify-between select-none relative z-50 flex-shrink-0">
+    <header 
+      className="h-16 w-full border-b px-6 flex items-center justify-between select-none relative z-50 flex-shrink-0 transition-all duration-1000"
+      style={{ background: 'var(--theme-main-bg, #030303)', borderBottomColor: 'var(--theme-border)' }}
+    >
 
       {/* 1. LEFT SIDE: Navigation Chevrons */}
       <div className="flex items-center gap-4 flex-shrink-0">

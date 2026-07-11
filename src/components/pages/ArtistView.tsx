@@ -84,7 +84,10 @@ export const ArtistView: React.FC = () => {
         className="min-h-[350px] sm:min-h-[500px] -mx-6 -mt-6 bg-cover bg-center relative flex flex-col justify-end p-6 sm:p-10"
         style={{ backgroundImage: `url(${currentChannelDetails.profile?.bannerUrl || currentChannelDetails.profile?.avatarUrl})` }}
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#030303]/40 to-[#030303]"></div>
+        <div 
+          className="absolute inset-0 transition-all duration-1000"
+          style={{ backgroundImage: 'linear-gradient(to bottom, transparent, rgba(3, 3, 3, 0.3), var(--theme-main-bg, #030303))' }}
+        ></div>
         
         <div className="relative z-10 w-full max-w-5xl">
           <h1 className="text-5xl sm:text-7xl md:text-8xl font-black text-white tracking-tighter drop-shadow-2xl mb-2">

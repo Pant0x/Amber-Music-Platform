@@ -11,6 +11,7 @@ import { PlayerDock } from '@/components/PlayerDock';
 import { DatabaseSync } from '@/components/DatabaseSync';
 import { ShareResolver } from '@/components/ShareResolver';
 import { ShareModal } from '@/components/ShareModal';
+import { GlobalThemeSetter } from '@/components/GlobalThemeSetter';
 import { Suspense } from 'react';
 
 const geistSans = Geist({
@@ -54,8 +55,11 @@ export default function RootLayout({
             {/* Bottom 2-Panel split layout (Main Content + Right Player Dock) */}
             <div className="flex-1 flex min-w-0 overflow-hidden relative">
               {/* Main Content Area */}
-              <main className="flex-1 overflow-hidden relative flex flex-col bg-[#030303]">
-                <div className="flex-1 overflow-y-auto px-6 py-6 pb-24 select-none bg-[#030303] custom-scrollbar relative">
+              <main 
+                className="flex-1 overflow-hidden relative flex flex-col transition-all duration-1000"
+                style={{ background: 'var(--theme-main-bg, #030303)' }}
+              >
+                <div className="flex-1 overflow-y-auto px-6 py-6 pb-24 select-none custom-scrollbar relative">
                   {/* Dynamic Ambient Background Lights */}
                   <div className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] rounded-full bg-[#ff0000]/5 blur-[120px] pointer-events-none z-0" />
                   <div className="absolute bottom-[20%] right-[10%] w-[600px] h-[600px] rounded-full bg-[#0055ff]/4 blur-[150px] pointer-events-none z-0" />
@@ -86,6 +90,7 @@ export default function RootLayout({
           <ShareResolver />
         </Suspense>
         <ShareModal />
+        <GlobalThemeSetter />
       </body>
     </html>
   );

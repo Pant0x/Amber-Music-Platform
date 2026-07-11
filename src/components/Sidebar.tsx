@@ -35,7 +35,10 @@ export const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="hidden md:flex w-[240px] bg-[#120d0d] flex-col select-none h-full flex-shrink-0 text-zinc-400 font-semibold p-4 border-r border-white/5">
+    <aside 
+      className="hidden md:flex w-[240px] flex-col select-none h-full flex-shrink-0 text-zinc-400 font-semibold p-4 border-r transition-all duration-1000"
+      style={{ background: 'var(--theme-sidebar-bg, #120d0d)', borderRightColor: 'var(--theme-border)' }}
+    >
       
       {/* Brand Header */}
       <div className="flex items-center gap-3 px-2 py-3 mb-2 flex-shrink-0">
