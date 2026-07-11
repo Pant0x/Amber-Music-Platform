@@ -5,8 +5,8 @@ import { MediaDeck } from '@/components/MediaDeck';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { QueuePanel } from '@/components/QueuePanel';
-import { NowPlayingView } from '@/components/NowPlayingView';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { PlayerDock } from '@/components/PlayerDock';
 
 import { DatabaseSync } from '@/components/DatabaseSync';
 import { ShareResolver } from '@/components/ShareResolver';
@@ -24,8 +24,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Music Player",
-  description: "A premium Music Player application",
+  title: "Cloud Music",
+  description: "A premium Cloud Music application",
   referrer: "no-referrer",
 };
 
@@ -40,19 +40,22 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="h-[100dvh] w-screen bg-[#030303] text-zinc-300 font-sans select-none overflow-hidden flex flex-col">
-        <div className="flex-1 min-h-0 relative flex flex-col">
-          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-            {/* 1. YouTube Music Sticky Top Header */}
+        {/* Main 2-Panel horizontal layout container */}
+        <div className="flex-1 flex min-w-0 overflow-hidden relative">
+          
+          {/* 1. Left Navigation Sidebar (Full Height) */}
+          <Sidebar />
+
+          {/* 2. Right Workspace Container */}
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
+            {/* Top Search bar & Navigation Header */}
             <Header />
 
-            {/* 2. Middle Body: Sidebar + Main Content scroll + sliding Queue Panel */}
+            {/* Bottom 2-Panel split layout (Main Content + Right Player Dock) */}
             <div className="flex-1 flex min-w-0 overflow-hidden relative">
-              {/* Left Navigation Sidebar */}
-              <Sidebar />
-
-              {/* Scrollable Dashboard View */}
+              {/* Main Content Area */}
               <main className="flex-1 overflow-hidden relative flex flex-col bg-[#030303]">
-                <div className="flex-1 overflow-y-auto px-6 py-6 pb-32 select-none bg-[#030303] custom-scrollbar relative">
+                <div className="flex-1 overflow-y-auto px-6 py-6 pb-24 select-none bg-[#030303] custom-scrollbar relative">
                   {/* Dynamic Ambient Background Lights */}
                   <div className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] rounded-full bg-[#ff0000]/5 blur-[120px] pointer-events-none z-0" />
                   <div className="absolute bottom-[20%] right-[10%] w-[600px] h-[600px] rounded-full bg-[#0055ff]/4 blur-[150px] pointer-events-none z-0" />
@@ -61,10 +64,12 @@ export default function RootLayout({
                     {children}
                   </div>
                 </div>
-                <NowPlayingView />
               </main>
 
-              {/* Sliding Queue Panel on Right */}
+              {/* Persistent Right Player Dock */}
+              <PlayerDock />
+
+              {/* Sliding Queue Panel (Slides on top of Right panel when opened) */}
               <QueuePanel />
             </div>
 
@@ -72,6 +77,8 @@ export default function RootLayout({
             <MobileBottomNav />
           </div>
         </div>
+
+        {/* MediaDeck plays audio/video in background */}
         <MediaDeck />
 
         <DatabaseSync />

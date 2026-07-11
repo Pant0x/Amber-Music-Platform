@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Home, Compass, Library, Plus, Music, Heart, User } from 'lucide-react';
+import { Home, Compass, Library, Plus, Music, Heart, User, Cloud } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { usePlayerStore } from '@/store/usePlayerStore';
 
@@ -13,7 +13,9 @@ export const Sidebar: React.FC = () => {
     playlists,
     likedTracks,
     createPlaylist,
-    setShowNowPlaying
+    setShowNowPlaying,
+    displayName,
+    avatarUrl
   } = usePlayerStore();
 
   const handlePlaylistCreate = () => {
@@ -33,76 +35,84 @@ export const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="hidden md:flex w-[240px] bg-[#030303] flex-col gap-4 select-none h-full flex-shrink-0 text-zinc-400 font-semibold p-4 border-r border-white/5">
+    <aside className="hidden md:flex w-[240px] bg-[#0a0909] flex-col select-none h-full flex-shrink-0 text-zinc-400 font-semibold p-4 border-r border-white/5">
       
+      {/* Brand Header */}
+      <div className="flex items-center gap-3 px-2 py-3 mb-2 flex-shrink-0">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#ff0055] to-[#ff4081] flex items-center justify-center text-white shadow-lg shadow-red-500/20">
+          <Cloud className="w-5 h-5 fill-current" />
+        </div>
+        <div>
+          <h1 className="text-base font-black tracking-tight text-white leading-none">Cloud Music</h1>
+          <span className="text-[10px] text-zinc-500 font-medium mt-1 block">Premium listening</span>
+        </div>
+      </div>
+
       {/* 1. Main Navigation Items */}
-      <nav className="flex flex-col gap-1">
-        <button
-          onClick={() => navigateToTab('home')}
-          className={`flex items-center gap-4 px-4 py-2.5 rounded-lg text-sm transition-colors duration-150 hover:bg-[#1a1a1a] hover:text-white ${
-            pathname === '/' ? 'bg-[#1a1a1a] text-white font-bold' : ''
-          }`}
-        >
-          <Home className="w-5 h-5" />
-          Home
-        </button>
-        <button
-          onClick={() => navigateToTab('explore')}
-          className={`flex items-center gap-4 px-4 py-2.5 rounded-lg text-sm transition-colors duration-150 hover:bg-[#1a1a1a] hover:text-white ${
-            pathname === '/explore' ? 'bg-[#1a1a1a] text-white font-bold' : ''
-          }`}
-        >
-          <Compass className="w-5 h-5" />
-          Explore
-        </button>
-        <button
-          onClick={() => navigateToTab('library')}
-          className={`flex items-center gap-4 px-4 py-2.5 rounded-lg text-sm transition-colors duration-150 hover:bg-[#1a1a1a] hover:text-white ${
-            pathname === '/library' ? 'bg-[#1a1a1a] text-white font-bold' : ''
-          }`}
-        >
-          <Library className="w-5 h-5" />
-          Library
-        </button>
-        <button
-          onClick={() => { setShowNowPlaying(false); router.push('/profile'); }}
-          className={`flex items-center gap-4 px-4 py-2.5 rounded-lg text-sm transition-colors duration-150 hover:bg-[#1a1a1a] hover:text-white ${
-            pathname === '/profile' ? 'bg-[#1a1a1a] text-white font-bold' : ''
-          }`}
-        >
-          <User className="w-5 h-5" />
-          My Profile
-        </button>
-      </nav>
+      <div className="flex-shrink-0">
+        <span className="text-[10px] font-bold text-zinc-650 uppercase tracking-wider px-2 block mb-2">Browse</span>
+        <nav className="flex flex-col gap-1">
+          <button
+            onClick={() => navigateToTab('home')}
+            className={`flex items-center gap-4 px-4 py-2.5 rounded-xl text-sm transition-all duration-200 hover:bg-white/5 hover:text-white ${
+              pathname === '/' ? 'bg-white/5 text-white font-bold' : ''
+            }`}
+          >
+            <Home className="w-4.5 h-4.5" />
+            Home
+          </button>
+          <button
+            onClick={() => navigateToTab('explore')}
+            className={`flex items-center gap-4 px-4 py-2.5 rounded-xl text-sm transition-all duration-200 hover:bg-white/5 hover:text-white ${
+              pathname === '/explore' ? 'bg-white/5 text-white font-bold' : ''
+            }`}
+          >
+            <Compass className="w-4.5 h-4.5" />
+            Explore
+          </button>
+          <button
+            onClick={() => navigateToTab('library')}
+            className={`flex items-center gap-4 px-4 py-2.5 rounded-xl text-sm transition-all duration-200 hover:bg-white/5 hover:text-white ${
+              pathname === '/library' ? 'bg-white/5 text-white font-bold' : ''
+            }`}
+          >
+            <Library className="w-4.5 h-4.5" />
+            Library
+          </button>
+        </nav>
+      </div>
 
       {/* Divider */}
-      <div className="h-[1px] bg-white/5 mx-2"></div>
+      <div className="h-[1px] bg-white/5 mx-2 my-2 flex-shrink-0"></div>
 
-      {/* 2. Playlist Utilities */}
+      {/* 2. Playlist Utilities & Playlists */}
       <div className="flex flex-col gap-2 flex-1 min-h-0">
-        <button
-          onClick={handlePlaylistCreate}
-          className="flex items-center gap-4 px-4 py-2.5 rounded-full text-sm bg-[#1f1f1f] text-white hover:bg-[#2a2a2a] transition-colors font-bold w-fit ml-2"
-        >
-          <Plus className="w-4 h-4" />
-          New playlist
-        </button>
+        <div className="flex items-center justify-between px-2 mb-1 flex-shrink-0">
+          <span className="text-[10px] font-bold text-zinc-650 uppercase tracking-wider block">Playlists</span>
+          <button
+            onClick={handlePlaylistCreate}
+            className="p-1 rounded-md text-zinc-500 hover:text-white hover:bg-white/5 transition-all"
+            title="Create Playlist"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        </div>
 
         {/* Scrollable Playlist Sub-list */}
-        <div className="flex-1 overflow-y-auto space-y-1 mt-2 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto space-y-1 custom-scrollbar">
           {/* Liked Music Shortcut */}
           <div
             onClick={() => navigateToTab('liked')}
-            className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors duration-150 ${
-              pathname === '/liked' ? 'bg-[#1a1a1a] text-white font-bold' : 'hover:bg-[#0d0d0d]'
+            className={`flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-all duration-200 ${
+              pathname === '/liked' ? 'bg-white/5 text-white font-bold' : 'hover:bg-white/5'
             }`}
           >
-            <div className="w-9 h-9 rounded bg-gradient-to-br from-[#ff0000] to-[#b30000] flex items-center justify-center flex-shrink-0 shadow-md">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#ff0055] to-[#b3003b] flex items-center justify-center flex-shrink-0 shadow-md">
               <Heart className="w-4.5 h-4.5 text-white fill-current animate-pulse" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold text-white truncate">Liked Music</p>
-              <p className="text-[10px] text-zinc-500 truncate mt-0.5">
+              <p className="text-xs font-bold text-white truncate">Liked Songs</p>
+              <p className="text-[10px] text-zinc-500 truncate mt-0.5 font-medium">
                 Auto Playlist • {likedTracks.length} songs
               </p>
             </div>
@@ -118,22 +128,44 @@ export const Sidebar: React.FC = () => {
                   setShowNowPlaying(false);
                   router.push(`/playlist/${playlist.id}`);
                 }}
-                className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors duration-150 ${
-                  isCurrent ? 'bg-[#1a1a1a] text-white font-bold' : 'hover:bg-[#0d0d0d]'
+                className={`flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                  isCurrent ? 'bg-white/5 text-white font-bold' : 'hover:bg-white/5'
                 }`}
               >
-                <div className="w-9 h-9 rounded bg-[#1f1f1f] flex items-center justify-center flex-shrink-0 shadow-md border border-white/5">
+                <div className="w-9 h-9 rounded-lg bg-zinc-900 flex items-center justify-center flex-shrink-0 shadow-md border border-white/5">
                   <Music className="w-4.5 h-4.5 text-zinc-400" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold text-white truncate">{playlist.name}</p>
-                  <p className="text-[10px] text-zinc-500 truncate mt-0.5">
+                  <p className="text-[10px] text-zinc-500 truncate mt-0.5 font-medium">
                     Playlist • {playlist.tracks.length} songs
                   </p>
                 </div>
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* User Profile Card Pinned at Bottom */}
+      <div className="mt-auto pt-3 border-t border-white/5 flex-shrink-0">
+        <div 
+          onClick={() => { setShowNowPlaying(false); router.push('/profile'); }}
+          className="flex items-center gap-3 p-1.5 rounded-xl cursor-pointer hover:bg-white/5 transition-all"
+        >
+          <img 
+            src={avatarUrl || undefined} 
+            className="w-9 h-9 rounded-full object-cover border border-white/10" 
+            alt="" 
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y";
+            }}
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold text-white truncate">{displayName || 'George Miles'}</p>
+            <p className="text-[10px] text-zinc-500 font-medium truncate mt-0.5">Premium member</p>
+          </div>
         </div>
       </div>
     </aside>

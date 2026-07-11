@@ -195,7 +195,7 @@ export const ShareModal: React.FC = () => {
       link: () => `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(shareUrl)}&media=${encodeURIComponent(shareTrack.thumbnailUrl || '')}&description=${encodeURIComponent(shareText)}`
     }
   ];
-  const shareText = `Check out "${shareTrack.title}" by ${shareTrack.channelTitle} on Pantooty Music Player!`;
+  const shareText = `Check out "${shareTrack.title}" by ${shareTrack.channelTitle} on Cloud Music!`;
 
   return (
     <div className="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center z-[100] animate-fade-in px-4">

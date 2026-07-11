@@ -131,16 +131,8 @@ export const Header: React.FC = () => {
   return (
     <header className="h-16 w-full bg-[#030303] border-b border-white/5 px-6 flex items-center justify-between select-none relative z-50 flex-shrink-0">
 
-      {/* 1. LEFT SIDE: Brand Logo & Navigation Chevrons */}
-      <div className="flex items-center gap-6 flex-shrink-0">
-        <div onClick={handleLogoClick} className="flex items-center gap-2 cursor-pointer">
-          <div className="w-8 h-8 rounded-full bg-[#ff0000] flex items-center justify-center text-white">
-            <Play className="w-4 h-4 fill-current ml-0.5" />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-white flex items-center gap-1">
-            Pantooty <span className="font-light text-zinc-400">Music</span>
-          </span>
-        </div>
+      {/* 1. LEFT SIDE: Navigation Chevrons */}
+      <div className="flex items-center gap-4 flex-shrink-0">
 
         <div className="flex items-center gap-1.5 bg-white/5 border border-white/5 p-1 rounded-full min-h-[30px] min-w-[70px]">
           {mounted && (

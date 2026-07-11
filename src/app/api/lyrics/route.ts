@@ -265,7 +265,7 @@ export async function GET(request: Request) {
       const lrcGetUrl = `https://lrclib.net/api/get?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}`;
       const lrcRes = await fetch(lrcGetUrl, {
         headers: {
-          'User-Agent': 'PantootyMusicPlayer/1.0.0 (https://github.com/better-lyrics/better-lyrics)'
+          'User-Agent': 'CloudMusic/1.0.0 (https://github.com/better-lyrics/better-lyrics)'
         }
       });
 
@@ -289,7 +289,7 @@ export async function GET(request: Request) {
         const query = `${cleanArtist} ${cleanTitle}`;
         const searchRes = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(query)}`, {
           headers: {
-            'User-Agent': 'PantootyMusicPlayer/1.0.0 (https://github.com/better-lyrics/better-lyrics)'
+            'User-Agent': 'CloudMusic/1.0.0 (https://github.com/better-lyrics/better-lyrics)'
           }
         });
 
