@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { ExplicitBadge } from './pages/shared';
 import { cleanVisualName, parseFeaturedArtists } from '@/utils/text';
+import { useDominantColor } from '@/hooks/useDominantColor';
 import {
   Play,
   Pause,
@@ -56,6 +57,8 @@ export const PlayerDock: React.FC = () => {
     volume,
     setVolume
   } = usePlayerStore();
+
+  const colors = useDominantColor(currentTrack?.thumbnailUrl);
 
   const [lyricsData, setLyricsData] = useState<{ lyrics: string; lines: { text: string; time: number }[]; isSynced?: boolean } | null>(null);
   const [lyricsLoading, setLyricsLoading] = useState(false);
@@ -211,13 +214,19 @@ export const PlayerDock: React.FC = () => {
   };
 
   return (
-    <div className="hidden lg:flex w-[380px] border-l border-white/5 bg-[#0a0909] flex-col select-none h-full flex-shrink-0 overflow-hidden relative z-20">
+    <div 
+      className="hidden lg:flex w-[380px] border-l border-white/5 flex-col select-none h-full flex-shrink-0 overflow-hidden relative z-20 transition-all duration-1000"
+      style={{ background: `linear-gradient(to bottom, ${colors.dominant}, #060505)` }}
+    >
       
       {/* Scrollable Container for Player & Lyrics */}
       <div className="flex-1 flex flex-col min-h-0 overflow-y-auto custom-scrollbar p-6">
         
         {/* Album Art / Video Player Frame */}
-        <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-zinc-900 border border-white/5 shadow-2xl flex-shrink-0">
+        <div 
+          className="relative w-full aspect-square rounded-2xl overflow-hidden bg-zinc-900 border border-white/5 shadow-2xl flex-shrink-0 transition-shadow duration-1000"
+          style={{ boxShadow: `0 20px 45px -10px ${colors.glow}` }}
+        >
           {playbackMode === 'video' ? (
             /* Portal target for ReactPlayer Video projection */
             <div 
@@ -307,8 +316,8 @@ export const PlayerDock: React.FC = () => {
             />
             {/* Progress overlay bar */}
             <div
-              className="absolute left-0 top-1/2 -translate-y-1/2 h-[3px] bg-[#ff0055] rounded-full pointer-events-none"
-              style={{ width: `${(duration > 0 ? playedSeconds / duration : 0) * 100}%` }}
+              className="absolute left-0 top-1/2 -translate-y-1/2 h-[3px] rounded-full pointer-events-none transition-all duration-300"
+              style={{ width: `${(duration > 0 ? playedSeconds / duration : 0) * 100}%`, backgroundColor: colors.accent }}
             />
           </div>
           <div className="flex justify-between items-center text-[10px] text-zinc-500 font-bold font-mono mt-1.5">
@@ -339,7 +348,8 @@ export const PlayerDock: React.FC = () => {
 
           <button
             onClick={togglePlay}
-            className="w-12 h-12 rounded-full bg-[#ff0055] hover:bg-[#ff1e6b] text-white flex items-center justify-center shadow-lg transition-transform active:scale-95 flex-shrink-0"
+            className="w-12 h-12 rounded-full text-white flex items-center justify-center shadow-lg transition-all active:scale-95 flex-shrink-0"
+            style={{ backgroundColor: colors.accent }}
             title={isPlaying ? 'Pause' : 'Play'}
           >
             {isPlaying ? (
@@ -401,8 +411,8 @@ export const PlayerDock: React.FC = () => {
               className="yt-volume-slider w-full z-10 cursor-pointer"
             />
             <div
-              className="absolute left-0 top-1/2 -translate-y-1/2 h-[3px] bg-white group-hover:bg-[#ff0055] rounded-full pointer-events-none"
-              style={{ width: `${(isMuted ? 0 : volume) * 100}%` }}
+              className="absolute left-0 top-1/2 -translate-y-1/2 h-[3px] rounded-full pointer-events-none transition-all duration-300"
+              style={{ width: `${(isMuted ? 0 : volume) * 100}%`, backgroundColor: colors.accent }}
             />
           </div>
         </div>
@@ -442,11 +452,12 @@ export const PlayerDock: React.FC = () => {
                         setSeekTrigger(line.time);
                       }
                     }}
-                    className={`cursor-pointer transition-all duration-300 py-1.5 px-3 rounded-lg text-base leading-relaxed ${
+                    className={`cursor-pointer transition-all duration-300 py-1.5 px-3 rounded-lg text-base leading-relaxed border border-transparent ${
                       isActive
-                        ? 'text-white text-lg font-extrabold scale-[1.02] bg-white/5 shadow-md shadow-black/10'
+                        ? 'text-white text-lg font-extrabold scale-[1.02] shadow-md shadow-black/10'
                         : 'text-zinc-650 hover:text-zinc-300 font-semibold'
                     }`}
+                    style={isActive ? { backgroundColor: colors.border, borderColor: colors.glow } : {}}
                   >
                     {line.text}
                   </p>

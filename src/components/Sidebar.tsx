@@ -35,7 +35,7 @@ export const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="hidden md:flex w-[240px] bg-[#0a0909] flex-col select-none h-full flex-shrink-0 text-zinc-400 font-semibold p-4 border-r border-white/5">
+    <aside className="hidden md:flex w-[240px] bg-[#120d0d] flex-col select-none h-full flex-shrink-0 text-zinc-400 font-semibold p-4 border-r border-white/5">
       
       {/* Brand Header */}
       <div className="flex items-center gap-3 px-2 py-3 mb-2 flex-shrink-0">
@@ -50,12 +50,12 @@ export const Sidebar: React.FC = () => {
 
       {/* 1. Main Navigation Items */}
       <div className="flex-shrink-0">
-        <span className="text-[10px] font-bold text-zinc-650 uppercase tracking-wider px-2 block mb-2">Browse</span>
+        <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider px-2 block mb-2">Browse</span>
         <nav className="flex flex-col gap-1">
           <button
             onClick={() => navigateToTab('home')}
-            className={`flex items-center gap-4 px-4 py-2.5 rounded-xl text-sm transition-all duration-200 hover:bg-white/5 hover:text-white ${
-              pathname === '/' ? 'bg-white/5 text-white font-bold' : ''
+            className={`flex items-center gap-4 px-4 py-2.5 rounded-xl text-sm transition-all duration-200 hover:text-white ${
+              pathname === '/' ? 'bg-[#2b1f1f] text-white font-bold' : 'hover:bg-white/5'
             }`}
           >
             <Home className="w-4.5 h-4.5" />
@@ -63,8 +63,8 @@ export const Sidebar: React.FC = () => {
           </button>
           <button
             onClick={() => navigateToTab('explore')}
-            className={`flex items-center gap-4 px-4 py-2.5 rounded-xl text-sm transition-all duration-200 hover:bg-white/5 hover:text-white ${
-              pathname === '/explore' ? 'bg-white/5 text-white font-bold' : ''
+            className={`flex items-center gap-4 px-4 py-2.5 rounded-xl text-sm transition-all duration-200 hover:text-white ${
+              pathname === '/explore' ? 'bg-[#2b1f1f] text-white font-bold' : 'hover:bg-white/5'
             }`}
           >
             <Compass className="w-4.5 h-4.5" />
@@ -72,12 +72,21 @@ export const Sidebar: React.FC = () => {
           </button>
           <button
             onClick={() => navigateToTab('library')}
-            className={`flex items-center gap-4 px-4 py-2.5 rounded-xl text-sm transition-all duration-200 hover:bg-white/5 hover:text-white ${
-              pathname === '/library' ? 'bg-white/5 text-white font-bold' : ''
+            className={`flex items-center gap-4 px-4 py-2.5 rounded-xl text-sm transition-all duration-200 hover:text-white ${
+              pathname === '/library' ? 'bg-[#2b1f1f] text-white font-bold' : 'hover:bg-white/5'
             }`}
           >
             <Library className="w-4.5 h-4.5" />
             Library
+          </button>
+          <button
+            onClick={() => navigateToTab('liked')}
+            className={`flex items-center gap-4 px-4 py-2.5 rounded-xl text-sm transition-all duration-200 hover:text-white ${
+              pathname === '/liked' ? 'bg-[#2b1f1f] text-white font-bold' : 'hover:bg-white/5'
+            }`}
+          >
+            <Heart className="w-4.5 h-4.5" />
+            Liked Songs
           </button>
         </nav>
       </div>
@@ -88,7 +97,7 @@ export const Sidebar: React.FC = () => {
       {/* 2. Playlist Utilities & Playlists */}
       <div className="flex flex-col gap-2 flex-1 min-h-0">
         <div className="flex items-center justify-between px-2 mb-1 flex-shrink-0">
-          <span className="text-[10px] font-bold text-zinc-650 uppercase tracking-wider block">Playlists</span>
+          <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider block">Collections</span>
           <button
             onClick={handlePlaylistCreate}
             className="p-1 rounded-md text-zinc-500 hover:text-white hover:bg-white/5 transition-all"
@@ -100,24 +109,6 @@ export const Sidebar: React.FC = () => {
 
         {/* Scrollable Playlist Sub-list */}
         <div className="flex-1 overflow-y-auto space-y-1 custom-scrollbar">
-          {/* Liked Music Shortcut */}
-          <div
-            onClick={() => navigateToTab('liked')}
-            className={`flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-all duration-200 ${
-              pathname === '/liked' ? 'bg-white/5 text-white font-bold' : 'hover:bg-white/5'
-            }`}
-          >
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#ff0055] to-[#b3003b] flex items-center justify-center flex-shrink-0 shadow-md">
-              <Heart className="w-4.5 h-4.5 text-white fill-current animate-pulse" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold text-white truncate">Liked Songs</p>
-              <p className="text-[10px] text-zinc-500 truncate mt-0.5 font-medium">
-                Auto Playlist • {likedTracks.length} songs
-              </p>
-            </div>
-          </div>
-
           {/* User Custom Playlists */}
           {playlists.map((playlist) => {
             const isCurrent = pathname === `/playlist/${playlist.id}`;
@@ -129,7 +120,7 @@ export const Sidebar: React.FC = () => {
                   router.push(`/playlist/${playlist.id}`);
                 }}
                 className={`flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-all duration-200 ${
-                  isCurrent ? 'bg-white/5 text-white font-bold' : 'hover:bg-white/5'
+                  isCurrent ? 'bg-[#2b1f1f] text-white font-bold' : 'hover:bg-white/5'
                 }`}
               >
                 <div className="w-9 h-9 rounded-lg bg-zinc-900 flex items-center justify-center flex-shrink-0 shadow-md border border-white/5">
@@ -137,7 +128,7 @@ export const Sidebar: React.FC = () => {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold text-white truncate">{playlist.name}</p>
-                  <p className="text-[10px] text-zinc-500 truncate mt-0.5 font-medium">
+                  <p className="text-[10px] text-zinc-550 truncate mt-0.5 font-medium">
                     Playlist • {playlist.tracks.length} songs
                   </p>
                 </div>
@@ -151,20 +142,20 @@ export const Sidebar: React.FC = () => {
       <div className="mt-auto pt-3 border-t border-white/5 flex-shrink-0">
         <div 
           onClick={() => { setShowNowPlaying(false); router.push('/profile'); }}
-          className="flex items-center gap-3 p-1.5 rounded-xl cursor-pointer hover:bg-white/5 transition-all"
+          className="flex items-center gap-3 p-3 rounded-2xl cursor-pointer bg-[#1c1414] hover:bg-[#281d1d] border border-white/5 transition-all shadow-lg"
         >
           <img 
-            src={avatarUrl || undefined} 
+            src={avatarUrl || "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"} 
             className="w-9 h-9 rounded-full object-cover border border-white/10" 
-            alt="" 
+            alt="Avatar" 
             onError={(e) => {
               e.currentTarget.onerror = null;
               e.currentTarget.src = "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y";
             }}
           />
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold text-white truncate">{displayName || 'George Miles'}</p>
-            <p className="text-[10px] text-zinc-500 font-medium truncate mt-0.5">Premium member</p>
+            <p className="text-xs font-bold text-white truncate leading-tight">{displayName || 'George Miles'}</p>
+            <p className="text-[10px] text-zinc-500 font-semibold truncate mt-0.5">Premium member</p>
           </div>
         </div>
       </div>
