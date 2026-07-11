@@ -36,8 +36,8 @@ export const Sidebar: React.FC = () => {
 
   return (
     <aside 
-      className="hidden md:flex w-[240px] flex-col select-none h-full flex-shrink-0 text-zinc-400 font-semibold p-4 border-r transition-all duration-1000"
-      style={{ background: 'var(--theme-sidebar-bg, #120d0d)', borderRightColor: 'var(--theme-border)' }}
+      className="hidden md:flex w-[240px] flex-col select-none h-full flex-shrink-0 text-zinc-400 font-semibold p-4 transition-all duration-1000"
+      style={{ background: 'var(--theme-sidebar-bg, #120d0d)' }}
     >
       
       {/* Brand Header */}
@@ -58,8 +58,9 @@ export const Sidebar: React.FC = () => {
           <button
             onClick={() => navigateToTab('home')}
             className={`flex items-center gap-4 px-4 py-2.5 rounded-xl text-sm transition-all duration-200 hover:text-white ${
-              pathname === '/' ? 'bg-[#2b1f1f] text-white font-bold' : 'hover:bg-white/5'
+              pathname === '/' ? 'text-white font-bold' : 'hover:bg-white/5'
             }`}
+            style={pathname === '/' ? { backgroundColor: 'var(--theme-border)' } : {}}
           >
             <Home className="w-4.5 h-4.5" />
             Home
@@ -67,8 +68,9 @@ export const Sidebar: React.FC = () => {
           <button
             onClick={() => navigateToTab('explore')}
             className={`flex items-center gap-4 px-4 py-2.5 rounded-xl text-sm transition-all duration-200 hover:text-white ${
-              pathname === '/explore' ? 'bg-[#2b1f1f] text-white font-bold' : 'hover:bg-white/5'
+              pathname === '/explore' ? 'text-white font-bold' : 'hover:bg-white/5'
             }`}
+            style={pathname === '/explore' ? { backgroundColor: 'var(--theme-border)' } : {}}
           >
             <Compass className="w-4.5 h-4.5" />
             Explore
@@ -76,8 +78,9 @@ export const Sidebar: React.FC = () => {
           <button
             onClick={() => navigateToTab('library')}
             className={`flex items-center gap-4 px-4 py-2.5 rounded-xl text-sm transition-all duration-200 hover:text-white ${
-              pathname === '/library' ? 'bg-[#2b1f1f] text-white font-bold' : 'hover:bg-white/5'
+              pathname === '/library' ? 'text-white font-bold' : 'hover:bg-white/5'
             }`}
+            style={pathname === '/library' ? { backgroundColor: 'var(--theme-border)' } : {}}
           >
             <Library className="w-4.5 h-4.5" />
             Library
@@ -85,8 +88,9 @@ export const Sidebar: React.FC = () => {
           <button
             onClick={() => navigateToTab('liked')}
             className={`flex items-center gap-4 px-4 py-2.5 rounded-xl text-sm transition-all duration-200 hover:text-white ${
-              pathname === '/liked' ? 'bg-[#2b1f1f] text-white font-bold' : 'hover:bg-white/5'
+              pathname === '/liked' ? 'text-white font-bold' : 'hover:bg-white/5'
             }`}
+            style={pathname === '/liked' ? { backgroundColor: 'var(--theme-border)' } : {}}
           >
             <Heart className="w-4.5 h-4.5" />
             Liked Songs
@@ -123,8 +127,9 @@ export const Sidebar: React.FC = () => {
                   router.push(`/playlist/${playlist.id}`);
                 }}
                 className={`flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-all duration-200 ${
-                  isCurrent ? 'bg-[#2b1f1f] text-white font-bold' : 'hover:bg-white/5'
+                  isCurrent ? 'text-white font-bold' : 'hover:bg-white/5'
                 }`}
+                style={isCurrent ? { backgroundColor: 'var(--theme-border)' } : {}}
               >
                 <div className="w-9 h-9 rounded-lg bg-zinc-900 flex items-center justify-center flex-shrink-0 shadow-md border border-white/5">
                   <Music className="w-4.5 h-4.5 text-zinc-400" />
@@ -142,10 +147,10 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* User Profile Card Pinned at Bottom */}
-      <div className="mt-auto pt-3 border-t border-white/5 flex-shrink-0">
+      <div className="mt-auto pt-3 flex-shrink-0">
         <div 
           onClick={() => { setShowNowPlaying(false); router.push('/profile'); }}
-          className="flex items-center gap-3 p-3 rounded-2xl cursor-pointer bg-[#1c1414] hover:bg-[#281d1d] border border-white/5 transition-all shadow-lg"
+          className="flex items-center gap-3 p-3 rounded-2xl cursor-pointer bg-white/5 hover:bg-white/10 border border-white/5 transition-all shadow-lg animate-fade-in"
         >
           <img 
             src={avatarUrl || "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"} 

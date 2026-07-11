@@ -43,13 +43,13 @@ export const GlobalThemeSetter: React.FC = () => {
   useEffect(() => {
     // Default fallback values (solid dark red/pink gradient theme matching image 1)
     const defaults = {
-      dominant: 'rgba(239, 35, 60, 0.08)',
-      glow: 'rgba(239, 35, 60, 0.28)',
-      accent: 'rgb(239, 35, 60)',
-      accentHover: 'rgba(239, 35, 60, 0.8)',
-      border: 'rgba(239, 35, 60, 0.15)',
-      sidebarBg: 'linear-gradient(to bottom, #120d0d, #060505)',
-      mainBg: 'linear-gradient(to bottom, #080808, #000000)',
+      dominant: 'rgba(255, 255, 255, 0.03)',
+      glow: 'rgba(255, 255, 255, 0.1)',
+      accent: 'rgb(255, 255, 255)',
+      accentHover: 'rgba(255, 255, 255, 0.8)',
+      border: 'rgba(255, 255, 255, 0.08)',
+      sidebarBg: 'linear-gradient(to bottom, #0f0e0e, #050505)',
+      mainBg: 'linear-gradient(to bottom, #070707, #000000)',
       playerBg: 'linear-gradient(to bottom, #0a0909, #050505)'
     };
 

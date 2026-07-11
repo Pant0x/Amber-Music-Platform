@@ -212,8 +212,8 @@ export const PlayerDock: React.FC = () => {
 
   return (
     <div 
-      className="hidden lg:flex w-[380px] border-l flex-col select-none h-full flex-shrink-0 overflow-hidden relative z-20 transition-all duration-1000"
-      style={{ background: 'var(--theme-player-bg, #0a0909)', borderLeftColor: 'var(--theme-border)' }}
+      className="hidden lg:flex w-[380px] flex-col select-none h-full flex-shrink-0 overflow-hidden relative z-20 transition-all duration-1000"
+      style={{ background: 'var(--theme-player-bg, #0a0909)' }}
     >
       
       {/* Scrollable Container for Player & Lyrics */}
