@@ -80,9 +80,31 @@ export const MediaDeck: React.FC = () => {
     
     // Only route if targetPath differs from current browser path
     if (targetPath && window.location.pathname !== targetPath) {
-      router.push(targetPath);
+      const search = window.location.search;
+      router.push(targetPath + search);
     }
   }, [activeTab, currentPlaylistId, currentChannelId, router]);
+
+  // Synchronize playing song parameter (play=TRACK_ID) in the URL search query
+  const currentTrackId = currentTrack?.id;
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const existingPlay = params.get('play');
+    if (currentTrackId) {
+      if (existingPlay !== currentTrackId) {
+        params.set('play', currentTrackId);
+        const newSearch = params.toString();
+        window.history.replaceState(null, '', window.location.pathname + `?${newSearch}`);
+      }
+    } else {
+      if (existingPlay) {
+        params.delete('play');
+        const newSearch = params.toString();
+        window.history.replaceState(null, '', window.location.pathname + (newSearch ? `?${newSearch}` : ''));
+      }
+    }
+  }, [currentTrackId, pathname]);
 
   const playerRef = useRef<any>(null);
   const [progress, setProgress] = useState({ played: 0, playedSeconds: 0, loaded: 0 });

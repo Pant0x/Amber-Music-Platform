@@ -18,11 +18,13 @@ interface PlayerState {
   selectedMood: string; // 'none' | 'energize' | 'focus' | 'relax' | 'commute' | 'workout'
   currentPlaylistId: string | null;
   currentChannelId: string | null;
+  artistSubTab: 'overview' | 'songs' | 'albums' | 'videos' | 'about';
+  setArtistSubTab: (tab: 'overview' | 'songs' | 'albums' | 'videos' | 'about') => void;
 
   // Navigation Stack State
-  navHistory: { activeTab: any; currentPlaylistId: any; currentChannelId: any }[];
-  navForward: { activeTab: any; currentPlaylistId: any; currentChannelId: any }[];
-  pushNavState: (activeTab: any, currentPlaylistId: any, currentChannelId: any) => void;
+  navHistory: { activeTab: any; currentPlaylistId: any; currentChannelId: any; artistSubTab?: any }[];
+  navForward: { activeTab: any; currentPlaylistId: any; currentChannelId: any; artistSubTab?: any }[];
+  pushNavState: (activeTab: any, currentPlaylistId: any, currentChannelId: any, artistSubTab?: any) => void;
   navigateBack: () => void;
   navigateForward: () => void;
 
@@ -140,25 +142,32 @@ export const usePlayerStore = create<PlayerState>()(
 
       // Navigation & Query Initial State
       activeTab: 'home',
-      searchQuery: '',
+       searchQuery: '',
       selectedMood: 'none',
       currentPlaylistId: null,
       currentChannelId: null,
+      artistSubTab: 'overview',
 
       // Navigation Stack State
       navHistory: [],
       navForward: [],
 
-      pushNavState: (activeTab, currentPlaylistId, currentChannelId) => {
+      pushNavState: (activeTab, currentPlaylistId, currentChannelId, artistSubTab) => {
         const state = get();
         const last = state.navHistory[state.navHistory.length - 1];
+        const targetArtistSubTab = artistSubTab !== undefined ? artistSubTab : state.artistSubTab;
         
-        if (!last || last.activeTab !== activeTab || last.currentPlaylistId !== currentPlaylistId || last.currentChannelId !== currentChannelId) {
+        if (!last || last.activeTab !== activeTab || last.currentPlaylistId !== currentPlaylistId || last.currentChannelId !== currentChannelId || last.artistSubTab !== targetArtistSubTab) {
           const prevStack = [...state.navHistory];
           if (prevStack.length >= 50) prevStack.shift();
           
           set({
-            navHistory: [...prevStack, { activeTab: state.activeTab, currentPlaylistId: state.currentPlaylistId, currentChannelId: state.currentChannelId }],
+            navHistory: [...prevStack, { 
+              activeTab: state.activeTab, 
+              currentPlaylistId: state.currentPlaylistId, 
+              currentChannelId: state.currentChannelId,
+              artistSubTab: state.artistSubTab
+            }],
             navForward: []
           });
         }
@@ -170,14 +179,20 @@ export const usePlayerStore = create<PlayerState>()(
         
         const prev = state.navHistory[state.navHistory.length - 1];
         const newHistory = state.navHistory.slice(0, -1);
-        const current = { activeTab: state.activeTab, currentPlaylistId: state.currentPlaylistId, currentChannelId: state.currentChannelId };
+        const current = { 
+          activeTab: state.activeTab, 
+          currentPlaylistId: state.currentPlaylistId, 
+          currentChannelId: state.currentChannelId,
+          artistSubTab: state.artistSubTab
+        };
         
         set({
           navHistory: newHistory,
           navForward: [current, ...state.navForward],
           activeTab: prev.activeTab,
           currentPlaylistId: prev.currentPlaylistId,
-          currentChannelId: prev.currentChannelId
+          currentChannelId: prev.currentChannelId,
+          artistSubTab: prev.artistSubTab || 'overview'
         });
       },
 
@@ -187,14 +202,20 @@ export const usePlayerStore = create<PlayerState>()(
         
         const next = state.navForward[0];
         const newForward = state.navForward.slice(1);
-        const current = { activeTab: state.activeTab, currentPlaylistId: state.currentPlaylistId, currentChannelId: state.currentChannelId };
+        const current = { 
+          activeTab: state.activeTab, 
+          currentPlaylistId: state.currentPlaylistId, 
+          currentChannelId: state.currentChannelId,
+          artistSubTab: state.artistSubTab
+        };
         
         set({
           navHistory: [...state.navHistory, current],
           navForward: newForward,
           activeTab: next.activeTab,
           currentPlaylistId: next.currentPlaylistId,
-          currentChannelId: next.currentChannelId
+          currentChannelId: next.currentChannelId,
+          artistSubTab: next.artistSubTab || 'overview'
         });
       },
 
@@ -394,6 +415,7 @@ export const usePlayerStore = create<PlayerState>()(
         get().pushNavState(activeTab, get().currentPlaylistId, get().currentChannelId);
         set({ activeTab, showNowPlaying: false });
       },
+      setArtistSubTab: (artistSubTab) => set({ artistSubTab }),
       setSearchQuery: (searchQuery) => set({ searchQuery }),
       setSelectedMood: (selectedMood) => set({ selectedMood }),
       setCurrentPlaylistId: (currentPlaylistId) => {
@@ -451,7 +473,7 @@ export const usePlayerStore = create<PlayerState>()(
             const data = await res.json();
             set({ 
               currentChannelDetails: data,
-              currentChannelId: data.profile?.id || null
+              currentChannelId: data.profile?.title || idOrName
             });
           }
         } catch (e) {
@@ -460,8 +482,8 @@ export const usePlayerStore = create<PlayerState>()(
       },
 
       viewChannel: async (channelTitle, channelId) => {
-        const idOrName = channelId || channelTitle;
-        const isName = !channelId;
+        const idOrName = channelTitle || channelId || '';
+        const isName = !!channelTitle;
         get().pushNavState('channel', null, idOrName);
         set({ activeTab: 'channel', currentChannelDetails: null, currentChannelId: idOrName });
         

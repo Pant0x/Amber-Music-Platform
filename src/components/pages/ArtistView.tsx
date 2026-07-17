@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { Track } from '@/types/music-player';
 import { Play, Pause, Shuffle, Disc, Heart, Compass, Radio, Check, Clock, Music, PlusCircle } from 'lucide-react';
@@ -25,10 +25,11 @@ export const ArtistView: React.FC = () => {
     playTrack,
     togglePlay,
     setCurrentPlaylistId,
-    setActiveTab
+    setActiveTab,
+    artistSubTab,
+    setArtistSubTab
   } = usePlayerStore();
 
-  const [artistSubTab, setArtistSubTab] = useState<'overview' | 'songs' | 'albums' | 'videos' | 'about'>('overview');
   const [albumFilter, setAlbumFilter] = useState<'All' | 'Albums' | 'Singles & EPs'>('All');
 
   const handlePlayAction = (track: Track, contextTracks: Track[] = []) => {
@@ -39,14 +40,19 @@ export const ArtistView: React.FC = () => {
     }
   };
 
+  const lastLoadedChannelIdRef = useRef<string | null>(null);
+
   // Hydrate Channel Details
   useEffect(() => {
     if (currentChannelId) {
       const isName = !currentChannelId.startsWith('UC');
       fetchChannelDetails(currentChannelId, isName);
-      setArtistSubTab('overview');
+      if (lastLoadedChannelIdRef.current !== currentChannelId) {
+        setArtistSubTab('overview');
+        lastLoadedChannelIdRef.current = currentChannelId;
+      }
     }
-  }, [currentChannelId, fetchChannelDetails]);
+  }, [currentChannelId, fetchChannelDetails, setArtistSubTab]);
 
   if (!currentChannelDetails) {
     return (

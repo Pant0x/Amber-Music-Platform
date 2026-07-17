@@ -498,7 +498,7 @@ export default function ProfilePage() {
             ) : resolvedChannels.map((channel) => (
               <div
                 key={channel.id}
-                onClick={() => router.push(`/artist/${channel.id}`)}
+                onClick={() => router.push(`/artist/${encodeURIComponent(channel.title || channel.id)}`)}
                 className="group flex-shrink-0 w-24 flex flex-col items-center text-center cursor-pointer space-y-1.5"
               >
                 <div className="w-16 h-16 rounded-full bg-zinc-900 flex items-center justify-center border border-white/5 shadow-md overflow-hidden relative group-hover:scale-105 transition-transform duration-200">

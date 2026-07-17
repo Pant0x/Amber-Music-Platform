@@ -107,8 +107,7 @@ export const ArtistLinks: React.FC<ArtistLinksProps> = ({
             <span
               onClick={(e) => {
                 e.stopPropagation();
-                const artistId = idx === 0 ? channelId : undefined;
-                router.push(`/artist/${encodeURIComponent(artistId || cleanName)}`);
+                router.push(`/artist/${encodeURIComponent(cleanName)}`);
               }}
               className="hover:underline hover:text-white cursor-pointer"
             >
