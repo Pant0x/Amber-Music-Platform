@@ -129,7 +129,7 @@ interface PlayerState {
     albumName?: string;
     albumId?: string;
     duration?: string;
-    type?: string;
+    type?: Track['type'];
   }) => void;
   
   isMinimized: boolean;
