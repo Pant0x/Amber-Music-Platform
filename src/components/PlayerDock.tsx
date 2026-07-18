@@ -367,7 +367,7 @@ export const PlayerDock: React.FC = () => {
                 <div className="flex items-center justify-between mt-1">
                   <p className="text-[11px] text-zinc-300 font-semibold drop-shadow-md">
                     {nowPlayingChannelDetails?.profile?.subscriberCountText || 
-                     (nowPlayingChannelDetails?.profile?.subscriberCount ? `${nowPlayingChannelDetails.profile.subscriberCount} listeners` : '12.4M monthly listeners')}
+                     (nowPlayingChannelDetails?.profile?.subscriberCount ? `${new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(Number(nowPlayingChannelDetails.profile.subscriberCount))} monthly listeners` : '12.4M monthly listeners')}
                   </p>
                   
                   {/* Follow Toggle button */}

@@ -65,9 +65,7 @@ export async function GET(request: Request) {
       if (mode === 'song') {
         // Enforce Topic channels strictly for songs to guarantee audio releases
         const topicItems = validItems.filter(i => 
-          i.channelTitle.toLowerCase().includes('topic') || 
-          i.channelTitle.toLowerCase() === artist.toLowerCase() ||
-          artist.toLowerCase().includes(i.channelTitle.toLowerCase())
+          i.channelTitle.toLowerCase().includes('topic')
         );
         if (topicItems.length > 0) {
           return findBestInGroup(topicItems);
@@ -126,14 +124,7 @@ export async function GET(request: Request) {
           console.log(`[Resolve API] Found top result match: "${searchData.topResult.title}" with videoId: ${videoId}`);
         }
       }
-      if (!videoId && searchData.videos && searchData.videos.length > 0) {
-        const match = getBestMatch(searchData.videos);
-        if (match) {
-          videoId = match.id;
-          trackMatch = match;
-          console.log(`[Resolve API] Fallback to video match: "${match.title}" with videoId: ${videoId}`);
-        }
-      }
+      // Removed fallback to searchData.videos to strictly avoid playing music videos when song mode is requested.
     }
 
     if (videoId) {
