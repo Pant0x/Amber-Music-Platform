@@ -30,6 +30,12 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
   const handlePlayAction = (track: Track, contextTracks: Track[] = []) => {
     if (currentTrack?.id === track.id) {
       togglePlay();
+      if (contextTracks.length > 0) {
+        const idx = contextTracks.findIndex(t => t.id === track.id);
+        if (idx !== -1) {
+           usePlayerStore.setState({ queue: contextTracks.slice(idx + 1), contextQueue: contextTracks });
+        }
+      }
     } else {
       playTrack(track, contextTracks);
     }

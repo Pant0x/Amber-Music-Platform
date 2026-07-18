@@ -342,9 +342,9 @@ export const PlayerDock: React.FC = () => {
           
           {/* Artist photo (Background style) */}
           <div className="w-full aspect-[4/3] relative overflow-hidden bg-zinc-800 flex items-center justify-center">
-            {nowPlayingChannelDetails?.thumbnail ? (
+            {nowPlayingChannelDetails?.profile?.avatarUrl || nowPlayingChannelDetails?.profile?.thumbnail || nowPlayingChannelDetails?.profile?.bannerUrl ? (
               <img 
-                src={upgradeThumbnailUrl(nowPlayingChannelDetails.thumbnail)} 
+                src={upgradeThumbnailUrl(nowPlayingChannelDetails.profile.avatarUrl || nowPlayingChannelDetails.profile.thumbnail || nowPlayingChannelDetails.profile.bannerUrl)} 
                 alt={currentTrack.channelTitle}
                 className="w-full h-full object-cover select-none transition-transform duration-700 group-hover/artist-card:scale-105"
               />
@@ -366,7 +366,8 @@ export const PlayerDock: React.FC = () => {
                 </h4>
                 <div className="flex items-center justify-between mt-1">
                   <p className="text-[11px] text-zinc-300 font-semibold drop-shadow-md">
-                    {nowPlayingChannelDetails?.subscriberCountText || '12.4M monthly listeners'}
+                    {nowPlayingChannelDetails?.profile?.subscriberCountText || 
+                     (nowPlayingChannelDetails?.profile?.subscriberCount ? `${nowPlayingChannelDetails.profile.subscriberCount} listeners` : '12.4M monthly listeners')}
                   </p>
                   
                   {/* Follow Toggle button */}
@@ -384,9 +385,9 @@ export const PlayerDock: React.FC = () => {
               </div>
 
               {/* Optional Bio snippet if available */}
-              {nowPlayingChannelDetails?.description && (
+              {(nowPlayingChannelDetails?.profile?.description || nowPlayingChannelDetails?.description) && (
                 <p className="text-[11px] text-zinc-300 line-clamp-2 leading-relaxed mt-1 font-medium select-text drop-shadow-md">
-                  {nowPlayingChannelDetails.description}
+                  {nowPlayingChannelDetails.profile?.description || nowPlayingChannelDetails.description}
                 </p>
               )}
             </div>

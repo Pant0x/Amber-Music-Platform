@@ -357,7 +357,7 @@ export const usePlayerStore = create<PlayerState>()(
       // Playback Actions
       playTrack: (track, contextTracks = []) => {
         set((state) => {
-          let newQueue: Track[] = [];
+          let newQueue: Track[] = state.queue;
           let newHistory = state.history;
 
           if (contextTracks.length > 0) {

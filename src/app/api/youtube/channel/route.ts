@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   if (!target) {
     return NextResponse.json({ error: 'Missing identifier' }, { status: 400 });
   }
-  // Redirect to new dynamic route
+  // Redirect to new dynamic route while preserving other query params
   const url = new URL(request.url);
-  return NextResponse.redirect(`${url.origin}/api/youtube/channel/${encodeURIComponent(target)}`);
+  return NextResponse.redirect(`${url.origin}/api/youtube/channel/${encodeURIComponent(target)}?${url.searchParams.toString()}`);
 }

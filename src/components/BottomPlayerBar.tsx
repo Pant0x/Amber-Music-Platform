@@ -30,7 +30,7 @@ const upgradeThumbnailUrl = (url: string | undefined): string => {
   }
   if (url.includes('i.ytimg.com/vi/') || url.includes('img.youtube.com/vi/')) {
     const cleanUrl = url.split('?')[0];
-    return cleanUrl.replace(/\/(default|mqdefault|sddefault|hqdefault|maxresdefault)\.jpg/, '/hqdefault.jpg');
+    return cleanUrl.replace(/\/(default|mqdefault|sddefault|hqdefault|maxresdefault)\.jpg/, '/maxresdefault.jpg');
   }
   return url;
 };
