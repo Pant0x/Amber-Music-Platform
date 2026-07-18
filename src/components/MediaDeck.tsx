@@ -47,7 +47,6 @@ export const MediaDeck: React.FC = () => {
     viewChannel,
     showNowPlaying,
     setShowNowPlaying,
-    playbackMode,
     nowPlayingTab,
     setNowPlayingTab,
     navigateBack,
@@ -135,7 +134,6 @@ export const MediaDeck: React.FC = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [isShuffle, setIsShuffle] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
-  const [videoRect, setVideoRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
 
   const progressRef = useRef(progress);
   useEffect(() => {
@@ -298,35 +296,6 @@ export const MediaDeck: React.FC = () => {
     };
   }, [isPlaying]);
 
-  useEffect(() => {
-    if (currentTrack && playbackMode === 'video') {
-      const updateRect = () => {
-        const el = document.getElementById('player-dock-video-portal');
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          setVideoRect({
-            left: rect.left,
-            top: rect.top,
-            width: rect.width,
-            height: rect.height
-          });
-        }
-      };
-
-      updateRect();
-      window.addEventListener('resize', updateRect);
-      // Run multiple delayed sweeps to capture transition frames
-      const timers = [50, 100, 200, 300, 500, 800].map(t => setTimeout(updateRect, t));
-
-      return () => {
-        window.removeEventListener('resize', updateRect);
-        timers.forEach(clearTimeout);
-      };
-    } else {
-      setVideoRect(null);
-    }
-  }, [currentTrack, playbackMode]);
-
   // Background periodic listen writer (best-effort)
   useEffect(() => {
     let interval: number | undefined;
@@ -364,10 +333,6 @@ export const MediaDeck: React.FC = () => {
   useEffect(() => {
     if (!currentTrack) return;
     
-    const isSongModeMatch = playbackMode === 'song' && (currentTrack.type === 'music' || !currentTrack.type);
-    const isVideoModeMatch = playbackMode === 'video' && currentTrack.type === 'video';
-    const modeMatchesTrackType = isSongModeMatch || isVideoModeMatch;
-
     // If we already have a direct YouTube origin track, we don't need to resolve.
     // This prevents searching and accidentally replacing an official Topic release with a VEVO video.
     const needsResolve = !currentTrack.youtubeId && currentTrack.origin !== 'youtube';
@@ -377,13 +342,13 @@ export const MediaDeck: React.FC = () => {
     }
     
     if (needsResolve) {
-      console.log(`[MediaDeck] Resolving stream (${playbackMode}) for: "${currentTrack.title}" by "${currentTrack.channelTitle}"`);
+      console.log(`[MediaDeck] Resolving stream for: "${currentTrack.title}" by "${currentTrack.channelTitle}"`);
       
       const resolveTrack = async () => {
         try {
           const explicitParam = currentTrack.isExplicit ? '&explicit=true' : '';
           const res = await fetch(
-            `/api/youtube/resolve?title=${encodeURIComponent(currentTrack.title)}&artist=${encodeURIComponent(currentTrack.channelTitle)}&mode=${playbackMode}${explicitParam}`
+            `/api/youtube/resolve?title=${encodeURIComponent(currentTrack.title)}&artist=${encodeURIComponent(currentTrack.channelTitle)}${explicitParam}`
           );
           if (res.ok) {
             const data = await res.json();
@@ -424,7 +389,7 @@ export const MediaDeck: React.FC = () => {
 
       resolveTrack();
     }
-  }, [currentTrack?.id, currentTrack?.youtubeId, setYoutubeIdForCurrentTrack, playbackMode]);
+  }, [currentTrack?.id, currentTrack?.youtubeId, setYoutubeIdForCurrentTrack]);
 
   // Pre-resolve next track in queue for instant playback on transition
   useEffect(() => {
@@ -446,7 +411,7 @@ export const MediaDeck: React.FC = () => {
         try {
           const explicitParam = nextTrack.isExplicit ? '&explicit=true' : '';
           const res = await fetch(
-            `/api/youtube/resolve?title=${encodeURIComponent(nextTrack.title)}&artist=${encodeURIComponent(nextTrack.channelTitle)}&mode=${playbackMode}${explicitParam}`
+            `/api/youtube/resolve?title=${encodeURIComponent(nextTrack.title)}&artist=${encodeURIComponent(nextTrack.channelTitle)}${explicitParam}`
           );
           if (res.ok) {
             const data = await res.json();
@@ -591,14 +556,7 @@ export const MediaDeck: React.FC = () => {
   return (
     <div 
       className="fixed z-50 rounded-2xl overflow-hidden pointer-events-none"
-      style={videoRect ? {
-        left: `${videoRect.left}px`,
-        top: `${videoRect.top}px`,
-        width: `${videoRect.width}px`,
-        height: `${videoRect.height}px`,
-        opacity: 1,
-        pointerEvents: 'auto'
-      } : {
+      style={{
         left: '-9999px',
         top: '-9999px',
         width: '200px',

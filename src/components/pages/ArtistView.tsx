@@ -670,10 +670,7 @@ export const ArtistView: React.FC = () => {
                 </p>
                 <p className="text-xs text-zinc-500 uppercase font-medium mt-0.5">Subscribers</p>
               </div>
-              <div>
-                <p className="text-2xl font-bold text-white">{Number(currentChannelDetails.profile?.videoCount || 0).toLocaleString()}</p>
-                <p className="text-xs text-zinc-500 uppercase font-medium mt-0.5">Videos</p>
-              </div>
+
               {currentChannelDetails.profile?.customUrl && (
                 <div>
                   <p className="text-sm font-medium text-white">{currentChannelDetails.profile.customUrl}</p>

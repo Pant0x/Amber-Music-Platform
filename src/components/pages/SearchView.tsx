@@ -32,7 +32,6 @@ export const SearchView: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searchTopResult, setSearchTopResult] = useState<any>(null);
   const [searchSongs, setSearchSongs] = useState<Track[]>([]);
-  const [searchVideos, setSearchVideos] = useState<any[]>([]);
   const [searchArtists, setSearchArtists] = useState<any[]>([]);
   const [searchAlbums, setSearchAlbums] = useState<any[]>([]);
   const [searchPlaylists, setSearchPlaylists] = useState<any[]>([]);
@@ -102,7 +101,6 @@ export const SearchView: React.FC = () => {
     if (!searchQuery) {
       setSearchTopResult(null);
       setSearchSongs([]);
-      setSearchVideos([]);
       setSearchArtists([]);
       setSearchAlbums([]);
       setSearchPlaylists([]);
@@ -125,7 +123,6 @@ export const SearchView: React.FC = () => {
           const data = await res.json();
           setSearchTopResult(data.topResult || null);
           setSearchSongs(data.songs || []);
-          setSearchVideos(data.videos || []);
           setSearchArtists(data.artists || []);
           setSearchAlbums(data.albums || []);
           setSearchPlaylists(data.communityPlaylists || []);
@@ -458,33 +455,6 @@ export const SearchView: React.FC = () => {
                 </div>
               )}
 
-              {/* Videos Section */}
-              {searchVideos.length > 0 && (
-                <div>
-                  <h3 className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-3">Videos</h3>
-                  <div className="flex overflow-x-auto no-scrollbar gap-4 pb-2">
-                    {searchVideos.slice(0, 5).map(vid => (
-                      <div
-                        key={`v-${vid.id}`}
-                        onClick={() => handlePlayAction(vid, searchVideos)}
-                        className="group flex-shrink-0 w-[240px] cursor-pointer"
-                      >
-                        <div className="aspect-video rounded-lg overflow-hidden bg-[#1f1f1f] mb-2 shadow-md relative">
-                          <img src={vid.thumbnailUrl || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
-                            <div className="w-10 h-10 rounded-full bg-[#ff0000]/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg">
-                              <Play className="w-4 h-4 fill-white text-white ml-0.5" />
-                            </div>
-                          </div>
-                        </div>
-                        <h4 className="text-xs font-semibold text-white truncate">{vid.title}</h4>
-                        <p className="text-[10px] text-zinc-500 truncate">{cleanVisualName(vid.channelTitle)}{vid.views ? ` • ${vid.views}` : ''}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* Community Playlists */}
               {searchPlaylists.length > 0 && (
                 <div>
@@ -639,7 +609,7 @@ export const SearchView: React.FC = () => {
           )}
 
           {/* Empty state */}
-          {searchSongs.length === 0 && searchArtists.length === 0 && searchAlbums.length === 0 && searchVideos.length === 0 && !searchTopResult && searchQuery && !loading && (
+          {searchSongs.length === 0 && searchArtists.length === 0 && searchAlbums.length === 0 && !searchTopResult && searchQuery && !loading && (
             <div className="py-20 text-center text-sm text-zinc-500 font-semibold">
               No results found. Try another query.
             </div>

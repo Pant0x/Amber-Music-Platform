@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   const query = searchParams.get('q');
   
   if (!query) {
-    return NextResponse.json({ topResult: null, songs: [], videos: [], artists: [], albums: [], communityPlaylists: [] });
+    return NextResponse.json({ topResult: null, songs: [], artists: [], albums: [], communityPlaylists: [] });
   }
 
   const getSearchQueryWithAudioSuffix = (origQuery: string): string => {
@@ -69,7 +69,6 @@ export async function GET(request: Request) {
     return NextResponse.json(cleanTopicGlobally({
       topResult,
       songs: ytMusicData.songs?.slice(0, 20) || [],
-      videos: ytArtistsData.videos?.slice(0, 10) || ytMusicData.videos?.slice(0, 10) || [],
       artists: artists.slice(0, 10),
       albums: ytMusicData.albums?.slice(0, 10) || [],
       communityPlaylists: ytMusicData.communityPlaylists?.slice(0, 10) || []
@@ -91,7 +90,7 @@ export async function GET(request: Request) {
       }
       const data = await res.json();
 
-      // Map SerpApi video_results to songs/videos
+      // Map SerpApi video_results to songs
       const songs = (data.video_results || []).map((v: any) => {
         const id = v.video_id || '';
         return {
@@ -142,7 +141,7 @@ export async function GET(request: Request) {
         };
       });
 
-      // Construct a top result: prefer the first artist/channel or the first video/song
+      // Construct a top result: prefer the first artist/channel or the first song
       let topResult = null;
       if (artists.length > 0) {
         topResult = {
@@ -160,7 +159,6 @@ export async function GET(request: Request) {
       return NextResponse.json(cleanTopicGlobally({
         topResult,
         songs: songs.slice(0, 20),
-        videos: songs.slice(0, 10).map((s: any) => ({ ...s, playbackMode: 'video' })), // map some songs to videos for tab display
         artists: artists.slice(0, 10),
         albums: albums.slice(0, 10),
         communityPlaylists: albums.slice(0, 10)
@@ -175,11 +173,9 @@ export async function GET(request: Request) {
   try {
     const spotifyApi = await getSpotifyApi();
 
-    // Perform Spotify search and YouTube Music searches in parallel
-    const [spotifyRes, ytAudioRes, ytVideoRes] = await Promise.allSettled([
-      spotifyApi.search(query, ['track', 'artist', 'album', 'playlist'], { limit: 20 }),
-      ytMusicSearch(getSearchQueryWithAudioSuffix(query)),
-      ytMusicSearch(query)
+    // Perform Spotify search
+    const [spotifyRes] = await Promise.allSettled([
+      spotifyApi.search(query, ['track', 'artist', 'album', 'playlist'], { limit: 20 })
     ]);
 
     // Check if Spotify search failed completely
@@ -195,7 +191,6 @@ export async function GET(request: Request) {
     let artists: any[] = [];
     let albums: any[] = [];
     let communityPlaylists: any[] = [];
-    let videos: any[] = [];
 
     const data = spotifyRes.value.body;
     
@@ -267,13 +262,6 @@ export async function GET(request: Request) {
       }));
     }
 
-    // Process YouTube Music search results for videos
-    if (ytVideoRes.status === 'fulfilled' && ytVideoRes.value.videos?.length > 0) {
-      videos = ytVideoRes.value.videos;
-    } else if (ytAudioRes.status === 'fulfilled' && ytAudioRes.value.videos) {
-      videos = ytAudioRes.value.videos;
-    }
-
     // Strict filtering: prefer songs (official audio) and exclude live/remix/cover from songs unless query suggests it
     const songExcludeRegex = /\b(live|remix|cover|acoustic|lyric|lyrics|sped|slowed|demo|edit|instrumental|karaoke|official\s+video|music\s+video|director|skit)\b/i;
     const querySuggestsVariants = /\b(live|remix|cover|acoustic|lyric|sped|slowed)\b/i.test(query || '');
@@ -307,14 +295,6 @@ export async function GET(request: Request) {
       }
     });
     songs = dedupedSongs;
-
-    videos = videos.filter((v) => {
-      if (!v || !v.title) return false;
-      // avoid very short/shorts content and clearly non-music cinematic pieces
-      const title = v.title.toLowerCase();
-      if (/\b(shorts|trailer|teaser|bts|behind the scenes|documentary)\b/.test(title)) return false;
-      return true;
-    }).map((v) => ({ ...v, playbackMode: 'video' }));
 
     // Artist disambiguation: query YouTube Music for possible channel matches for top Spotify artists
     const enrichArtistsWithYouTube = async (artistsArr: any[]) => {
@@ -403,7 +383,6 @@ export async function GET(request: Request) {
     return NextResponse.json(cleanTopicGlobally({
       topResult,
       songs,
-      videos,
       artists,
       albums,
       communityPlaylists
