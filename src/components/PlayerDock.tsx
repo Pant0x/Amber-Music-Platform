@@ -70,19 +70,19 @@ export const PlayerDock: React.FC = () => {
     clearQueue,
     playTrack,
     viewChannel,
-    currentChannelDetails,
+    nowPlayingChannelDetails,
     subscribedChannels,
     toggleSubscribeChannel,
     currentChannelId,
-    fetchChannelDetails
+    fetchNowPlayingChannelDetails
   } = usePlayerStore();
 
   // Fetch artist channel details (PFP, monthly listeners, bio) when track changes
   useEffect(() => {
     if (currentTrack?.channelTitle) {
-      fetchChannelDetails(currentTrack.channelTitle, true);
+      fetchNowPlayingChannelDetails(currentTrack.channelTitle, true);
     }
-  }, [currentTrack?.id, currentTrack?.channelTitle, fetchChannelDetails]);
+  }, [currentTrack?.id, currentTrack?.channelTitle, fetchNowPlayingChannelDetails]);
 
   if (!currentTrack) return null;
 
@@ -290,8 +290,8 @@ export const PlayerDock: React.FC = () => {
         
         {/* Album Art / Video Player Frame */}
         <div 
-          className="relative w-full aspect-square rounded-2xl overflow-hidden bg-zinc-900 border flex-shrink-0 transition-all duration-1000"
-          style={{ boxShadow: '0 20px 45px -10px var(--theme-glow)', borderColor: 'var(--theme-border)' }}
+          className="relative w-full aspect-square rounded-xl overflow-hidden bg-zinc-950 flex-shrink-0"
+          style={{ boxShadow: '0 8px 30px rgba(0, 0, 0, 0.6)' }}
         >
           <img
             src={upgradeThumbnailUrl(currentTrack.thumbnailUrl) || undefined}
@@ -340,7 +340,7 @@ export const PlayerDock: React.FC = () => {
           {/* Artist photo (large) */}
           <div className="w-full aspect-[16/9] relative overflow-hidden bg-zinc-950">
             <img 
-              src={upgradeThumbnailUrl(currentChannelDetails?.thumbnail) || upgradeThumbnailUrl(currentTrack.thumbnailUrl) || ''} 
+              src={upgradeThumbnailUrl(nowPlayingChannelDetails?.thumbnail) || upgradeThumbnailUrl(currentTrack.thumbnailUrl) || ''} 
               alt={currentTrack.channelTitle}
               className="w-full h-full object-cover select-none transition-transform duration-700 group-hover/artist-card:scale-105"
               onError={(e) => {
@@ -360,7 +360,7 @@ export const PlayerDock: React.FC = () => {
                   {currentTrack.channelTitle}
                 </h4>
                 <p className="text-[10px] text-zinc-450 mt-1 font-semibold">
-                  {currentChannelDetails?.subscriberCountText || '12.4M monthly listeners'}
+                  {nowPlayingChannelDetails?.subscriberCountText || '12.4M monthly listeners'}
                 </p>
               </div>
 
@@ -378,9 +378,9 @@ export const PlayerDock: React.FC = () => {
             </div>
 
             {/* Optional Bio snippet if available */}
-            {currentChannelDetails?.description && (
+            {nowPlayingChannelDetails?.description && (
               <p className="text-[11px] text-zinc-400 line-clamp-3 leading-relaxed mt-1 font-medium select-text">
-                {currentChannelDetails.description}
+                {nowPlayingChannelDetails.description}
               </p>
             )}
           </div>

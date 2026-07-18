@@ -33,6 +33,7 @@ interface PlayerState {
   likedTracks: Track[];
   searchHistory: string[];
   currentChannelDetails: any;
+  nowPlayingChannelDetails: any;
   subscribedChannels: string[];
   displayName: string;
   avatarUrl: string;
@@ -67,6 +68,7 @@ interface PlayerState {
 
   // YouTube Channel Details Actions
   fetchChannelDetails: (idOrName: string, isName?: boolean) => Promise<void>;
+  fetchNowPlayingChannelDetails: (idOrName: string, isName?: boolean) => Promise<void>;
   viewChannel: (channelTitle: string, channelId?: string) => Promise<void>;
   playArtistRadio: (artistIdOrName: string) => Promise<void>;
 
@@ -232,6 +234,7 @@ export const usePlayerStore = create<PlayerState>()(
       likedTracks: [],
       searchHistory: [],
       currentChannelDetails: null,
+      nowPlayingChannelDetails: null,
       subscribedChannels: [],
       displayName: 'Anonymous Listener',
       avatarUrl: 'bg-gradient-to-tr from-blue-600 to-indigo-900',
@@ -340,17 +343,21 @@ export const usePlayerStore = create<PlayerState>()(
       // Playback Actions
       playTrack: (track, contextTracks = []) => {
         set((state) => {
-          const newHistory = state.currentTrack 
-            ? [state.currentTrack, ...state.history.filter(t => t.id !== state.currentTrack?.id)].slice(0, 50)
-            : state.history;
-
           let newQueue: Track[] = [];
+          let newHistory = state.history;
+
           if (contextTracks.length > 0) {
             const idx = contextTracks.findIndex((t: Track) => t.id === track.id);
             if (idx !== -1) {
               newQueue = contextTracks.slice(idx + 1);
+              const prevContextTracks = contextTracks.slice(0, idx).reverse();
+              newHistory = [...prevContextTracks, ...state.history.filter(t => !contextTracks.some(ct => ct.id === t.id))].slice(0, 50);
             } else {
               newQueue = contextTracks;
+            }
+          } else {
+            if (state.currentTrack) {
+              newHistory = [state.currentTrack, ...state.history.filter(t => t.id !== state.currentTrack?.id)].slice(0, 50);
             }
           }
 
@@ -493,6 +500,20 @@ export const usePlayerStore = create<PlayerState>()(
           }
         } catch (e) {
           console.error('Error fetching channel details:', e);
+        }
+      },
+
+      fetchNowPlayingChannelDetails: async (idOrName, isName = false) => {
+        try {
+          const res = await fetch(`/api/youtube/channel/${encodeURIComponent(idOrName)}`);
+          if (res.ok) {
+            const data = await res.json();
+            set({ 
+              nowPlayingChannelDetails: data
+            });
+          }
+        } catch (e) {
+          console.error('Error fetching now playing channel details:', e);
         }
       },
 

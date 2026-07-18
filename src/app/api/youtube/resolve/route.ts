@@ -28,7 +28,7 @@ export async function GET(request: Request) {
 
     const query = mode === 'video' 
       ? `${artist} ${title} Official Video` 
-      : `${artist} - Topic ${title}${isExplicitRequest ? ' Explicit' : ''}`;
+      : `${artist} ${title}${isExplicitRequest ? ' Explicit' : ''}`;
     console.log(`[Resolve API] Searching YouTube Music for (${mode}): "${query}"`);
     const searchData = await ytMusicSearch(query);
 
@@ -56,7 +56,11 @@ export async function GET(request: Request) {
       
       if (mode === 'song') {
         // Enforce Topic channels strictly for songs to guarantee audio releases
-        const topicItems = validItems.filter(i => i.channelTitle.toLowerCase().includes('topic'));
+        const topicItems = validItems.filter(i => 
+          i.channelTitle.toLowerCase().includes('topic') || 
+          i.channelTitle.toLowerCase() === artist.toLowerCase() ||
+          artist.toLowerCase().includes(i.channelTitle.toLowerCase())
+        );
         if (topicItems.length > 0) {
           return findBestInGroup(topicItems);
         }
