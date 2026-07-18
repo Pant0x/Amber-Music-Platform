@@ -148,7 +148,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                     )}
                   </div>
 
-                  <TrackCover track={track} contextTracks={likedTracks} sizeClass="w-10 h-10 rounded" />
+                  <TrackCover track={track} contextTracks={likedTracks} sizeClass="w-10 h-10 rounded" noOverlay />
 
                   <div className="min-w-0 flex-1">
                     <p className={`text-sm font-semibold truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
@@ -299,7 +299,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                       )}
                     </div>
 
-                    <TrackCover track={track} contextTracks={activePlaylist.tracks} sizeClass="w-10 h-10 rounded" />
+                    <TrackCover track={track} contextTracks={activePlaylist.tracks} sizeClass="w-10 h-10 rounded" noOverlay />
 
                     <div className="min-w-0 flex-1">
                       <p className={`text-sm font-semibold truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
@@ -489,7 +489,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                       )}
                     </div>
 
-                    <TrackCover track={track} contextTracks={ytPlaylistDetails.tracks} sizeClass="w-10 h-10 rounded" />
+                    <TrackCover track={track} contextTracks={ytPlaylistDetails.tracks} sizeClass="w-10 h-10 rounded" noOverlay />
 
                     <div className="min-w-0 flex-1">
                       <p className={`text-sm font-semibold truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>

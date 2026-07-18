@@ -488,8 +488,7 @@ export const usePlayerStore = create<PlayerState>()(
           if (res.ok) {
             const data = await res.json();
             set({ 
-              currentChannelDetails: data,
-              currentChannelId: data.profile?.title || idOrName
+              currentChannelDetails: data
             });
           }
         } catch (e) {

@@ -370,7 +370,7 @@ export const SearchView: React.FC = () => {
                               onDoubleClick={() => handlePlayAction(track, searchSongs)}
                               className={`group/row flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition-colors ${isActive ? 'bg-white/5' : ''}`}
                             >
-                              <TrackCover track={track} contextTracks={searchSongs} sizeClass="w-10 h-10 rounded" />
+                              <TrackCover track={track} contextTracks={searchSongs} sizeClass="w-10 h-10 rounded" noOverlay />
                               <div className="min-w-0 flex-1">
                                 <p className={`text-sm font-medium truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
                                   {track.title}
@@ -542,7 +542,7 @@ export const SearchView: React.FC = () => {
                         </>
                       )}
                     </div>
-                    <TrackCover track={track} contextTracks={searchSongs} sizeClass="w-10 h-10 rounded" />
+                    <TrackCover track={track} contextTracks={searchSongs} sizeClass="w-10 h-10 rounded" noOverlay />
                     <div className="min-w-0 flex-1">
                       <p className={`text-sm font-semibold truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
                         {track.title}{track.isExplicit && <ExplicitBadge />}

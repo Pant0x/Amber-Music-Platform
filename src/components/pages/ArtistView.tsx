@@ -257,7 +257,7 @@ export const ArtistView: React.FC = () => {
                       onClick={() => handlePlayAction(track, currentChannelDetails.topSongs)}
                       className={`group/row flex items-center gap-4 px-2 py-2.5 rounded-sm hover:bg-white/5 transition-colors cursor-pointer ${isActive ? 'bg-white/5' : ''}`}
                     >
-                      <TrackCover track={track} contextTracks={currentChannelDetails.topSongs} sizeClass="w-12 h-12 rounded" />
+                      <TrackCover track={track} contextTracks={currentChannelDetails.topSongs} sizeClass="w-12 h-12 rounded" noOverlay />
                       <div className="min-w-0 flex-1">
                         <p className={`text-sm truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
                           {track.title}
@@ -516,7 +516,7 @@ export const ArtistView: React.FC = () => {
                     )}
                   </div>
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <TrackCover track={track} contextTracks={currentChannelDetails.topSongs} sizeClass="w-10 h-10 rounded" />
+                    <TrackCover track={track} contextTracks={currentChannelDetails.topSongs} sizeClass="w-10 h-10 rounded" noOverlay />
                     <p className={`text-sm truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>{track.title}</p>
                   </div>
                   <div className="hidden sm:flex items-center gap-2 text-sm text-zinc-400 w-48 truncate flex-shrink-0">
