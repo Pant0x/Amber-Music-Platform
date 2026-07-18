@@ -6,6 +6,7 @@ import { TrackCover } from '../TrackCover';
 import { ExplicitBadge, ArtistLinks, Carousel, isActiveTrack, PlayingEqualizer } from './shared';
 import { cleanVisualName } from '@/utils/text';
 import { AlbumCoverPlayOverlay } from '../AlbumCoverPlayOverlay';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export const ArtistView: React.FC = () => {
   const {
@@ -30,6 +31,8 @@ export const ArtistView: React.FC = () => {
     setArtistSubTab
   } = usePlayerStore();
 
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [albumFilter, setAlbumFilter] = useState<'All' | 'Albums' | 'Singles & EPs'>('All');
 
   const handlePlayAction = (track: Track, contextTracks: Track[] = []) => {
@@ -48,11 +51,49 @@ export const ArtistView: React.FC = () => {
       const isName = !currentChannelId.startsWith('UC');
       fetchChannelDetails(currentChannelId, isName);
       if (lastLoadedChannelIdRef.current !== currentChannelId) {
-        setArtistSubTab('overview');
+        // Read URL param on initial channel load if present
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialTab = urlParams.get('tab') as any;
+        const validTabs = ['overview', 'songs', 'albums', 'videos', 'about'];
+        if (initialTab && validTabs.includes(initialTab)) {
+          setArtistSubTab(initialTab);
+        } else {
+          setArtistSubTab('overview');
+        }
         lastLoadedChannelIdRef.current = currentChannelId;
       }
     }
   }, [currentChannelId, fetchChannelDetails, setArtistSubTab]);
+
+  // Synchronize artist sub-tab with ?tab= query parameter in URL
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const tabParam = searchParams.get('tab') as any;
+    const validTabs = ['overview', 'songs', 'albums', 'videos', 'about'];
+    if (tabParam && validTabs.includes(tabParam) && tabParam !== artistSubTab) {
+      setArtistSubTab(tabParam);
+    }
+  }, [searchParams, setArtistSubTab, artistSubTab]);
+
+  // Update URL query parameters when artistSubTab changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const currentTab = params.get('tab');
+    if (artistSubTab && artistSubTab !== 'overview') {
+      if (currentTab !== artistSubTab) {
+        params.set('tab', artistSubTab);
+        const newSearch = params.toString();
+        window.history.pushState(null, '', window.location.pathname + `?${newSearch}`);
+      }
+    } else {
+      if (currentTab) {
+        params.delete('tab');
+        const newSearch = params.toString();
+        window.history.pushState(null, '', window.location.pathname + (newSearch ? `?${newSearch}` : ''));
+      }
+    }
+  }, [artistSubTab]);
 
   if (!currentChannelDetails) {
     return (

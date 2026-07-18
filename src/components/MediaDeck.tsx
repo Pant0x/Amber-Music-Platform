@@ -75,7 +75,10 @@ export const MediaDeck: React.FC = () => {
     else if (activeTab === 'library') targetPath = '/library';
     else if (activeTab === 'liked') targetPath = '/liked';
     else if (activeTab === 'search') targetPath = '/search';
-    else if (activeTab === 'playlist' && currentPlaylistId) targetPath = `/playlist/${currentPlaylistId}`;
+    else if (activeTab === 'playlist' && currentPlaylistId) {
+      const prefix = (currentPlaylistId.startsWith('MPREb') || currentPlaylistId.startsWith('OLAK')) ? 'album' : 'playlist';
+      targetPath = `/${prefix}/${currentPlaylistId}`;
+    }
     else if (activeTab === 'channel' && currentChannelId) targetPath = `/artist/${currentChannelId}`;
     
     // Only route if targetPath differs from current browser path
