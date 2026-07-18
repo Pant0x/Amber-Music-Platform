@@ -21,9 +21,17 @@ export async function GET(request: Request) {
     // Check resolve cache
     const cacheKey = `${artist.toLowerCase().trim()}_${title.toLowerCase().trim()}_${mode}_${isExplicitRequest}`;
     if (resolveCache.has(cacheKey)) {
-      const cachedVideoId = resolveCache.get(cacheKey);
-      console.log(`[Resolve API] Cache HIT for key: "${cacheKey}" -> videoId: ${cachedVideoId}`);
-      return NextResponse.json({ videoId: cachedVideoId });
+      const cachedData = resolveCache.get(cacheKey);
+      if (cachedData) {
+        try {
+          const parsedData = JSON.parse(cachedData);
+          console.log(`[Resolve API] Cache HIT for key: "${cacheKey}" -> videoId: ${parsedData.videoId}`);
+          return NextResponse.json(parsedData);
+        } catch (e) {
+          // fallback if cache was just the videoId string (from before this change)
+          return NextResponse.json({ videoId: cachedData });
+        }
+      }
     }
 
     const query = mode === 'video' 
@@ -76,18 +84,21 @@ export async function GET(request: Request) {
     };
 
     let videoId = '';
+    let trackMatch: any = null;
     
     if (mode === 'video') {
       if (searchData.videos && searchData.videos.length > 0) {
         const match = getBestMatch(searchData.videos);
         if (match) {
           videoId = match.id;
+          trackMatch = match;
           console.log(`[Resolve API] Found video clip match: "${match.title}" with videoId: ${videoId}`);
         }
       }
       if (!videoId && searchData.topResult && (searchData.topResult.type === 'video' || searchData.topResult.resultType === 'video')) {
         if (isCorrectMatch(title, searchData.topResult.title) && isArtistMatch(artist, searchData.topResult.channelTitle || searchData.topResult.author)) {
           videoId = searchData.topResult.id;
+          trackMatch = searchData.topResult;
           console.log(`[Resolve API] Found top result video match: "${searchData.topResult.title}" with videoId: ${videoId}`);
         }
       }
@@ -95,6 +106,7 @@ export async function GET(request: Request) {
         const match = getBestMatch(searchData.songs);
         if (match) {
           videoId = match.id;
+          trackMatch = match;
           console.log(`[Resolve API] Fallback to song match for video: "${match.title}" with videoId: ${videoId}`);
         }
       }
@@ -103,12 +115,14 @@ export async function GET(request: Request) {
         const match = getBestMatch(searchData.songs);
         if (match) {
           videoId = match.id;
+          trackMatch = match;
           console.log(`[Resolve API] Found song match: "${match.title}" with videoId: ${videoId}`);
         }
       }
       if (!videoId && searchData.topResult && (searchData.topResult.type === 'music' || searchData.topResult.resultType === 'song')) {
         if (isCorrectMatch(title, searchData.topResult.title) && isArtistMatch(artist, searchData.topResult.channelTitle || searchData.topResult.author)) {
           videoId = searchData.topResult.id;
+          trackMatch = searchData.topResult;
           console.log(`[Resolve API] Found top result match: "${searchData.topResult.title}" with videoId: ${videoId}`);
         }
       }
@@ -116,20 +130,25 @@ export async function GET(request: Request) {
         const match = getBestMatch(searchData.videos);
         if (match) {
           videoId = match.id;
+          trackMatch = match;
           console.log(`[Resolve API] Fallback to video match: "${match.title}" with videoId: ${videoId}`);
         }
       }
     }
 
-    if (!videoId) {
+    if (videoId) {
+      const responseData = { videoId, track: trackMatch };
+      resolveCache.set(cacheKey, JSON.stringify(responseData));
+      // Optional: limit cache size
+      if (resolveCache.size > 500) {
+        const firstKey = resolveCache.keys().next().value;
+        if (firstKey) resolveCache.delete(firstKey);
+      }
+      return NextResponse.json(responseData);
+    } else {
       console.log(`[Resolve API] No matches found, returning fallback empty`);
       return NextResponse.json({ videoId: null });
     }
-
-    // Populate resolve cache
-    resolveCache.set(cacheKey, videoId);
-
-    return NextResponse.json({ videoId });
   } catch (error: any) {
     console.error('[Resolve API] Error resolving track to YouTube ID:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

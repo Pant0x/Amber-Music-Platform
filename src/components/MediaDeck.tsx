@@ -80,10 +80,10 @@ export const MediaDeck: React.FC = () => {
       const prefix = (currentPlaylistId.startsWith('MPREb') || currentPlaylistId.startsWith('OLAK')) ? 'album' : 'playlist';
       targetPath = `/${prefix}/${currentPlaylistId}`;
     }
-    else if (activeTab === 'channel' && currentChannelId) targetPath = `/artist/${currentChannelId}`;
+    else if (activeTab === 'channel' && currentChannelId) targetPath = `/artist/${encodeURIComponent(currentChannelId)}`;
     
     // Only route if targetPath differs from current browser path
-    if (targetPath && window.location.pathname !== targetPath) {
+    if (targetPath && window.location.pathname !== targetPath && decodeURIComponent(window.location.pathname) !== decodeURIComponent(targetPath)) {
       const search = window.location.search;
       router.push(targetPath + search);
     }
@@ -103,6 +103,7 @@ export const MediaDeck: React.FC = () => {
     else if (pathname.startsWith('/artist/')) tab = 'channel';
     
     if (tab && activeTab !== tab) {
+      if (activeTab === 'lyrics') return;
       setActiveTab(tab);
     }
   }, [pathname, activeTab, setActiveTab]);
@@ -367,9 +368,13 @@ export const MediaDeck: React.FC = () => {
     const isVideoModeMatch = playbackMode === 'video' && currentTrack.type === 'video';
     const modeMatchesTrackType = isSongModeMatch || isVideoModeMatch;
 
-    const needsResolve = currentTrack.origin === 'spotify'
-      ? !currentTrack.youtubeId
-      : (!currentTrack.youtubeId && !modeMatchesTrackType);
+    // If we already have a direct YouTube origin track, we don't need to resolve.
+    // This prevents searching and accidentally replacing an official Topic release with a VEVO video.
+    const needsResolve = !currentTrack.youtubeId && currentTrack.origin !== 'youtube';
+    
+    if (!currentTrack.youtubeId && currentTrack.origin === 'youtube') {
+      setYoutubeIdForCurrentTrack(currentTrack.id);
+    }
     
     if (needsResolve) {
       console.log(`[MediaDeck] Resolving stream (${playbackMode}) for: "${currentTrack.title}" by "${currentTrack.channelTitle}"`);
@@ -385,6 +390,18 @@ export const MediaDeck: React.FC = () => {
             if (data.videoId) {
               console.log(`[MediaDeck] Successfully resolved to videoId: ${data.videoId}`);
               setYoutubeIdForCurrentTrack(data.videoId);
+              if (data.track) {
+                enrichCurrentTrack({
+                  title: data.track.title,
+                  channelTitle: data.track.channelTitle,
+                  thumbnailUrl: data.track.thumbnailUrl,
+                  albumName: data.track.albumName,
+                  albumId: data.track.albumId,
+                  duration: data.track.duration,
+                  isExplicit: data.track.isExplicit,
+                  type: data.track.type
+                });
+              }
             } else {
               console.error('[MediaDeck] Failed to resolve: no videoId returned');
               if (currentTrack.origin === 'youtube') {
@@ -413,7 +430,17 @@ export const MediaDeck: React.FC = () => {
   useEffect(() => {
     if (queue.length === 0) return;
     const nextTrack = queue[0];
-    if (nextTrack.origin === 'spotify' && !nextTrack.youtubeId) {
+    
+    if (!nextTrack.youtubeId && nextTrack.origin === 'youtube') {
+      usePlayerStore.setState((state) => {
+        const newQueue = [...state.queue];
+        newQueue[0] = { ...newQueue[0], youtubeId: nextTrack.id };
+        return { queue: newQueue };
+      });
+      return;
+    }
+
+    if (!nextTrack.youtubeId) {
       console.log(`[MediaDeck] Pre-resolving next track in queue: "${nextTrack.title}"`);
       const resolveNext = async () => {
         try {
@@ -426,7 +453,25 @@ export const MediaDeck: React.FC = () => {
             if (data.videoId) {
               console.log(`[MediaDeck] Successfully pre-resolved next track to: ${data.videoId}`);
               usePlayerStore.setState((state) => {
-                const newQueue = state.queue.map((t, idx) => idx === 0 ? { ...t, youtubeId: data.videoId } : t);
+                const newQueue = state.queue.map((t, idx) => {
+                  if (idx === 0) {
+                    return { 
+                      ...t, 
+                      youtubeId: data.videoId,
+                      ...(data.track && {
+                        title: data.track.title,
+                        channelTitle: data.track.channelTitle,
+                        thumbnailUrl: data.track.thumbnailUrl,
+                        albumName: data.track.albumName,
+                        albumId: data.track.albumId,
+                        duration: data.track.duration,
+                        isExplicit: data.track.isExplicit,
+                        type: data.track.type
+                      })
+                    };
+                  }
+                  return t;
+                });
                 return { queue: newQueue };
               });
             }

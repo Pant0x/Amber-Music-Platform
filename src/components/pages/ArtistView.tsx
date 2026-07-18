@@ -6,7 +6,7 @@ import { TrackCover } from '../TrackCover';
 import { ExplicitBadge, ArtistLinks, Carousel, isActiveTrack, PlayingEqualizer } from './shared';
 import { cleanVisualName } from '@/utils/text';
 import { AlbumCoverPlayOverlay } from '../AlbumCoverPlayOverlay';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 export const ArtistView: React.FC = () => {
   const {
@@ -32,7 +32,7 @@ export const ArtistView: React.FC = () => {
   } = usePlayerStore();
 
   const router = useRouter();
-  const searchParams = useSearchParams();
+
   const [albumFilter, setAlbumFilter] = useState<'All' | 'Albums' | 'Singles & EPs'>('All');
 
   const handlePlayAction = (track: Track, contextTracks: Track[] = []) => {
@@ -40,6 +40,20 @@ export const ArtistView: React.FC = () => {
       togglePlay();
     } else {
       playTrack(track, contextTracks);
+    }
+  };
+
+  const handlePlayAlbum = async (album: any) => {
+    try {
+      const res = await fetch(`/api/youtube/playlist?id=${album.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.tracks && data.tracks.length > 0) {
+          playTrack(data.tracks[0], data.tracks);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to play album", e);
     }
   };
 
@@ -66,15 +80,21 @@ export const ArtistView: React.FC = () => {
     }
   }, [currentChannelId, fetchChannelDetails, setArtistSubTab]);
 
-  // Synchronize artist sub-tab with ?tab= query parameter in URL
+  // Synchronize artist sub-tab with URL on popstate (back/forward)
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const tabParam = searchParams.get('tab') as any;
-    const validTabs = ['overview', 'songs', 'albums', 'about'];
-    if (tabParam && validTabs.includes(tabParam) && tabParam !== artistSubTab) {
-      setArtistSubTab(tabParam);
-    }
-  }, [searchParams, setArtistSubTab, artistSubTab]);
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab') as any;
+      const validTabs = ['overview', 'songs', 'albums', 'about'];
+      if (tabParam && validTabs.includes(tabParam)) {
+        setArtistSubTab(tabParam);
+      } else {
+        setArtistSubTab('overview');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [setArtistSubTab]);
 
   // Update URL query parameters when artistSubTab changes
   useEffect(() => {
@@ -312,7 +332,7 @@ export const ArtistView: React.FC = () => {
                   <div key={`ov-album-${album.id}`}
                     onClick={() => {
                       if (album.type === 'music') {
-                        handlePlayAction(album, [album]);
+                        handlePlayAlbum(album);
                       } else {
                         setCurrentPlaylistId(album.id);
                         setActiveTab('playlist');
@@ -351,7 +371,7 @@ export const ArtistView: React.FC = () => {
                   <div key={`ov-single-${album.id}`}
                     onClick={() => {
                       if (album.type === 'music') {
-                        handlePlayAction(album, [album]);
+                        handlePlayAlbum(album);
                       } else {
                         setCurrentPlaylistId(album.id);
                         setActiveTab('playlist');
@@ -592,7 +612,7 @@ export const ArtistView: React.FC = () => {
                   <div key={`tab-album-${album.id}`}
                     onClick={() => {
                       if (album.type === 'music') {
-                        handlePlayAction(album, [album]);
+                        handlePlayAlbum(album);
                       } else {
                         setCurrentPlaylistId(album.id);
                         setActiveTab('playlist');
@@ -628,6 +648,11 @@ export const ArtistView: React.FC = () => {
           <h2 className="text-2xl font-bold text-white">{cleanVisualName(currentChannelDetails.profile?.title || '')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="md:col-span-2">
+              {currentChannelDetails.profile?.thumbnailUrl && (
+                <div className="mb-6 w-48 h-48 rounded-full overflow-hidden border-2 border-white/10 shadow-xl bg-[#1f1f1f]">
+                  <img src={currentChannelDetails.profile.thumbnailUrl} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover" />
+                </div>
+              )}
               <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">
                 {currentChannelDetails.profile?.description || "No description available."}
               </p>

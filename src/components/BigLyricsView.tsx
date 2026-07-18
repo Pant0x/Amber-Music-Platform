@@ -121,12 +121,23 @@ export const BigLyricsView: React.FC = () => {
 
   return (
     <div 
-      className="absolute inset-0 flex flex-col select-none overflow-hidden z-40 animate-fade-in"
-      style={{
-        background: 'var(--theme-player-bg, #0a0909)'
-      }}
+      className="absolute inset-0 flex flex-col select-none overflow-hidden z-40 animate-fade-in bg-[#030303]"
     >
-      <div className="flex-1 flex flex-col min-h-0 relative px-6 md:px-16 lg:px-24">
+      {/* Blurred album cover background */}
+      {currentTrack.thumbnailUrl && (
+        <div 
+          className="absolute inset-0 z-0 opacity-40 scale-[1.2] blur-[80px]"
+          style={{
+            backgroundImage: `url(${currentTrack.thumbnailUrl})`,
+            backgroundPosition: 'center',
+            backgroundSize: 'cover',
+          }}
+        />
+      )}
+      {/* Dark gradient overlay to make lyrics readable */}
+      <div className="absolute inset-0 z-0 bg-gradient-to-b from-black/40 via-black/60 to-black/80" />
+
+      <div className="flex-1 flex flex-col min-h-0 relative z-10 px-6 md:px-16 lg:px-24">
         {globalLyricsLoading ? (
           <div className="flex-1 flex flex-col justify-center space-y-6 max-w-2xl mx-auto w-full pt-10">
             <div className="h-7 bg-white/5 rounded-lg w-3/4 animate-pulse" />

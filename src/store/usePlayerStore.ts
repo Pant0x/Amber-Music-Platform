@@ -121,7 +121,16 @@ interface PlayerState {
   seekTrigger: number | null;
   setSeekTrigger: (seconds: number | null) => void;
   setYoutubeIdForCurrentTrack: (youtubeId: string) => void;
-  enrichCurrentTrack: (metadata: { title: string; channelTitle: string; isExplicit: boolean }) => void;
+  enrichCurrentTrack: (metadata: { 
+    title: string; 
+    channelTitle: string; 
+    isExplicit: boolean;
+    thumbnailUrl?: string;
+    albumName?: string;
+    albumId?: string;
+    duration?: string;
+    type?: string;
+  }) => void;
   
   isMinimized: boolean;
   setIsMinimized: (isMinimized: boolean) => void;
@@ -332,6 +341,11 @@ export const usePlayerStore = create<PlayerState>()(
             title: metadata.title,
             channelTitle: metadata.channelTitle,
             isExplicit: metadata.isExplicit,
+            ...(metadata.thumbnailUrl && { thumbnailUrl: metadata.thumbnailUrl }),
+            ...(metadata.albumName && { albumName: metadata.albumName }),
+            ...(metadata.albumId && { albumId: metadata.albumId }),
+            ...(metadata.duration && { duration: metadata.duration }),
+            ...(metadata.type && { type: metadata.type }),
             isEnriched: true
           }
         };
