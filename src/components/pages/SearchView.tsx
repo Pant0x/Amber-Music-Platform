@@ -36,7 +36,7 @@ export const SearchView: React.FC = () => {
   const [searchArtists, setSearchArtists] = useState<any[]>([]);
   const [searchAlbums, setSearchAlbums] = useState<any[]>([]);
   const [searchPlaylists, setSearchPlaylists] = useState<any[]>([]);
-  const [searchFilter, setSearchFilter] = useState<'all' | 'songs' | 'videos' | 'artists' | 'albums' | 'playlists'>('all');
+  const [searchFilter, setSearchFilter] = useState<'all' | 'songs' | 'artists' | 'albums' | 'playlists'>('all');
 
   const [landingRecs, setLandingRecs] = useState<Track[]>([]);
   const [landingTrends, setLandingTrends] = useState<any[]>([]);
@@ -149,7 +149,6 @@ export const SearchView: React.FC = () => {
         {([
           { id: 'all', label: 'All' },
           { id: 'songs', label: 'Songs' },
-          { id: 'videos', label: 'Videos' },
           { id: 'artists', label: 'Artists' },
           { id: 'albums', label: 'Albums' },
           { id: 'playlists', label: 'Playlists' }
@@ -561,26 +560,6 @@ export const SearchView: React.FC = () => {
             </div>
           )}
 
-          {/* Videos filter */}
-          {searchFilter === 'videos' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {searchVideos.map(vid => (
-                <div key={`vf-${vid.id}`} onClick={() => handlePlayAction(vid, searchVideos)} className="group cursor-pointer">
-                  <div className="aspect-video rounded-lg overflow-hidden bg-[#1f1f1f] mb-2 shadow-md relative">
-                    <img src={vid.thumbnailUrl || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
-                      <div className="w-12 h-12 rounded-full bg-[#ff0000]/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg">
-                        <Play className="w-5 h-5 fill-white text-white ml-0.5" />
-                      </div>
-                    </div>
-                  </div>
-                  <h4 className="text-sm font-semibold text-white truncate">{vid.title}{vid.isExplicit && <ExplicitBadge />}</h4>
-                  <p className="text-xs text-zinc-500 truncate">{cleanVisualName(vid.channelTitle)}{vid.views ? ` • ${vid.views}` : ''}</p>
-                </div>
-              ))}
-              {searchVideos.length === 0 && <p className="text-sm text-zinc-500 py-10 text-center col-span-full">No videos found.</p>}
-            </div>
-          )}
 
           {/* Artists filter */}
           {searchFilter === 'artists' && (

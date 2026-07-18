@@ -60,8 +60,6 @@ export const PlayerDock: React.FC = () => {
     setSeekTrigger,
     repeatMode,
     setRepeatMode,
-    playbackMode,
-    setPlaybackMode,
     volume,
     setVolume,
     rightSidebarView,
@@ -295,32 +293,19 @@ export const PlayerDock: React.FC = () => {
           className="relative w-full aspect-square rounded-2xl overflow-hidden bg-zinc-900 border flex-shrink-0 transition-all duration-1000"
           style={{ boxShadow: '0 20px 45px -10px var(--theme-glow)', borderColor: 'var(--theme-border)' }}
         >
-          {playbackMode === 'video' ? (
-            /* Portal target for ReactPlayer Video projection */
-            <div 
-              id="player-dock-video-portal" 
-              className="w-full h-full bg-black relative"
-            >
-              <div className="absolute inset-0 flex items-center justify-center text-zinc-500 gap-2">
-                <Video className="w-6 h-6 animate-pulse" />
-                <span className="text-xs font-semibold">Video Streaming</span>
-              </div>
-            </div>
-          ) : (
-            <img
-              src={upgradeThumbnailUrl(currentTrack.thumbnailUrl) || undefined}
-              referrerPolicy="no-referrer"
-              onError={(e) => {
-                e.currentTarget.onerror = null;
-                e.currentTarget.src = currentTrack.thumbnailUrl || '';
-              }}
-              alt={currentTrack.title}
-              className="w-full h-full object-cover select-none"
-            />
-          )}
+          <img
+            src={upgradeThumbnailUrl(currentTrack.thumbnailUrl) || undefined}
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = currentTrack.thumbnailUrl || '';
+            }}
+            alt={currentTrack.title}
+            className="w-full h-full object-cover select-none"
+          />
         </div>
 
-        {/* Title, Artist, Mode Toggle & Like Button */}
+        {/* Title, Artist, & Like Button */}
         <div className="mt-5 flex-shrink-0">
           <div className="flex justify-between items-start">
             <div className="min-w-0 flex-1 pr-4">
@@ -340,32 +325,6 @@ export const PlayerDock: React.FC = () => {
               }`}
             >
               <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
-            </button>
-          </div>
-
-          {/* Mode Selector Pill (Song vs Video) */}
-          <div className="flex bg-zinc-950/80 border border-white/5 p-0.5 rounded-full text-xs font-bold mt-4 w-fit shadow-md">
-            <button
-              onClick={() => setPlaybackMode('song')}
-              className={`px-4 py-1 rounded-full transition-all duration-200 font-bold tracking-wide flex items-center gap-1.5 ${
-                playbackMode === 'song'
-                  ? 'bg-white text-black shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              <Music className="w-3.5 h-3.5" />
-              Song
-            </button>
-            <button
-              onClick={() => setPlaybackMode('video')}
-              className={`px-4 py-1 rounded-full transition-all duration-200 font-bold tracking-wide flex items-center gap-1.5 ${
-                playbackMode === 'video'
-                  ? 'bg-white text-black shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              <Video className="w-3.5 h-3.5" />
-              Video
             </button>
           </div>
         </div>

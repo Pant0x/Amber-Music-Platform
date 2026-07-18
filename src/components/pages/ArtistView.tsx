@@ -55,7 +55,7 @@ export const ArtistView: React.FC = () => {
         // Read URL param on initial channel load if present
         const urlParams = new URLSearchParams(window.location.search);
         const initialTab = urlParams.get('tab') as any;
-        const validTabs = ['overview', 'songs', 'albums', 'videos', 'about'];
+        const validTabs = ['overview', 'songs', 'albums', 'about'];
         if (initialTab && validTabs.includes(initialTab)) {
           setArtistSubTab(initialTab);
         } else {
@@ -70,7 +70,7 @@ export const ArtistView: React.FC = () => {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const tabParam = searchParams.get('tab') as any;
-    const validTabs = ['overview', 'songs', 'albums', 'videos', 'about'];
+    const validTabs = ['overview', 'songs', 'albums', 'about'];
     if (tabParam && validTabs.includes(tabParam) && tabParam !== artistSubTab) {
       setArtistSubTab(tabParam);
     }
@@ -224,7 +224,7 @@ export const ArtistView: React.FC = () => {
 
       {/* Sub-Tab Navigation */}
       <div className="flex items-center gap-0 border-b border-white/10 mb-6">
-        {(['overview', 'songs', 'albums', 'videos', 'about'] as const).map((tab) => (
+        {(['overview', 'songs', 'albums', 'about'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setArtistSubTab(tab)}
@@ -403,35 +403,6 @@ export const ArtistView: React.FC = () => {
             </div>
           )}
 
-          {/* Videos */}
-          {currentChannelDetails.videos?.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-white">Videos</h2>
-                <button onClick={() => setArtistSubTab('videos')}
-                  className="border border-white/20 text-white text-sm font-medium px-4 py-1.5 rounded-full hover:bg-white/5 transition-colors">
-                  More
-                </button>
-              </div>
-              <Carousel className="gap-6">
-                {currentChannelDetails.videos.slice(0, 8).map((track: Track) => (
-                  <div key={`ov-vid-${track.id}`}
-                    onClick={() => handlePlayAction(track, currentChannelDetails.videos)}
-                    className="group flex-shrink-0 w-[240px] cursor-pointer">
-                    <div className="relative aspect-video w-full rounded-sm overflow-hidden mb-2 bg-[#1f1f1f]">
-                      <img src={track.thumbnailUrl || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                      <span className="absolute top-1.5 left-1.5 bg-red-600/90 text-white text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-sm tracking-wider shadow">Video</span>
-                      {track.views && (
-                        <span className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[10px] font-medium px-1.5 py-0.5 rounded">{track.views}</span>
-                      )}
-                    </div>
-                    <h4 className="text-sm text-white line-clamp-2">{cleanVisualName(track.title)}</h4>
-                    <p className="text-xs text-zinc-400 mt-0.5">{track.views ? track.views : (track.publishedAt?.slice(0, 10) || '')}</p>
-                  </div>
-                ))}
-              </Carousel>
-            </div>
-          )}
 
           {/* Fans might also like */}
           {currentChannelDetails.relatedArtists?.length > 0 && (
@@ -650,39 +621,6 @@ export const ArtistView: React.FC = () => {
         </div>
       )}
 
-      {/* ========== TAB: VIDEOS ========== */}
-      {artistSubTab === 'videos' && (
-        <div className="space-y-6 animate-fade-in">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-white">Videos</h2>
-            {currentChannelDetails.videos?.length > 0 && (
-              <button onClick={() => handlePlayAction(currentChannelDetails.videos[0], currentChannelDetails.videos)}
-                className="flex items-center gap-1.5 border border-white/20 text-white px-4 py-1.5 rounded-full text-sm font-medium hover:bg-white/5 transition-colors">
-                <Play className="w-3.5 h-3.5 fill-current" /> Play all
-              </button>
-            )}
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-6">
-            {currentChannelDetails.videos?.map((track: Track) => {
-              const isActive = isActiveTrack(currentTrack, track);
-              return (
-                <div key={`tab-vid-${track.id}`}
-                  onClick={() => handlePlayAction(track, currentChannelDetails.videos)}
-                  className="group cursor-pointer">
-                  <div className="relative aspect-video w-full rounded-sm overflow-hidden mb-2 bg-[#1f1f1f]">
-                    <img src={track.thumbnailUrl || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                    <span className="absolute top-1.5 left-1.5 bg-red-600/90 text-white text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-sm tracking-wider shadow">Video</span>
-                    {track.views && <span className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[10px] font-medium px-1.5 py-0.5 rounded">{track.views}</span>}
-                    {track.duration && <span className="absolute bottom-1.5 right-3 bg-black/80 text-white text-[10px] font-medium px-1.5 py-0.5 rounded font-mono">{track.duration}</span>}
-                  </div>
-                  <h4 className={`text-sm line-clamp-2 ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>{track.title}</h4>
-                  <p className="text-xs text-zinc-400 mt-0.5">{track.views ? track.views : (track.publishedAt?.slice(0, 10) || '')}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* ========== TAB: ABOUT ========== */}
       {artistSubTab === 'about' && (

@@ -62,6 +62,7 @@ export const MediaDeck: React.FC = () => {
   const setYoutubeIdForCurrentTrack = usePlayerStore((s) => s.setYoutubeIdForCurrentTrack);
   const enrichCurrentTrack = usePlayerStore((s) => s.enrichCurrentTrack);
   const activeTab = usePlayerStore((s) => s.activeTab);
+  const setActiveTab = usePlayerStore((s) => s.setActiveTab);
   const currentPlaylistId = usePlayerStore((s) => s.currentPlaylistId);
   const currentChannelId = usePlayerStore((s) => s.currentChannelId);
   
@@ -87,6 +88,24 @@ export const MediaDeck: React.FC = () => {
       router.push(targetPath + search);
     }
   }, [activeTab, currentPlaylistId, currentChannelId, router]);
+
+  // Synchronize activeTab inside store with pathname when browser navigates
+  useEffect(() => {
+    if (!pathname) return;
+    
+    let tab: any = null;
+    if (pathname === '/') tab = 'home';
+    else if (pathname === '/explore') tab = 'explore';
+    else if (pathname === '/library') tab = 'library';
+    else if (pathname === '/liked') tab = 'liked';
+    else if (pathname === '/search') tab = 'search';
+    else if (pathname.startsWith('/playlist/') || pathname.startsWith('/album/')) tab = 'playlist';
+    else if (pathname.startsWith('/artist/')) tab = 'channel';
+    
+    if (tab && activeTab !== tab) {
+      setActiveTab(tab);
+    }
+  }, [pathname, activeTab, setActiveTab]);
 
   // Synchronize playing song parameter (play=TRACK_ID) in the URL search query
   const currentTrackId = currentTrack?.id;
