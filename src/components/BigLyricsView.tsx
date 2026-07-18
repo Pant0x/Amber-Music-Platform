@@ -121,9 +121,9 @@ export const BigLyricsView: React.FC = () => {
 
   return (
     <div 
-      className="absolute inset-0 flex flex-col transition-all duration-1000 select-none overflow-hidden"
+      className="absolute inset-0 flex flex-col select-none overflow-hidden z-40 animate-fade-in"
       style={{
-        background: 'radial-gradient(circle at center, var(--theme-player-bg, #040d06) 0%, #030303 100%)'
+        background: 'var(--theme-player-bg, #0a0909)'
       }}
     >
       <div className="flex-1 flex flex-col min-h-0 relative px-6 md:px-16 lg:px-24">

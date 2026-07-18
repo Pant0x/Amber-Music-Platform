@@ -48,9 +48,10 @@ export const ArtistView: React.FC = () => {
   // Hydrate Channel Details
   useEffect(() => {
     if (currentChannelId) {
-      const isName = !currentChannelId.startsWith('UC');
-      fetchChannelDetails(currentChannelId, isName);
       if (lastLoadedChannelIdRef.current !== currentChannelId) {
+        const isName = !currentChannelId.startsWith('UC');
+        fetchChannelDetails(currentChannelId, isName);
+        
         // Read URL param on initial channel load if present
         const urlParams = new URLSearchParams(window.location.search);
         const initialTab = urlParams.get('tab') as any;

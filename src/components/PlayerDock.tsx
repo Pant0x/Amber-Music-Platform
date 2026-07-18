@@ -75,8 +75,16 @@ export const PlayerDock: React.FC = () => {
     currentChannelDetails,
     subscribedChannels,
     toggleSubscribeChannel,
-    currentChannelId
+    currentChannelId,
+    fetchChannelDetails
   } = usePlayerStore();
+
+  // Fetch artist channel details (PFP, monthly listeners, bio) when track changes
+  useEffect(() => {
+    if (currentTrack?.channelTitle) {
+      fetchChannelDetails(currentTrack.channelTitle, true);
+    }
+  }, [currentTrack?.id, currentTrack?.channelTitle, fetchChannelDetails]);
 
   if (!currentTrack) return null;
 
