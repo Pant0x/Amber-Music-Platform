@@ -4,9 +4,9 @@ import "./globals.css";
 import { MediaDeck } from '@/components/MediaDeck';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
-import { QueuePanel } from '@/components/QueuePanel';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { PlayerDock } from '@/components/PlayerDock';
+import { BottomPlayerBar } from '@/components/BottomPlayerBar';
 
 import { DatabaseSync } from '@/components/DatabaseSync';
 import { ShareResolver } from '@/components/ShareResolver';
@@ -26,7 +26,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Cloud Music",
-  description: "A premium Cloud Music application",
+  description: "Your premium listening experience",
   referrer: "no-referrer",
 };
 
@@ -75,15 +75,15 @@ export default function RootLayout({
 
               {/* Persistent Right Player Dock */}
               <PlayerDock />
-
-              {/* Sliding Queue Panel (Slides on top of Right panel when opened) */}
-              <QueuePanel />
             </div>
 
             {/* Mobile Bottom Navigation Bar */}
             <MobileBottomNav />
           </div>
         </div>
+
+        {/* Bottom Horizontal Player controls bar */}
+        <BottomPlayerBar />
 
         {/* MediaDeck plays audio/video in background */}
         <MediaDeck />

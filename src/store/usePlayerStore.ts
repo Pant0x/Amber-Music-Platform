@@ -85,6 +85,8 @@ interface PlayerState {
   // Queue & Panel State
   showQueuePanel: boolean;
   toggleQueuePanel: () => void;
+  rightSidebarView: 'now-playing' | 'queue' | 'connect';
+  setRightSidebarView: (view: 'now-playing' | 'queue' | 'connect') => void;
   removeFromQueue: (id: string) => void;
   clearQueue: () => void;
   playNext: (track: Track) => void;
@@ -232,6 +234,8 @@ export const usePlayerStore = create<PlayerState>()(
       // Queue Panel Initial State
       showQueuePanel: false,
       toggleQueuePanel: () => set((state) => ({ showQueuePanel: !state.showQueuePanel })),
+      rightSidebarView: 'now-playing',
+      setRightSidebarView: (view) => set({ rightSidebarView: view }),
       removeFromQueue: (id) => set((state) => {
         const index = state.queue.findIndex(t => t.id === id);
         if (index === -1) return state;

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
-import { ExplicitBadge } from './pages/shared';
+import { ExplicitBadge, PlayingEqualizer } from './pages/shared';
 import { cleanVisualName, parseFeaturedArtists } from '@/utils/text';
 import {
   Play,
@@ -15,7 +15,16 @@ import {
   Music,
   Video,
   Volume2,
-  VolumeX
+  VolumeX,
+  Trash2,
+  X,
+  ListMusic,
+  History,
+  Laptop,
+  Tv,
+  HelpCircle,
+  Info,
+  ExternalLink
 } from 'lucide-react';
 
 const upgradeThumbnailUrl = (url: string | undefined): string => {
@@ -54,7 +63,15 @@ export const PlayerDock: React.FC = () => {
     playbackMode,
     setPlaybackMode,
     volume,
-    setVolume
+    setVolume,
+    rightSidebarView,
+    setRightSidebarView,
+    queue,
+    history,
+    removeFromQueue,
+    clearQueue,
+    playTrack,
+    viewChannel
   } = usePlayerStore();
 
   const [lyricsData, setLyricsData] = useState<{ lyrics: string; lines: { text: string; time: number }[]; isSynced?: boolean } | null>(null);
@@ -201,14 +218,196 @@ export const PlayerDock: React.FC = () => {
 
   const parsed = parseFeaturedArtists(currentTrack.title);
 
-  const handleScrub = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const fraction = parseFloat(e.target.value);
-    setSeekTrigger(fraction * duration);
-  };
+  // 1. QUEUE SIDEBAR VIEW
+  if (rightSidebarView === 'queue') {
+    return (
+      <div 
+        className="hidden lg:flex w-[380px] flex-col select-none h-full flex-shrink-0 overflow-hidden relative z-20 transition-all duration-1000 p-6"
+        style={{ background: 'var(--theme-player-bg, #0a0909)' }}
+      >
+        <div className="flex items-center justify-between mb-6 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-bold text-white">Play Queue</h3>
+            <span className="text-[10px] font-bold bg-white/10 px-2 py-0.5 rounded-full text-zinc-300">
+              {queue.length}
+            </span>
+          </div>
+          <button 
+            onClick={() => setRightSidebarView('now-playing')}
+            className="p-1.5 rounded-full hover:bg-white/5 text-zinc-400 hover:text-white transition-all"
+            title="Close Queue"
+          >
+            <X className="w-4.5 h-4.5" />
+          </button>
+        </div>
 
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
-  };
+        <div className="flex-1 overflow-y-auto space-y-5 custom-scrollbar pr-1">
+          {/* Currently Playing Track */}
+          <div>
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Now playing</span>
+            <div className="flex items-center gap-3 p-2 rounded-xl bg-white/5 border border-white/5">
+              <img 
+                src={upgradeThumbnailUrl(currentTrack.thumbnailUrl) || undefined} 
+                className="w-10 h-10 rounded-md object-cover flex-shrink-0" 
+                alt="" 
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = currentTrack.thumbnailUrl || '';
+                }}
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-white truncate">{parsed.title}</p>
+                <p className="text-[10px] text-zinc-400 truncate mt-0.5 font-semibold">{currentTrack.channelTitle}</p>
+              </div>
+              <PlayingEqualizer isPlaying={isPlaying} />
+            </div>
+          </div>
+
+          {/* Next Up */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Next up</span>
+              {queue.length > 0 && (
+                <button onClick={clearQueue} className="text-[10px] font-bold text-zinc-400 hover:text-white flex items-center gap-1 transition-all">
+                  <Trash2 className="w-3 h-3" />
+                  Clear
+                </button>
+              )}
+            </div>
+            
+            <div className="space-y-1">
+              {queue.map((track, idx) => {
+                const trParsed = parseFeaturedArtists(track.title);
+                return (
+                  <div 
+                    key={`q-${track.id}-${idx}`}
+                    onClick={() => playTrack(track, queue.slice(idx + 1))}
+                    className="group flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 cursor-pointer transition-all duration-200"
+                  >
+                    <img 
+                      src={upgradeThumbnailUrl(track.thumbnailUrl) || undefined} 
+                      className="w-9 h-9 rounded-md object-cover flex-shrink-0" 
+                      alt="" 
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = track.thumbnailUrl || '';
+                      }}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold text-white truncate">{trParsed.title}</p>
+                      <p className="text-[10px] text-zinc-450 truncate mt-0.5 font-medium">{track.channelTitle}</p>
+                    </div>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); removeFromQueue(track.id); }}
+                      className="opacity-0 group-hover:opacity-100 p-1 text-zinc-500 hover:text-white hover:bg-white/5 rounded-md transition-all"
+                      title="Remove from queue"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
+              {queue.length === 0 && (
+                <p className="text-zinc-500 text-xs italic py-4 text-center">Queue is empty.</p>
+              )}
+            </div>
+          </div>
+
+          {/* History */}
+          {history.length > 0 && (
+            <div>
+              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Recently played</span>
+              <div className="space-y-1">
+                {history.slice(-10).reverse().map((track, idx) => {
+                  const histParsed = parseFeaturedArtists(track.title);
+                  return (
+                    <div 
+                      key={`h-${track.id}-${idx}`}
+                      onClick={() => playTrack(track)}
+                      className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 cursor-pointer transition-all duration-200"
+                    >
+                      <img 
+                        src={upgradeThumbnailUrl(track.thumbnailUrl) || undefined} 
+                        className="w-9 h-9 rounded-md object-cover flex-shrink-0" 
+                        alt="" 
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = track.thumbnailUrl || '';
+                        }}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-white truncate">{histParsed.title}</p>
+                        <p className="text-[10px] text-zinc-450 truncate mt-0.5 font-medium">{track.channelTitle}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // 2. CONNECT SIDEBAR VIEW
+  if (rightSidebarView === 'connect') {
+    return (
+      <div 
+        className="hidden lg:flex w-[380px] flex-col select-none h-full flex-shrink-0 overflow-hidden relative z-20 transition-all duration-1000 p-6"
+        style={{ background: 'var(--theme-player-bg, #0a0909)' }}
+      >
+        <div className="flex items-center justify-between mb-6 flex-shrink-0">
+          <h3 className="text-base font-bold text-white">Connect to a device</h3>
+          <button 
+            onClick={() => setRightSidebarView('now-playing')}
+            className="p-1.5 rounded-full hover:bg-white/5 text-zinc-400 hover:text-white transition-all"
+            title="Close Connect"
+          >
+            <X className="w-4.5 h-4.5" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto space-y-4 custom-scrollbar pr-1">
+          {/* Active device */}
+          <div className="flex items-center gap-4 p-3 rounded-2xl bg-white/5 border border-[#1db954]/25 cursor-pointer">
+            <div className="w-10 h-10 rounded-full bg-[#1db954]/10 flex items-center justify-center flex-shrink-0 text-[#1db954]">
+              <Laptop className="w-5 h-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold text-[#1db954]">Wired Connection</p>
+              <p className="text-[10px] text-zinc-400 mt-0.5 font-medium">Active Listening</p>
+            </div>
+          </div>
+
+          {/* LG TV Available Device */}
+          <div className="flex items-center gap-4 p-3 rounded-2xl hover:bg-white/5 cursor-pointer transition-all duration-200">
+            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0 text-zinc-400">
+              <Tv className="w-5 h-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold text-zinc-350">[LG] webOS TV UP7750PVB</p>
+              <p className="text-[10px] text-zinc-500 mt-0.5 font-medium">Install Spotify to listen</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Menu help triggers */}
+        <div className="mt-auto border-t border-white/5 pt-4 space-y-3 flex-shrink-0 text-[11px] font-semibold text-zinc-400">
+          <a href="#" className="flex items-center justify-between hover:text-white transition-colors py-1">
+            <span>Don't see your device?</span>
+            <HelpCircle className="w-3.5 h-3.5" />
+          </a>
+          <a href="#" className="flex items-center justify-between hover:text-white transition-colors py-1">
+            <span>What can I connect to?</span>
+            <Info className="w-3.5 h-3.5" />
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. NOW PLAYING SIDEBAR VIEW (DEFAULT)
 
   return (
     <div 
@@ -265,7 +464,7 @@ export const PlayerDock: React.FC = () => {
             <button
               onClick={() => toggleLikeTrack(currentTrack)}
               className={`p-2 rounded-full hover:bg-white/5 transition-all flex-shrink-0 ${
-                isLiked ? 'text-[#ff0055]' : 'text-zinc-500 hover:text-white'
+                isLiked ? 'text-[#1db954]' : 'text-zinc-500 hover:text-white'
               }`}
             >
               <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
@@ -296,120 +495,6 @@ export const PlayerDock: React.FC = () => {
               <Video className="w-3.5 h-3.5" />
               Video
             </button>
-          </div>
-        </div>
-
-        {/* Seekbar and Timer */}
-        <div className="mt-5 flex-shrink-0">
-          <div className="relative flex items-center group w-full">
-            <input
-              type="range"
-              min="0"
-              max="0.999"
-              step="any"
-              value={duration > 0 ? playedSeconds / duration : 0}
-              onChange={handleScrub}
-              className="yt-deck-slider w-full"
-            />
-            <div
-              className="absolute left-0 top-1/2 -translate-y-1/2 h-[3px] rounded-full pointer-events-none transition-all duration-300"
-              style={{ width: `${(duration > 0 ? playedSeconds / duration : 0) * 100}%`, backgroundColor: 'var(--theme-accent)' }}
-            />
-          </div>
-          <div className="flex justify-between items-center text-[10px] text-zinc-500 font-bold font-mono mt-1.5">
-            <span>{formatTime(playedSeconds)}</span>
-            <span>{formatTime(duration)}</span>
-          </div>
-        </div>
-
-        {/* Playback Controls Row */}
-        <div className="mt-4 flex items-center justify-between px-2 flex-shrink-0">
-          <button
-            onClick={() => setIsShuffle(!isShuffle)}
-            className={`p-2 rounded-full hover:bg-white/5 transition-all ${
-              isShuffle ? 'text-[#ff0055]' : 'text-zinc-500 hover:text-white'
-            }`}
-            title="Shuffle"
-          >
-            <Shuffle className="w-4.5 h-4.5" />
-          </button>
-
-          <button
-            onClick={prevTrack}
-            className="p-2 rounded-full text-zinc-400 hover:text-white hover:bg-white/5 transition-all"
-            title="Previous"
-          >
-            <SkipBack className="w-5 h-5 fill-current" />
-          </button>
-
-          <button
-            onClick={togglePlay}
-            className="w-12 h-12 rounded-full text-white flex items-center justify-center shadow-lg transition-all active:scale-95 flex-shrink-0"
-            style={{ backgroundColor: 'var(--theme-accent)' }}
-            title={isPlaying ? 'Pause' : 'Play'}
-          >
-            {isPlaying ? (
-              <Pause className="w-5 h-5 fill-current text-white" />
-            ) : (
-              <Play className="w-5 h-5 fill-current text-white ml-0.5" />
-            )}
-          </button>
-
-          <button
-            onClick={nextTrack}
-            className="p-2 rounded-full text-zinc-400 hover:text-white hover:bg-white/5 transition-all"
-            title="Next"
-          >
-            <SkipForward className="w-5 h-5 fill-current" />
-          </button>
-
-          <button
-            onClick={() => {
-              if (repeatMode === 'none') setRepeatMode('all');
-              else if (repeatMode === 'all') setRepeatMode('one');
-              else setRepeatMode('none');
-            }}
-            className={`p-2 rounded-full hover:bg-white/5 transition-all relative ${
-              repeatMode !== 'none' ? 'text-[#ff0055]' : 'text-zinc-500 hover:text-white'
-            }`}
-            title={`Repeat mode: ${repeatMode}`}
-          >
-            <Repeat className="w-4.5 h-4.5" />
-            {repeatMode === 'one' && (
-              <span className="absolute top-1 right-1 text-[8px] font-bold bg-[#ff0055] text-white w-3 h-3 rounded-full flex items-center justify-center border border-[#0a0909]">
-                1
-              </span>
-            )}
-          </button>
-        </div>
-
-        {/* Volume controls for convenience */}
-        <div className="mt-4 flex items-center gap-3 px-2 flex-shrink-0">
-          <button
-            onClick={toggleMute}
-            className="text-zinc-500 hover:text-white transition-colors"
-            title={isMuted ? 'Unmute' : 'Mute'}
-          >
-            {isMuted || volume === 0 ? (
-              <VolumeX className="w-4.5 h-4.5" />
-            ) : (
-              <Volume2 className="w-4.5 h-4.5" />
-            )}
-          </button>
-          <div className="relative flex-1 flex items-center group py-2">
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="any"
-              value={isMuted ? 0 : volume}
-              onChange={(e) => setVolume(parseFloat(e.target.value))}
-              className="yt-volume-slider w-full z-10 cursor-pointer"
-            />
-            <div
-              className="absolute left-0 top-1/2 -translate-y-1/2 h-[3px] rounded-full pointer-events-none transition-all duration-300"
-              style={{ width: `${(isMuted ? 0 : volume) * 100}%`, backgroundColor: 'var(--theme-accent)' }}
-            />
           </div>
         </div>
 
