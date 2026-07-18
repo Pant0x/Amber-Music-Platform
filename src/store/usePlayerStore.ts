@@ -13,7 +13,7 @@ interface PlayerState {
   history: Track[];
 
   // Navigation & Query State
-  activeTab: 'home' | 'explore' | 'library' | 'playlist' | 'liked' | 'channel' | 'search';
+  activeTab: 'home' | 'explore' | 'library' | 'playlist' | 'liked' | 'channel' | 'search' | 'lyrics';
   searchQuery: string;
   selectedMood: string; // 'none' | 'energize' | 'focus' | 'relax' | 'commute' | 'workout'
   currentPlaylistId: string | null;
@@ -54,7 +54,7 @@ interface PlayerState {
   prevTrack: () => void;
   
   // Navigation Actions
-  setActiveTab: (tab: 'home' | 'explore' | 'library' | 'playlist' | 'liked' | 'channel' | 'search') => void;
+  setActiveTab: (tab: 'home' | 'explore' | 'library' | 'playlist' | 'liked' | 'channel' | 'search' | 'lyrics') => void;
   setSearchQuery: (query: string) => void;
   setSelectedMood: (mood: string) => void;
   setCurrentPlaylistId: (id: string | null) => void;
@@ -97,6 +97,12 @@ interface PlayerState {
   toggleAutoplay: () => void;
   setAutoplayQueue: (queue: Track[]) => void;
   fetchAutoplayQueue: (videoId: string) => Promise<void>;
+
+  // Synced Lyrics state
+  globalLyricsData: { lyrics: string; lines: { text: string; time: number }[]; isSynced?: boolean } | null;
+  globalLyricsLoading: boolean;
+  setGlobalLyricsData: (data: any) => void;
+  setGlobalLyricsLoading: (loading: boolean) => void;
 
   // Now Playing Panel State
   showNowPlaying: boolean;
@@ -267,6 +273,12 @@ export const usePlayerStore = create<PlayerState>()(
           console.error('[Store Autoplay] Failed to fetch autoplay next tracks:', err);
         }
       },
+
+      // Synced Lyrics state initializers
+      globalLyricsData: null,
+      globalLyricsLoading: false,
+      setGlobalLyricsData: (globalLyricsData) => set({ globalLyricsData }),
+      setGlobalLyricsLoading: (globalLyricsLoading) => set({ globalLyricsLoading }),
 
       // Now Playing Initial State
       showNowPlaying: false,

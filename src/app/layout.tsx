@@ -7,6 +7,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { PlayerDock } from '@/components/PlayerDock';
 import { BottomPlayerBar } from '@/components/BottomPlayerBar';
+import { LyricsOverlay } from '@/components/LyricsOverlay';
 
 import { DatabaseSync } from '@/components/DatabaseSync';
 import { ShareResolver } from '@/components/ShareResolver';
@@ -71,6 +72,7 @@ export default function RootLayout({
                     {children}
                   </div>
                 </div>
+                <LyricsOverlay />
               </main>
 
               {/* Persistent Right Player Dock */}

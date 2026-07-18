@@ -61,13 +61,74 @@ export const BottomPlayerBar: React.FC = () => {
     rightSidebarView,
     setRightSidebarView,
     playlists,
-    createPlaylist
+    createPlaylist,
+    setGlobalLyricsData,
+    setGlobalLyricsLoading,
+    activeTab,
+    setActiveTab,
+    navigateBack,
+    pushNavState,
+    currentPlaylistId,
+    currentChannelId,
+    artistSubTab
   } = usePlayerStore();
 
   const [isMuted, setIsMuted] = useState(false);
   const [prevVolume, setPrevVolume] = useState(volume);
   const [isShuffle, setIsShuffle] = useState(false);
   const [showPlaylistMenu, setShowPlaylistMenu] = useState(false);
+
+  // Global lyrics caching and fetching
+  const lyricsCache = React.useRef(new Map<string, any>());
+  const lyricsAbortRef = React.useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    if (!currentTrack) return;
+
+    const cacheKey = `${currentTrack.id}_${currentTrack.title}_${currentTrack.channelTitle}_${currentTrack.youtubeId || ''}`;
+
+    if (lyricsAbortRef.current) {
+      lyricsAbortRef.current.abort();
+    }
+
+    if (lyricsCache.current.has(cacheKey)) {
+      setGlobalLyricsData(lyricsCache.current.get(cacheKey));
+      setGlobalLyricsLoading(false);
+      return;
+    }
+
+    setGlobalLyricsLoading(true);
+
+    const controller = new AbortController();
+    lyricsAbortRef.current = controller;
+
+    const queryVideoId = currentTrack.youtubeId || currentTrack.id;
+    fetch(`/api/lyrics?title=${encodeURIComponent(currentTrack.title)}&artist=${encodeURIComponent(currentTrack.channelTitle)}&duration=${encodeURIComponent(currentTrack.duration || '3:00')}&videoId=${encodeURIComponent(queryVideoId)}`, {
+      signal: controller.signal
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (controller.signal.aborted) return;
+        if (data?.lyrics) {
+          lyricsCache.current.set(cacheKey, data);
+          setGlobalLyricsData(data);
+        } else {
+          lyricsCache.current.set(cacheKey, null);
+          setGlobalLyricsData(null);
+        }
+      })
+      .catch(err => {
+        if (err?.name === 'AbortError') return;
+        console.error('Failed to load lyrics:', err);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setGlobalLyricsLoading(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [currentTrack?.id, currentTrack?.title, currentTrack?.channelTitle, currentTrack?.youtubeId, setGlobalLyricsData, setGlobalLyricsLoading]);
 
   if (!currentTrack) return null;
 
@@ -279,11 +340,18 @@ export const BottomPlayerBar: React.FC = () => {
       <div className="flex items-center gap-3 w-[30%] min-w-[200px] justify-end">
         {/* Lyrics Button */}
         <button 
-          onClick={() => toggleSidebarView('now-playing')}
+          onClick={() => {
+            if (activeTab === 'lyrics') {
+              navigateBack();
+            } else {
+              pushNavState(activeTab, currentPlaylistId, currentChannelId, artistSubTab);
+              setActiveTab('lyrics');
+            }
+          }}
           className={`p-1.5 rounded-md hover:bg-white/5 transition-all ${
-            rightSidebarView === 'now-playing' ? 'text-[#1db954]' : 'text-zinc-400 hover:text-white'
+            activeTab === 'lyrics' ? 'text-[#1db954]' : 'text-zinc-400 hover:text-white'
           }`}
-          title="Lyrics / Now Playing"
+          title="Lyrics"
         >
           <Mic2 className="w-4.5 h-4.5" />
         </button>
