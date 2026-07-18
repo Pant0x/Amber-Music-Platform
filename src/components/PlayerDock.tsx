@@ -30,11 +30,11 @@ import {
 const upgradeThumbnailUrl = (url: string | undefined): string => {
   if (!url) return '';
   if (url.includes('googleusercontent.com')) {
-    return url.replace(/=w\d+-h\d+.*$/, '=w544-h544-l90-rj').replace(/=s\d+.*$/, '=w544-h544-l90-rj');
+    return url.replace(/=w\d+-h\d+.*$/, '=w1080-h1080-l90-rj').replace(/=s\d+.*$/, '=w1080-h1080-l90-rj');
   }
   if (url.includes('i.ytimg.com/vi/') || url.includes('img.youtube.com/vi/')) {
     const cleanUrl = url.split('?')[0];
-    return cleanUrl.replace(/\/(default|mqdefault|sddefault|hqdefault|maxresdefault)\.jpg/, '/hqdefault.jpg');
+    return cleanUrl.replace(/\/(default|mqdefault|sddefault|hqdefault|maxresdefault)\.jpg/, '/maxresdefault.jpg');
   }
   return url;
 };
@@ -80,7 +80,8 @@ export const PlayerDock: React.FC = () => {
   // Fetch artist channel details (PFP, monthly listeners, bio) when track changes
   useEffect(() => {
     if (currentTrack?.channelTitle) {
-      fetchNowPlayingChannelDetails(currentTrack.channelTitle, true);
+      const artistName = cleanVisualName(currentTrack.channelTitle);
+      fetchNowPlayingChannelDetails(artistName, true);
     }
   }, [currentTrack?.id, currentTrack?.channelTitle, fetchNowPlayingChannelDetails]);
 
@@ -335,54 +336,60 @@ export const PlayerDock: React.FC = () => {
         {/* Dynamic "About the artist" Card */}
         <div className="rounded-2xl overflow-hidden bg-zinc-900 border border-white/5 flex flex-col flex-shrink-0 shadow-lg relative group/artist-card">
           {/* Header text */}
-          <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider p-4 pb-2">About the artist</p>
-          
-          {/* Artist photo (large) */}
-          <div className="w-full aspect-[16/9] relative overflow-hidden bg-zinc-950">
-            <img 
-              src={upgradeThumbnailUrl(nowPlayingChannelDetails?.thumbnail) || upgradeThumbnailUrl(currentTrack.thumbnailUrl) || ''} 
-              alt={currentTrack.channelTitle}
-              className="w-full h-full object-cover select-none transition-transform duration-700 group-hover/artist-card:scale-105"
-              onError={(e) => {
-                e.currentTarget.onerror = null;
-                e.currentTarget.src = currentTrack.thumbnailUrl || '';
-              }}
-            />
-            {/* Soft dark vignette gradient */}
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent" />
+          <div className="absolute top-0 left-0 right-0 z-10 p-4 pb-0 flex justify-between items-start pointer-events-none">
+            <p className="text-[11px] font-bold text-white drop-shadow-md tracking-wider">About the artist</p>
           </div>
-
-          {/* Details & Interactive Actions */}
-          <div className="p-4 flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0 flex-1 pr-2">
-                <h4 className="text-sm font-bold text-white leading-tight truncate hover:underline cursor-pointer" onClick={() => viewChannel(currentChannelId || currentTrack.channelTitle)}>
-                  {currentTrack.channelTitle}
+          
+          {/* Artist photo (Background style) */}
+          <div className="w-full aspect-[4/3] relative overflow-hidden bg-zinc-800 flex items-center justify-center">
+            {nowPlayingChannelDetails?.thumbnail ? (
+              <img 
+                src={upgradeThumbnailUrl(nowPlayingChannelDetails.thumbnail)} 
+                alt={currentTrack.channelTitle}
+                className="w-full h-full object-cover select-none transition-transform duration-700 group-hover/artist-card:scale-105"
+              />
+            ) : (
+              <Music className="w-12 h-12 text-zinc-600" />
+            )}
+            
+            {/* Soft dark vignette gradient for text readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/50 to-transparent opacity-90" />
+            
+            {/* Overlay Details & Actions */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 flex flex-col gap-2 z-10">
+              <div className="flex flex-col gap-0">
+                <h4 
+                  className="text-base font-bold text-white leading-tight truncate hover:underline cursor-pointer drop-shadow-md" 
+                  onClick={() => viewChannel(currentChannelId || currentTrack.channelTitle)}
+                >
+                  {cleanVisualName(currentTrack.channelTitle)}
                 </h4>
-                <p className="text-[10px] text-zinc-450 mt-1 font-semibold">
-                  {nowPlayingChannelDetails?.subscriberCountText || '12.4M monthly listeners'}
-                </p>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-[11px] text-zinc-300 font-semibold drop-shadow-md">
+                    {nowPlayingChannelDetails?.subscriberCountText || '12.4M monthly listeners'}
+                  </p>
+                  
+                  {/* Follow Toggle button */}
+                  <button
+                    onClick={() => toggleSubscribeChannel(currentChannelId || currentTrack.channelTitle)}
+                    className={`text-[10px] font-bold tracking-wide uppercase px-4 py-1.5 rounded-full border transition-all duration-200 ${
+                      subscribedChannels.includes(currentChannelId || currentTrack.channelTitle)
+                        ? 'bg-transparent text-white border-white/40 hover:border-white'
+                        : 'bg-white text-black border-transparent hover:scale-105'
+                    }`}
+                  >
+                    {subscribedChannels.includes(currentChannelId || currentTrack.channelTitle) ? 'Following' : 'Follow'}
+                  </button>
+                </div>
               </div>
 
-              {/* Follow Toggle button */}
-              <button
-                onClick={() => toggleSubscribeChannel(currentChannelId || currentTrack.channelTitle)}
-                className={`text-[10px] font-bold tracking-wide uppercase px-4 py-1.5 rounded-full border transition-all duration-200 ${
-                  subscribedChannels.includes(currentChannelId || currentTrack.channelTitle)
-                    ? 'bg-transparent text-white border-white/20 hover:border-white/50'
-                    : 'bg-white text-black border-white hover:bg-zinc-200'
-                }`}
-              >
-                {subscribedChannels.includes(currentChannelId || currentTrack.channelTitle) ? 'Following' : 'Follow'}
-              </button>
+              {/* Optional Bio snippet if available */}
+              {nowPlayingChannelDetails?.description && (
+                <p className="text-[11px] text-zinc-300 line-clamp-2 leading-relaxed mt-1 font-medium select-text drop-shadow-md">
+                  {nowPlayingChannelDetails.description}
+                </p>
+              )}
             </div>
-
-            {/* Optional Bio snippet if available */}
-            {nowPlayingChannelDetails?.description && (
-              <p className="text-[11px] text-zinc-400 line-clamp-3 leading-relaxed mt-1 font-medium select-text">
-                {nowPlayingChannelDetails.description}
-              </p>
-            )}
           </div>
         </div>
 
