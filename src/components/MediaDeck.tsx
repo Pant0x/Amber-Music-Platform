@@ -333,11 +333,16 @@ export const MediaDeck: React.FC = () => {
   useEffect(() => {
     if (!currentTrack) return;
     
-    // If we already have a direct YouTube origin track, we don't need to resolve.
-    // This prevents searching and accidentally replacing an official Topic release with a VEVO video.
-    const needsResolve = !currentTrack.youtubeId && currentTrack.origin !== 'youtube';
+    const isVideoOrVevo = currentTrack.channelTitle?.toLowerCase().includes('vevo') || 
+                          currentTrack.channelTitle?.toLowerCase().includes('official') ||
+                          currentTrack.title?.toLowerCase().includes('video clip') ||
+                          currentTrack.title?.toLowerCase().includes('music video');
+
+    // If we already have a direct YouTube origin track, we don't need to resolve,
+    // unless it is a VEVO or video clip track that we want to redirect to the official release.
+    const needsResolve = !currentTrack.youtubeId && (currentTrack.origin !== 'youtube' || isVideoOrVevo);
     
-    if (!currentTrack.youtubeId && currentTrack.origin === 'youtube') {
+    if (!currentTrack.youtubeId && currentTrack.origin === 'youtube' && !isVideoOrVevo) {
       setYoutubeIdForCurrentTrack(currentTrack.id);
     }
     
@@ -396,7 +401,12 @@ export const MediaDeck: React.FC = () => {
     if (queue.length === 0) return;
     const nextTrack = queue[0];
     
-    if (!nextTrack.youtubeId && nextTrack.origin === 'youtube') {
+    const isNextVideoOrVevo = nextTrack.channelTitle?.toLowerCase().includes('vevo') || 
+                              nextTrack.channelTitle?.toLowerCase().includes('official') ||
+                              nextTrack.title?.toLowerCase().includes('video clip') ||
+                              nextTrack.title?.toLowerCase().includes('music video');
+
+    if (!nextTrack.youtubeId && nextTrack.origin === 'youtube' && !isNextVideoOrVevo) {
       usePlayerStore.setState((state) => {
         const newQueue = [...state.queue];
         newQueue[0] = { ...newQueue[0], youtubeId: nextTrack.id };
