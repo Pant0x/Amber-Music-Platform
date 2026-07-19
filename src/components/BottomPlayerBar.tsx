@@ -22,6 +22,7 @@ import {
   PlusCircle,
   Check
 } from 'lucide-react';
+import { ArtistLinks } from './pages/shared';
 
 const upgradeThumbnailUrl = (url: string | undefined): string => {
   if (!url) return '';
@@ -189,9 +190,9 @@ export const BottomPlayerBar: React.FC = () => {
           <h4 className="text-sm font-bold text-white truncate leading-tight hover:underline cursor-pointer" title={parsed.title}>
             {parsed.title}
           </h4>
-          <p className="text-[11px] text-zinc-400 truncate mt-1 leading-none font-semibold hover:text-white cursor-pointer" title={currentTrack.channelTitle}>
-            {currentTrack.channelTitle}
-          </p>
+          <div className="text-[11px] text-zinc-400 truncate mt-1 leading-none font-semibold" title={currentTrack.channelTitle}>
+            <ArtistLinks channelTitle={currentTrack.channelTitle} channelId={currentTrack.channelId} />
+          </div>
         </div>
         
         {/* Like and Add Buttons */}

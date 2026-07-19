@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
-import { ExplicitBadge, PlayingEqualizer } from './pages/shared';
+import { ExplicitBadge, PlayingEqualizer, ArtistLinks } from './pages/shared';
 import { cleanVisualName, parseFeaturedArtists } from '@/utils/text';
 import {
   Play,
@@ -80,7 +80,13 @@ export const PlayerDock: React.FC = () => {
   // Fetch artist channel details (PFP, monthly listeners, bio) when track changes
   useEffect(() => {
     if (currentTrack?.channelTitle) {
-      const artistName = cleanVisualName(currentTrack.channelTitle);
+      // Split featured/multiple artists and query only the first artist details
+      const splitNames = currentTrack.channelTitle
+        .split(/,|\s+&\s+|\s+and\s+|\s+feat\.?\s+|\s+ft\.?\s+/i)
+        .map(name => name.trim())
+        .filter(Boolean);
+      const firstArtist = splitNames[0] || currentTrack.channelTitle;
+      const artistName = cleanVisualName(firstArtist);
       fetchNowPlayingChannelDetails(artistName, true);
     }
   }, [currentTrack?.id, currentTrack?.channelTitle, fetchNowPlayingChannelDetails]);
@@ -359,10 +365,9 @@ export const PlayerDock: React.FC = () => {
             <div className="absolute bottom-0 left-0 right-0 p-4 flex flex-col gap-2 z-10">
               <div className="flex flex-col gap-0">
                 <h4 
-                  className="text-base font-bold text-white leading-tight truncate hover:underline cursor-pointer drop-shadow-md" 
-                  onClick={() => viewChannel(currentChannelId || currentTrack.channelTitle)}
+                  className="text-base font-bold text-white leading-tight truncate drop-shadow-md"
                 >
-                  {cleanVisualName(currentTrack.channelTitle)}
+                  <ArtistLinks channelTitle={currentTrack.channelTitle} channelId={currentTrack.channelId} />
                 </h4>
                 <div className="flex items-center justify-between mt-1">
                   <p className="text-[11px] text-zinc-300 font-semibold drop-shadow-md">

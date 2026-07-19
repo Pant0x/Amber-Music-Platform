@@ -17,9 +17,10 @@ export async function GET(request: Request) {
 
     const mode = searchParams.get('mode') || 'song';
     const isExplicitRequest = searchParams.get('explicit') === 'true';
+    const album = searchParams.get('album');
     
     // Check resolve cache
-    const cacheKey = `${artist.toLowerCase().trim()}_${title.toLowerCase().trim()}_${mode}_${isExplicitRequest}`;
+    const cacheKey = `${artist.toLowerCase().trim()}_${title.toLowerCase().trim()}_${album?.toLowerCase().trim() || ''}_${mode}_${isExplicitRequest}`;
     if (resolveCache.has(cacheKey)) {
       const cachedData = resolveCache.get(cacheKey);
       if (cachedData) {
@@ -36,9 +37,16 @@ export async function GET(request: Request) {
 
     let query = mode === 'video' 
       ? `${artist} ${title} Official Video` 
-      : `${artist} ${title} ${isExplicitRequest ? 'Explicit' : ''} Topic`;
+      : `${artist} ${title} ${album ? album + ' ' : ''}${isExplicitRequest ? 'Explicit' : ''} Topic`;
     console.log(`[Resolve API] Searching YouTube Music for (${mode}): "${query}"`);
     let searchData = await ytMusicSearch(query);
+
+    // Fallback if no songs found with the specific query (e.g. if the album name caused no results)
+    if (album && mode === 'song' && (!searchData.songs || searchData.songs.length === 0)) {
+      query = `${artist} ${title} ${isExplicitRequest ? 'Explicit' : ''} Topic`;
+      console.log(`[Resolve API] Fallback search without album name: "${query}"`);
+      searchData = await ytMusicSearch(query);
+    }
 
     // Fallback if no songs found with the explicit query keyword
     if (isExplicitRequest && mode === 'song' && (!searchData.songs || searchData.songs.length === 0)) {
@@ -64,14 +72,10 @@ export async function GET(request: Request) {
       return uncensoredMatch || firstItem;
     };
 
-    const getBestMatch = (items: any[]) => {
-      // Filter out items that are not correct title matches or artist matches
-      const validItems = items.filter(i => isCorrectMatch(title, i.title) && isArtistMatch(artist, i.channelTitle));
-      if (!validItems || validItems.length === 0) return null;
-      
+    const selectBestFromGroup = (group: any[]) => {
       if (mode === 'song') {
         // Enforce Topic channels strictly for songs to guarantee audio releases
-        const topicItems = validItems.filter(i => 
+        const topicItems = group.filter(i => 
           i.channelTitle.toLowerCase().includes('topic')
         );
         if (topicItems.length > 0) {
@@ -79,7 +83,7 @@ export async function GET(request: Request) {
         }
 
         // If no explicit topic channel, aggressively filter out VEVO and main channels!
-        const strictAudioItems = validItems.filter(i => 
+        const strictAudioItems = group.filter(i => 
           !i.channelTitle.toLowerCase().includes('vevo') &&
           i.channelTitle.toLowerCase() !== artist.toLowerCase() &&
           !i.channelTitle.toLowerCase().includes('official')
@@ -89,13 +93,33 @@ export async function GET(request: Request) {
         }
       } else if (mode === 'video') {
         // Enforce non-Topic channels (official artist channel/VEVO) for music videos
-        const clipItems = validItems.filter(i => !i.channelTitle.toLowerCase().includes('topic'));
+        const clipItems = group.filter(i => !i.channelTitle.toLowerCase().includes('topic'));
         if (clipItems.length > 0) {
           return findBestInGroup(clipItems);
         }
       }
+      return findBestInGroup(group);
+    };
 
-      return findBestInGroup(validItems);
+    const getBestMatch = (items: any[]) => {
+      // Filter out items that are not correct title matches or artist matches
+      const validItems = items.filter(i => isCorrectMatch(title, i.title) && isArtistMatch(artist, i.channelTitle));
+      if (!validItems || validItems.length === 0) return null;
+      
+      // If we have an album constraint, filter/prioritize items matching the album name!
+      if (album) {
+        const cleanRequestedAlbum = album.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const albumMatchItems = validItems.filter(i => {
+          if (!i.albumName) return false;
+          const cleanItemAlbum = i.albumName.toLowerCase().replace(/[^a-z0-9]/g, '');
+          return cleanItemAlbum.includes(cleanRequestedAlbum) || cleanRequestedAlbum.includes(cleanItemAlbum);
+        });
+        if (albumMatchItems.length > 0) {
+          return selectBestFromGroup(albumMatchItems);
+        }
+      }
+
+      return selectBestFromGroup(validItems);
     };
 
     let videoId = '';

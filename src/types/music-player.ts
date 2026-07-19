@@ -15,6 +15,8 @@ export interface Track {
   duration?: string;
   isExplicit?: boolean;
   isEnriched?: boolean;
+  albumName?: string;
+  albumId?: string;
 }
 
 export interface Playlist {

@@ -350,8 +350,9 @@ export const MediaDeck: React.FC = () => {
         try {
           const hideExplicit = usePlayerStore.getState().hideExplicit;
           const explicitParam = (!hideExplicit || currentTrack.isExplicit) ? '&explicit=true' : '';
+          const albumParam = currentTrack.albumName ? `&album=${encodeURIComponent(currentTrack.albumName)}` : '';
           const res = await fetch(
-            `/api/youtube/resolve?title=${encodeURIComponent(currentTrack.title)}&artist=${encodeURIComponent(currentTrack.channelTitle)}${explicitParam}`
+            `/api/youtube/resolve?title=${encodeURIComponent(currentTrack.title)}&artist=${encodeURIComponent(currentTrack.channelTitle)}${explicitParam}${albumParam}`
           );
           if (res.ok) {
             const data = await res.json();
@@ -416,8 +417,9 @@ export const MediaDeck: React.FC = () => {
         try {
           const hideExplicit = usePlayerStore.getState().hideExplicit;
           const explicitParam = (!hideExplicit || nextTrack.isExplicit) ? '&explicit=true' : '';
+          const albumParam = nextTrack.albumName ? `&album=${encodeURIComponent(nextTrack.albumName)}` : '';
           const res = await fetch(
-            `/api/youtube/resolve?title=${encodeURIComponent(nextTrack.title)}&artist=${encodeURIComponent(nextTrack.channelTitle)}${explicitParam}`
+            `/api/youtube/resolve?title=${encodeURIComponent(nextTrack.title)}&artist=${encodeURIComponent(nextTrack.channelTitle)}${explicitParam}${albumParam}`
           );
           if (res.ok) {
             const data = await res.json();
@@ -579,11 +581,11 @@ export const MediaDeck: React.FC = () => {
         url={
           currentTrack.youtubeId 
             ? `https://www.youtube.com/watch?v=${currentTrack.youtubeId}` 
-            : (trackNeedsResolve || currentTrack.origin === 'spotify') 
+            : currentTrack.origin === 'spotify' 
               ? '' 
               : `https://www.youtube.com/watch?v=${currentTrack.id}`
         }
-        playing={isPlaying && !trackNeedsResolve && (currentTrack.origin !== 'spotify' || !!currentTrack.youtubeId)}
+        playing={isPlaying && !trackNeedsResolve}
         volume={volume}
         muted={isMuted}
         onProgress={handlePlayerProgress}

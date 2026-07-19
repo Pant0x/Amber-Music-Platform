@@ -57,13 +57,13 @@ export function isArtistMatch(requestedArtist: string, channelTitle: string): bo
 
   if (individualArtists.length === 0) return true;
 
-  // Clean the channel name of generic topic/VEVO/official suffixes
+  // Clean the channel name of generic suffixes globally (substring replacements to catch "ArtistVEVO")
   const channelArtistClean = cleanChannel
+    .replace(/vevo/g, '')
+    .replace(/official/g, '')
+    .replace(/records/g, '')
+    .replace(/music/g, '')
     .replace(/\s*-\s*topic\b/g, '')
-    .replace(/\s*vevo\b/g, '')
-    .replace(/\s*official\b/g, '')
-    .replace(/\s*records\b/g, '')
-    .replace(/\s*music\b/g, '')
     .trim();
 
   // Split channel artists by same separators
