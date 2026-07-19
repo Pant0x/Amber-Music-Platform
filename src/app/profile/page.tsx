@@ -16,7 +16,10 @@ import {
   Check, 
   Edit2, 
   ExternalLink, 
-  LogIn 
+  LogIn, 
+  Upload, 
+  Camera, 
+  X 
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useUser, SignInButton } from '@clerk/nextjs';
@@ -46,6 +49,7 @@ export default function ProfilePage() {
   const [tempName, setTempName] = useState(displayName);
   const [showAvatarEditor, setShowAvatarEditor] = useState(false);
   const [tempAvatar, setTempAvatar] = useState(avatarUrl);
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [resolvedChannels, setResolvedChannels] = useState<any[]>([]);
   const [channelsLoading, setChannelsLoading] = useState(false);
 
@@ -57,6 +61,47 @@ export default function ProfilePage() {
   useEffect(() => {
     setTempAvatar(avatarUrl);
   }, [avatarUrl]);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Image must be under 2MB');
+      return;
+    }
+
+    setAvatarUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('bucket', 'avatars');
+      formData.append('folder', user?.id || '');
+
+      const uploadRes = await fetch('/api/storage/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!uploadRes.ok) throw new Error('Upload failed');
+      
+      const { url } = await uploadRes.json();
+      setTempAvatar(url);
+      
+      // Also update Clerk avatar
+      await fetch('/api/user/avatar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatarUrl: url }),
+      });
+    } catch (err) {
+      console.error('Avatar upload failed:', err);
+      alert('Failed to upload avatar');
+    } finally {
+      setAvatarUploading(false);
+      e.target.value = '';
+    }
+  };
 
   // Fetch Subscribed Channels detail (avatar/title)
   useEffect(() => {
@@ -218,6 +263,17 @@ export default function ProfilePage() {
         <div className="p-6 rounded-2xl bg-zinc-950/40 border border-white/5 space-y-4 animate-scale-up">
           <h3 className="text-xs font-bold text-white uppercase tracking-wider">Customize Profile Picture</h3>
           <div className="space-y-4">
+            <div>
+              <span className="block text-[10px] text-zinc-500 uppercase tracking-wider mb-2">Upload Image</span>
+              <div className="flex items-center gap-3">
+                <label className="flex items-center justify-center w-9 h-9 rounded-full bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors group">
+                  <Upload className="w-4 h-4 text-zinc-400 group-hover:text-white" />
+                  <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+                </label>
+                <span className="text-xs text-zinc-400">JPG/PNG up to 2MB</span>
+              </div>
+              {avatarUploading && <div className="mt-2 text-xs text-yellow-400">Uploading...</div>}
+            </div>
             <div>
               <span className="block text-[10px] text-zinc-500 uppercase tracking-wider mb-2">Preset Colors</span>
               <div className="flex items-center gap-3">
