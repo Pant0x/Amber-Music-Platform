@@ -187,10 +187,12 @@ export const BigLyricsView: React.FC = () => {
                       setSeekTrigger(line.time);
                     }
                   }}
-                  className={`text-2xl md:text-4xl lg:text-[2.75rem] font-black leading-[1.2] tracking-tight px-3 py-2 rounded-xl transition-all duration-500 ease-out select-text ${
+                  className={`text-2xl md:text-4xl lg:text-[2.75rem] font-black px-3 py-3 rounded-xl transition-all duration-500 ease-out select-text ${
                     isArabic 
-                      ? isSynced ? 'text-right origin-right' : 'text-center'
-                      : isSynced ? 'text-left origin-left' : 'text-center'
+                      ? 'tracking-normal leading-[1.45] text-right origin-right' 
+                      : isSynced 
+                        ? 'tracking-tight leading-[1.2] text-left origin-left' 
+                        : 'tracking-tight leading-[1.2] text-center'
                   } ${
                     isClickable ? 'cursor-pointer' : 'cursor-default'
                   } ${

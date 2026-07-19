@@ -236,14 +236,31 @@ export async function GET(request: Request) {
       }
     }
 
-    const cleanTitle = title
+    // Robust Title Cleaning: Strip artist name from the title format "Artist - Track" or "Track - Artist"
+    let cleanTitle = title;
+    const artistNames = artist.split(/[,|/]/).map(n => n.trim().toLowerCase());
+    for (const name of artistNames) {
+      if (name) {
+        if (cleanTitle.toLowerCase().startsWith(name + ' -')) {
+          cleanTitle = cleanTitle.substring(name.length + 2).trim();
+        }
+        if (cleanTitle.toLowerCase().endsWith('- ' + name)) {
+          cleanTitle = cleanTitle.substring(0, cleanTitle.length - (name.length + 2)).trim();
+        }
+      }
+    }
+
+    cleanTitle = cleanTitle
       .replace(/\([^)]*(feat|ft|with|prod|video|audio|visualizer|lyric|explicit|clean|leak)[^)]*\)/gi, '')
       .replace(/\[[^\]]*\]/g, '')
       .replace(/-.*(remix|edit|mix|video|audio|explicit|clean).*/gi, '')
       .replace(/\b(official|music video|audio|visualizer|explicit|leak)\b/gi, '')
       .replace(/\s+/g, ' ')
       .trim();
-    const cleanArtist = artist.replace(/ - Topic/g, '').trim();
+
+    let cleanArtist = artist.replace(/ - Topic/g, '').trim();
+    // Split by pipe/slashes to use the primary artist name for metadata matching
+    cleanArtist = cleanArtist.split(/[,|/]/)[0].trim();
 
     let lyricsText = '';
     let syncedLines: { text: string; time: number }[] = [];
@@ -279,40 +296,65 @@ export async function GET(request: Request) {
       console.error("LRCLIB direct fetch error:", err);
     }
 
+    // Helper to evaluate if a fetch response contains valid synced lyrics
+    const parseAndVerifyLrc = (lrcStr: string) => {
+      const parsed = parseLrc(lrcStr);
+      return parsed.some(line => line.time !== -999) ? parsed : null;
+    };
+
     // --- LAYER 2: LRCLIB SEARCH QUERY ---
     if (!isSynced) {
       try {
-        const query = `${cleanArtist} ${cleanTitle}`;
-        const searchRes = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(query)}`, {
+        let queryStr = `${cleanArtist} ${cleanTitle}`;
+        let searchRes = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(queryStr)}`, {
           headers: {
             'User-Agent': 'CloudMusic/1.0.0 (https://github.com/better-lyrics/better-lyrics)'
           }
         });
 
+        let searchData = [];
         if (searchRes.ok) {
-          const searchData = await searchRes.json();
-          if (searchData && searchData.length > 0) {
-            // Find the best match that has actual timestamps in its syncedLyrics
-            let matchedItem = null;
-            for (const item of searchData) {
-              if (item.syncedLyrics) {
-                const parsed = parseLrc(item.syncedLyrics);
-                if (parsed.some(line => line.time !== -999)) {
-                  matchedItem = { item, parsed };
-                  break;
-                }
+          searchData = await searchRes.json();
+        }
+
+        // Fallback: If initial search failed or had no synced results, try using the first part of the title (before dashes)
+        const titleParts = cleanTitle.split('-').map(p => p.trim());
+        const hasDashes = titleParts.length > 1;
+        const initialHasSynced = searchData.some((item: any) => item.syncedLyrics && parseAndVerifyLrc(item.syncedLyrics));
+
+        if ((searchData.length === 0 || !initialHasSynced) && hasDashes) {
+          const fallbackQuery = `${cleanArtist} ${titleParts[0]}`;
+          console.log(`[API Lyrics] Executing dash-fallback search: "${fallbackQuery}"`);
+          const fallbackRes = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(fallbackQuery)}`, {
+            headers: {
+              'User-Agent': 'CloudMusic/1.0.0 (https://github.com/better-lyrics/better-lyrics)'
+            }
+          });
+          if (fallbackRes.ok) {
+            searchData = await fallbackRes.json();
+          }
+        }
+
+        if (searchData && searchData.length > 0) {
+          let matchedItem = null;
+          for (const item of searchData) {
+            if (item.syncedLyrics) {
+              const parsed = parseAndVerifyLrc(item.syncedLyrics);
+              if (parsed) {
+                matchedItem = { item, parsed };
+                break;
               }
             }
+          }
 
-            if (matchedItem) {
-              syncedLines = matchedItem.parsed;
-              lyricsText = matchedItem.item.syncedLyrics;
-              isSynced = true;
-              console.log('[API Lyrics] Successfully fetched synced lyrics from LRCLIB SEARCH QUERY!');
-            } else {
-              const bestMatch = searchData[0];
-              lyricsText = bestMatch.plainLyrics || bestMatch.syncedLyrics || '';
-            }
+          if (matchedItem) {
+            syncedLines = matchedItem.parsed;
+            lyricsText = matchedItem.item.syncedLyrics;
+            isSynced = true;
+            console.log('[API Lyrics] Successfully fetched synced lyrics from LRCLIB SEARCH QUERY!');
+          } else {
+            const bestMatch = searchData[0];
+            lyricsText = bestMatch.plainLyrics || bestMatch.syncedLyrics || '';
           }
         }
       } catch (err) {
