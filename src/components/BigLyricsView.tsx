@@ -174,18 +174,24 @@ export const BigLyricsView: React.FC = () => {
               const isActive = isSynced && idx === activeLineIndex;
               const isPast = isSynced && idx < activeLineIndex;
               const isClickable = isSynced && line.time !== -999;
+              const isArabic = /[\u0600-\u06FF]/.test(line.text);
               
               return (
                 <p
                   key={`big-lyric-${idx}`}
                   ref={isActive ? activeLyricRef : null}
                   data-lyric-line
+                  dir={isArabic ? 'rtl' : 'ltr'}
                   onClick={() => {
                     if (isClickable) {
                       setSeekTrigger(line.time);
                     }
                   }}
-                  className={`text-2xl md:text-4xl lg:text-[2.75rem] font-black leading-[1.2] tracking-tight px-3 py-2 rounded-xl transition-all duration-500 ease-out origin-left select-text ${
+                  className={`text-2xl md:text-4xl lg:text-[2.75rem] font-black leading-[1.2] tracking-tight px-3 py-2 rounded-xl transition-all duration-500 ease-out select-text ${
+                    isArabic 
+                      ? isSynced ? 'text-right origin-right' : 'text-center'
+                      : isSynced ? 'text-left origin-left' : 'text-center'
+                  } ${
                     isClickable ? 'cursor-pointer' : 'cursor-default'
                   } ${
                     !isSynced 
