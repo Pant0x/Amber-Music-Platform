@@ -34,11 +34,18 @@ export async function GET(request: Request) {
       }
     }
 
-    const query = mode === 'video' 
+    let query = mode === 'video' 
       ? `${artist} ${title} Official Video` 
-      : `${artist} ${title} Topic`;
+      : `${artist} ${title} ${isExplicitRequest ? 'Explicit' : ''} Topic`;
     console.log(`[Resolve API] Searching YouTube Music for (${mode}): "${query}"`);
-    const searchData = await ytMusicSearch(query);
+    let searchData = await ytMusicSearch(query);
+
+    // Fallback if no songs found with the explicit query keyword
+    if (isExplicitRequest && mode === 'song' && (!searchData.songs || searchData.songs.length === 0)) {
+      query = `${artist} ${title} Topic`;
+      console.log(`[Resolve API] Fallback search without explicit keyword: "${query}"`);
+      searchData = await ytMusicSearch(query);
+    }
 
     const findBestInGroup = (group: any[]) => {
       const firstItem = group[0];

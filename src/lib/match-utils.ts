@@ -34,7 +34,7 @@ export function isCorrectMatch(requestedTitle: string, matchedTitle: string): bo
 const ALLOWED_GENERIC_CHANNELS = [
   'vevo', 'lyrical lemonade', 'cole bennett', 'ovo sound', 'spinnin', 'atlantic',
   'ultra', 'sony', 'universal', 'warner', 'records', 'music', 'cactus jack', 'grade a',
-  'opium', 'interscope', 'def jam', 'republic', 'columbia', 'rca', 'epic', 'various artists', 'topic'
+  'opium', 'interscope', 'def jam', 'republic', 'columbia', 'rca', 'epic', 'various artists'
 ];
 
 /**
@@ -51,25 +51,42 @@ export function isArtistMatch(requestedArtist: string, channelTitle: string): bo
 
   // Split requested artists by separators like ",", "&", "and", "feat", etc.
   const individualArtists = cleanArtist
-    .split(/,|\s+&\s+|\s+and\s+|\s+feat\.?\s+/i)
+    .split(/,|\s+&\s+|\s+and\s+|\s+feat\.?\s+|\s+ft\.?\s+/i)
     .map(name => name.trim())
     .filter(Boolean);
 
   if (individualArtists.length === 0) return true;
 
-  // 1. Direct match with channel name
-  const isDirect = individualArtists.some(artistName => {
-    if (artistName.length <= 2) {
-      const escaped = artistName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-      const regex = new RegExp(`\\b${escaped}\\b`, 'i');
-      return regex.test(cleanChannel);
-    }
-    return cleanChannel.includes(artistName);
-  });
+  // Clean the channel name of generic topic/VEVO/official suffixes
+  const channelArtistClean = cleanChannel
+    .replace(/\s*-\s*topic\b/g, '')
+    .replace(/\s*vevo\b/g, '')
+    .replace(/\s*official\b/g, '')
+    .replace(/\s*records\b/g, '')
+    .replace(/\s*music\b/g, '')
+    .trim();
 
-  if (isDirect) return true;
+  // Split channel artists by same separators
+  const channelArtists = channelArtistClean
+    .split(/,|\s+&\s+|\s+and\s+|\s+feat\.?\s+|\s+ft\.?\s+/i)
+    .map(name => name.trim())
+    .filter(Boolean);
 
-  // 2. Allowed generic channels check
+  // 1. Direct exact match check: any requested artist must exactly match one of the channel's artists
+  const hasExactMatch = individualArtists.some(reqArt => 
+    channelArtists.some(chanArt => {
+      // Check exact match or boundary containment to handle names with spaces correctly
+      if (chanArt === reqArt) return true;
+      if (chanArt.length > 2 && reqArt.length > 2) {
+        return chanArt.includes(reqArt) || reqArt.includes(chanArt);
+      }
+      return false;
+    })
+  );
+
+  if (hasExactMatch) return true;
+
+  // 2. Allowed generic channels check (e.g. major labels, various artists)
   const isGeneric = ALLOWED_GENERIC_CHANNELS.some(keyword => cleanChannel.includes(keyword));
   if (isGeneric) return true;
 

@@ -348,7 +348,8 @@ export const MediaDeck: React.FC = () => {
       
       const resolveTrack = async () => {
         try {
-          const explicitParam = currentTrack.isExplicit ? '&explicit=true' : '';
+          const hideExplicit = usePlayerStore.getState().hideExplicit;
+          const explicitParam = (!hideExplicit || currentTrack.isExplicit) ? '&explicit=true' : '';
           const res = await fetch(
             `/api/youtube/resolve?title=${encodeURIComponent(currentTrack.title)}&artist=${encodeURIComponent(currentTrack.channelTitle)}${explicitParam}`
           );
@@ -413,7 +414,8 @@ export const MediaDeck: React.FC = () => {
       console.log(`[MediaDeck] Pre-resolving next track in queue: "${nextTrack.title}"`);
       const resolveNext = async () => {
         try {
-          const explicitParam = nextTrack.isExplicit ? '&explicit=true' : '';
+          const hideExplicit = usePlayerStore.getState().hideExplicit;
+          const explicitParam = (!hideExplicit || nextTrack.isExplicit) ? '&explicit=true' : '';
           const res = await fetch(
             `/api/youtube/resolve?title=${encodeURIComponent(nextTrack.title)}&artist=${encodeURIComponent(nextTrack.channelTitle)}${explicitParam}`
           );
