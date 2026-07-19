@@ -360,32 +360,36 @@ export const MediaDeck: React.FC = () => {
               console.log(`[MediaDeck] Successfully resolved to videoId: ${data.videoId}`);
               setYoutubeIdForCurrentTrack(data.videoId);
               if (data.track) {
+                // Only enrich non-text metadata — never overwrite title/artist from resolver
+                // (resolver may find a slightly different version that would corrupt displayed metadata)
                 enrichCurrentTrack({
-                  title: data.track.title,
-                  channelTitle: data.track.channelTitle,
-                  thumbnailUrl: data.track.thumbnailUrl,
-                  albumName: data.track.albumName,
-                  albumId: data.track.albumId,
-                  duration: data.track.duration,
-                  isExplicit: data.track.isExplicit,
-                  type: data.track.type
+                  thumbnailUrl: data.track.thumbnailUrl || undefined,
+                  albumName: data.track.albumName || undefined,
+                  albumId: data.track.albumId || undefined,
+                  duration: data.track.duration || undefined,
+                  isExplicit: data.track.isExplicit ?? undefined,
                 });
               }
             } else {
               console.error('[MediaDeck] Failed to resolve: no videoId returned');
-              if (currentTrack.origin === 'youtube') {
+              // Do NOT fall back to raw currentTrack.id for album tracks — it may be a VEVO/video clip.
+              // Only fall back for tracks that originated directly as standalone YouTube videos.
+              const isAlbumTrack = !!currentTrack.albumName || !!currentTrack.albumId;
+              if (currentTrack.origin === 'youtube' && !isAlbumTrack) {
                 setYoutubeIdForCurrentTrack(currentTrack.id);
               }
             }
           } else {
             console.error('[MediaDeck] Failed to resolve: HTTP error', res.status);
-            if (currentTrack.origin === 'youtube') {
+            const isAlbumTrack = !!currentTrack.albumName || !!currentTrack.albumId;
+            if (currentTrack.origin === 'youtube' && !isAlbumTrack) {
               setYoutubeIdForCurrentTrack(currentTrack.id);
             }
           }
         } catch (err) {
           console.error('[MediaDeck] Error resolving track:', err);
-          if (currentTrack.origin === 'youtube') {
+          const isAlbumTrack = !!currentTrack.albumName || !!currentTrack.albumId;
+          if (currentTrack.origin === 'youtube' && !isAlbumTrack) {
             setYoutubeIdForCurrentTrack(currentTrack.id);
           }
         }

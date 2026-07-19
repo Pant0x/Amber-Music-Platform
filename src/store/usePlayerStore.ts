@@ -122,9 +122,9 @@ interface PlayerState {
   setSeekTrigger: (seconds: number | null) => void;
   setYoutubeIdForCurrentTrack: (youtubeId: string) => void;
   enrichCurrentTrack: (metadata: { 
-    title: string; 
-    channelTitle: string; 
-    isExplicit: boolean;
+    title?: string; 
+    channelTitle?: string; 
+    isExplicit?: boolean;
     thumbnailUrl?: string;
     albumName?: string;
     albumId?: string;
@@ -338,9 +338,9 @@ export const usePlayerStore = create<PlayerState>()(
         return {
           currentTrack: {
             ...state.currentTrack,
-            title: metadata.title,
-            channelTitle: metadata.channelTitle,
-            isExplicit: metadata.isExplicit,
+            ...(metadata.title !== undefined && { title: metadata.title }),
+            ...(metadata.channelTitle !== undefined && { channelTitle: metadata.channelTitle }),
+            ...(metadata.isExplicit !== undefined && { isExplicit: metadata.isExplicit }),
             ...(metadata.thumbnailUrl && { thumbnailUrl: metadata.thumbnailUrl }),
             ...(metadata.albumName && { albumName: metadata.albumName }),
             ...(metadata.albumId && { albumId: metadata.albumId }),

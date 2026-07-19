@@ -32,8 +32,8 @@ export function isCorrectMatch(requestedTitle: string, matchedTitle: string): bo
 
 /** Well-known music label/platform channel keywords that should always be allowed. */
 const ALLOWED_GENERIC_CHANNELS = [
-  'vevo', 'lyrical lemonade', 'cole bennett', 'ovo sound', 'spinnin', 'atlantic',
-  'ultra', 'sony', 'universal', 'warner', 'records', 'music', 'cactus jack', 'grade a',
+  'lyrical lemonade', 'cole bennett', 'ovo sound', 'spinnin', 'atlantic',
+  'ultra', 'sony', 'universal', 'warner', 'cactus jack', 'grade a',
   'opium', 'interscope', 'def jam', 'republic', 'columbia', 'rca', 'epic', 'various artists'
 ];
 
@@ -58,12 +58,14 @@ export function isArtistMatch(requestedArtist: string, channelTitle: string): bo
   if (individualArtists.length === 0) return true;
 
   // Clean the channel name of generic suffixes globally (substring replacements to catch "ArtistVEVO")
+  // Then normalize whitespace so cleaned strings like "drake  " become "drake"
   const channelArtistClean = cleanChannel
     .replace(/vevo/g, '')
     .replace(/official/g, '')
     .replace(/records/g, '')
     .replace(/music/g, '')
     .replace(/\s*-\s*topic\b/g, '')
+    .replace(/\s+/g, ' ')
     .trim();
 
   // Split channel artists by same separators
@@ -75,10 +77,13 @@ export function isArtistMatch(requestedArtist: string, channelTitle: string): bo
   // 1. Direct exact match check: any requested artist must exactly match one of the channel's artists
   const hasExactMatch = individualArtists.some(reqArt => 
     channelArtists.some(chanArt => {
-      // Check exact match or boundary containment to handle names with spaces correctly
+      // Exact full-string match first
       if (chanArt === reqArt) return true;
-      if (chanArt.length > 2 && reqArt.length > 2) {
-        return chanArt.includes(reqArt) || reqArt.includes(chanArt);
+      // Containment only for multi-word names (e.g. "travis scott" in "travis scott feat drake")
+      // Require word boundary to prevent "drake" matching "drakeofficial" after cleaning
+      if (chanArt.length > 3 && reqArt.length > 3) {
+        const words = chanArt.split(/\s+/);
+        return words.some(w => w === reqArt) || reqArt.split(/\s+/).every(w => chanArt.includes(w));
       }
       return false;
     })

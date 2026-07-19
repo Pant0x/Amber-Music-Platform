@@ -18,6 +18,11 @@ export async function GET(request: Request) {
     const mode = searchParams.get('mode') || 'song';
     const isExplicitRequest = searchParams.get('explicit') === 'true';
     const album = searchParams.get('album');
+
+    // Use only the primary artist for search queries (first name when comma-separated or featured)
+    const primaryArtist = artist
+      .split(/,|\s+&\s+|\s+feat\.?\s+|\s+ft\.?\s+/i)[0]
+      .trim();
     
     // Check resolve cache
     const cacheKey = `${artist.toLowerCase().trim()}_${title.toLowerCase().trim()}_${album?.toLowerCase().trim() || ''}_${mode}_${isExplicitRequest}`;
@@ -29,28 +34,27 @@ export async function GET(request: Request) {
           console.log(`[Resolve API] Cache HIT for key: "${cacheKey}" -> videoId: ${parsedData.videoId}`);
           return NextResponse.json(parsedData);
         } catch (e) {
-          // fallback if cache was just the videoId string (from before this change)
           return NextResponse.json({ videoId: cachedData });
         }
       }
     }
 
     let query = mode === 'video' 
-      ? `${artist} ${title} Official Video` 
-      : `${artist} ${title} ${album ? album + ' ' : ''}${isExplicitRequest ? 'Explicit' : ''} Topic`;
+      ? `${primaryArtist} ${title} Official Video` 
+      : `${primaryArtist} ${title} ${album ? album + ' ' : ''}${isExplicitRequest ? 'Explicit ' : ''}Topic`;
     console.log(`[Resolve API] Searching YouTube Music for (${mode}): "${query}"`);
     let searchData = await ytMusicSearch(query);
 
     // Fallback if no songs found with the specific query (e.g. if the album name caused no results)
     if (album && mode === 'song' && (!searchData.songs || searchData.songs.length === 0)) {
-      query = `${artist} ${title} ${isExplicitRequest ? 'Explicit' : ''} Topic`;
+      query = `${primaryArtist} ${title} ${isExplicitRequest ? 'Explicit ' : ''}Topic`;
       console.log(`[Resolve API] Fallback search without album name: "${query}"`);
       searchData = await ytMusicSearch(query);
     }
 
     // Fallback if no songs found with the explicit query keyword
     if (isExplicitRequest && mode === 'song' && (!searchData.songs || searchData.songs.length === 0)) {
-      query = `${artist} ${title} Topic`;
+      query = `${primaryArtist} ${title} Topic`;
       console.log(`[Resolve API] Fallback search without explicit keyword: "${query}"`);
       searchData = await ytMusicSearch(query);
     }
