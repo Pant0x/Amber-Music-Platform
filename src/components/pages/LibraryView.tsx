@@ -15,8 +15,8 @@ export const LibraryView: React.FC = () => {
   } = usePlayerStore();
 
   return (
-    <AnimatedPage className="space-y-6">
-      <h1 className="text-3xl font-extrabold text-white tracking-tight">Library</h1>
+    <AnimatedPage className="space-y-6 pt-6">
+      <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-8">Recently Added</h1>
       
       <div className="space-y-4">
         <h2 className="text-lg font-bold text-white tracking-tight">Playlists</h2>
@@ -24,14 +24,14 @@ export const LibraryView: React.FC = () => {
           
           {/* Liked songs card */}
           <HoverCard
-            className="group bg-[#0d0d0d] hover:bg-[#1a1a1a] p-4 rounded-lg transition-all duration-200 cursor-pointer shadow-lg relative border border-white/5"
+            className="group bg-white/5 hover:bg-white/10 p-4 rounded-2xl transition-all duration-300 cursor-pointer shadow-lg relative border border-white/5 hover:scale-[1.02]"
           >
             <div
               onClick={() => {
                 router.push('/liked');
               }}
             >
-              <div className="aspect-square w-full rounded bg-gradient-to-br from-[#ff0000] to-[#b30000] flex items-center justify-center mb-3 relative overflow-hidden">
+              <div className="aspect-square w-full rounded-xl bg-gradient-to-br from-[#ff0000] to-[#b30000] flex items-center justify-center mb-4 relative overflow-hidden shadow-md">
                 <Heart className="w-12 h-12 text-white fill-current" />
                 <AlbumCoverPlayOverlay item={{ id: 'liked', title: 'Liked Music', type: 'playlist' }} contextTracks={likedTracks} />
               </div>
@@ -44,14 +44,14 @@ export const LibraryView: React.FC = () => {
           {playlists.map((pl) => (
             <HoverCard
               key={pl.id}
-              className="group bg-[#0d0d0d] hover:bg-[#1a1a1a] p-4 rounded-lg transition-all duration-200 cursor-pointer shadow-lg relative border border-white/5"
+              className="group bg-white/5 hover:bg-white/10 p-4 rounded-2xl transition-all duration-300 cursor-pointer shadow-lg relative border border-white/5 hover:scale-[1.02]"
             >
               <div
                 onClick={() => {
                   router.push(`/playlist/${pl.id}`);
                 }}
               >
-                <div className="aspect-square w-full rounded bg-[#1f1f1f] flex items-center justify-center mb-3 relative overflow-hidden">
+                <div className="aspect-square w-full rounded-xl bg-[#1f1f1f] flex items-center justify-center mb-4 relative overflow-hidden shadow-md">
                   <Music className="w-10 h-10 text-zinc-600" />
                   <AlbumCoverPlayOverlay item={{ id: pl.id, title: pl.name, type: 'playlist' }} contextTracks={pl.tracks} />
                 </div>

@@ -169,10 +169,10 @@ export const BottomPlayerBar: React.FC = () => {
   };
 
   return (
-    <div 
-      className="h-[80px] w-screen text-white border-t border-white/[0.04] px-4 flex items-center justify-between select-none relative z-50 flex-shrink-0 transition-all duration-1000 backdrop-blur-2xl"
-      style={{ background: 'var(--theme-player-bg, #090909)' }}
-    >
+    <div className="w-screen px-4 pb-4 pt-1 flex justify-center flex-shrink-0 relative z-50 bg-transparent">
+      <div 
+        className="h-[84px] w-full max-w-[1600px] rounded-3xl text-white border border-white/10 px-6 flex items-center justify-between select-none transition-all duration-1000 backdrop-blur-3xl bg-black/40 shadow-2xl shadow-black/50"
+      >
       {/* 1. LEFT SECTION: Track Info */}
       <div className="flex items-center gap-3 w-[30%] min-w-[200px]">
         <div className="w-14 h-14 rounded-lg overflow-hidden bg-zinc-900 border border-white/5 flex-shrink-0 shadow-md shadow-black/40">
@@ -200,11 +200,11 @@ export const BottomPlayerBar: React.FC = () => {
           <button 
             onClick={() => toggleLikeTrack(currentTrack)}
             className={`p-2 rounded-full hover:bg-white/5 transition-all ${
-              isLiked ? 'text-[#1db954]' : 'text-zinc-400 hover:text-white'
+              isLiked ? 'text-[var(--theme-accent)]' : 'text-zinc-400 hover:text-white'
             }`}
             title={isLiked ? 'Remove from Liked' : 'Save to Liked'}
           >
-            {isLiked ? <Check className="w-4 h-4 text-[#1db954]" /> : <Heart className="w-4 h-4" />}
+            {isLiked ? <Check className="w-4 h-4 text-[var(--theme-accent)]" /> : <Heart className="w-4 h-4" />}
           </button>
           
           <div className="relative">
@@ -231,7 +231,7 @@ export const BottomPlayerBar: React.FC = () => {
                         className="w-full text-left p-2 rounded-lg hover:bg-white/5 text-white truncate flex items-center justify-between"
                       >
                         <span>{pl.name}</span>
-                        {hasTrack && <Check className="w-3.5 h-3.5 text-[#1db954]" />}
+                        {hasTrack && <Check className="w-3.5 h-3.5 text-[var(--theme-accent)]" />}
                       </button>
                     );
                   })}
@@ -260,7 +260,7 @@ export const BottomPlayerBar: React.FC = () => {
           <button 
             onClick={() => setIsShuffle(!isShuffle)}
             className={`p-1 rounded-full transition-all ${
-              isShuffle ? 'text-[#1db954]' : 'text-zinc-400 hover:text-white'
+              isShuffle ? 'text-[var(--theme-accent)]' : 'text-zinc-400 hover:text-white'
             }`}
             title="Shuffle"
           >
@@ -277,13 +277,13 @@ export const BottomPlayerBar: React.FC = () => {
           
           <button 
             onClick={togglePlay}
-            className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all flex-shrink-0"
+            className="w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all flex-shrink-0 group"
             title={isPlaying ? 'Pause' : 'Play'}
           >
             {isPlaying ? (
-              <Pause className="w-4 h-4 fill-current text-black" />
+              <Pause className="w-4.5 h-4.5 fill-current text-black" />
             ) : (
-              <Play className="w-4 h-4 fill-current text-black ml-0.5" />
+              <Play className="w-4.5 h-4.5 fill-current text-black ml-0.5" />
             )}
           </button>
           
@@ -302,13 +302,13 @@ export const BottomPlayerBar: React.FC = () => {
               else setRepeatMode('none');
             }}
             className={`p-1 rounded-full transition-all relative ${
-              repeatMode !== 'none' ? 'text-[#1db954]' : 'text-zinc-400 hover:text-white'
+              repeatMode !== 'none' ? 'text-[var(--theme-accent)]' : 'text-zinc-400 hover:text-white'
             }`}
             title={`Repeat mode: ${repeatMode}`}
           >
             <Repeat className="w-4.5 h-4.5" />
             {repeatMode === 'one' && (
-              <span className="absolute top-[-3px] right-[-3px] text-[7px] font-bold bg-[#1db954] text-black w-2.5 h-2.5 rounded-full flex items-center justify-center font-sans">
+              <span className="absolute top-[-3px] right-[-3px] text-[7px] font-bold bg-[var(--theme-accent)] text-white w-2.5 h-2.5 rounded-full flex items-center justify-center font-sans shadow-sm">
                 1
               </span>
             )}
@@ -350,7 +350,7 @@ export const BottomPlayerBar: React.FC = () => {
             }
           }}
           className={`p-1.5 rounded-md hover:bg-white/5 transition-all ${
-            activeTab === 'lyrics' ? 'text-[#1db954]' : 'text-zinc-400 hover:text-white'
+            activeTab === 'lyrics' ? 'text-[var(--theme-accent)]' : 'text-zinc-400 hover:text-white'
           }`}
           title="Lyrics"
         >
@@ -361,7 +361,7 @@ export const BottomPlayerBar: React.FC = () => {
         <button 
           onClick={() => toggleSidebarView('queue')}
           className={`p-1.5 rounded-md hover:bg-white/5 transition-all ${
-            rightSidebarView === 'queue' ? 'text-[#1db954]' : 'text-zinc-400 hover:text-white'
+            rightSidebarView === 'queue' ? 'text-[var(--theme-accent)]' : 'text-zinc-400 hover:text-white'
           }`}
           title="Queue"
         >
@@ -372,7 +372,7 @@ export const BottomPlayerBar: React.FC = () => {
         <button 
           onClick={() => toggleSidebarView('connect')}
           className={`p-1.5 rounded-md hover:bg-white/5 transition-all ${
-            rightSidebarView === 'connect' ? 'text-[#1db954]' : 'text-zinc-400 hover:text-white'
+            rightSidebarView === 'connect' ? 'text-[var(--theme-accent)]' : 'text-zinc-400 hover:text-white'
           }`}
           title="Connect to a device"
         >
@@ -420,6 +420,7 @@ export const BottomPlayerBar: React.FC = () => {
         >
           <Maximize2 className="w-4.5 h-4.5" />
         </button>
+      </div>
       </div>
     </div>
   );

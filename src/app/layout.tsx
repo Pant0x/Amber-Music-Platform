@@ -8,6 +8,7 @@ import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { PlayerDock } from '@/components/PlayerDock';
 import { BottomPlayerBar } from '@/components/BottomPlayerBar';
 import { LyricsOverlay } from '@/components/LyricsOverlay';
+import { NowPlayingView } from '@/components/NowPlayingView';
 
 import { DatabaseSync } from '@/components/DatabaseSync';
 import { ShareResolver } from '@/components/ShareResolver';
@@ -38,11 +39,18 @@ export default function RootLayout({
       className={`${plusJakarta.variable} h-full antialiased`}
     >
       <body 
-        className="h-[100dvh] w-screen text-zinc-300 font-sans select-none overflow-hidden flex flex-col transition-all duration-1000"
-        style={{ background: 'var(--theme-main-bg, #030303)' }}
+        className="h-[100dvh] w-screen text-zinc-300 font-sans select-none overflow-hidden flex flex-col transition-all duration-1000 bg-black"
       >
+        {/* Apple Music Ambient Glow Layer */}
+        <div 
+          className="fixed inset-0 pointer-events-none transition-colors duration-[2000ms] ease-in-out z-0"
+          style={{
+            background: `radial-gradient(circle at 50% -20%, rgba(var(--theme-ambient-r, 0), var(--theme-ambient-g, 0), var(--theme-ambient-b, 0), 0.15) 0%, transparent 70%)`
+          }}
+        />
+
         {/* Main 2-Panel horizontal layout container */}
-        <div className="flex-1 flex min-w-0 overflow-hidden relative">
+        <div className="flex-1 flex min-w-0 overflow-hidden relative z-10">
           
           {/* 1. Left Navigation Sidebar (Full Height) */}
           <Sidebar />
@@ -55,10 +63,7 @@ export default function RootLayout({
             {/* Bottom 2-Panel split layout (Main Content + Right Player Dock) */}
             <div className="flex-1 flex min-w-0 overflow-hidden relative">
               {/* Main Content Area */}
-              <main 
-                className="flex-1 overflow-hidden relative flex flex-col transition-all duration-1000"
-                style={{ background: 'var(--theme-main-bg, #030303)' }}
-              >
+              <main className="flex-1 overflow-hidden relative flex flex-col transition-all duration-1000 bg-transparent">
                 <div className="flex-1 overflow-y-auto px-6 py-6 pb-24 select-none custom-scrollbar relative">
                   {/* Dynamic Ambient Background Orbs – color shifts with the currently playing track */}
                   <div 
@@ -77,14 +82,15 @@ export default function RootLayout({
                 <LyricsOverlay />
               </main>
 
-              {/* Persistent Right Player Dock */}
-              <PlayerDock />
             </div>
 
             {/* Mobile Bottom Navigation Bar */}
             <MobileBottomNav />
           </div>
         </div>
+
+        {/* Fullscreen Immersive Player */}
+        <NowPlayingView />
 
         {/* Bottom Horizontal Player controls bar */}
         <BottomPlayerBar />

@@ -71,19 +71,18 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
     return (
       <AnimatedPage className="space-y-6">
         <div 
-          className="flex flex-col md:flex-row items-end gap-6 -mx-6 p-6 pt-12 transition-all duration-1000"
-          style={{ backgroundImage: 'linear-gradient(to bottom, rgba(179, 0, 0, 0.2), var(--theme-main-bg, #030303))' }}
+          className="flex flex-col md:flex-row items-end gap-6 -mx-6 p-6 pt-12 transition-all duration-1000 bg-transparent"
         >
-          <div className="w-48 h-48 bg-gradient-to-br from-[#ff0000] to-[#b30000] rounded-lg flex items-center justify-center shadow-2xl border border-white/10 flex-shrink-0 animate-pulse">
-            <Heart className="w-20 h-20 text-white fill-current" />
+          <div className="w-56 h-56 bg-gradient-to-br from-[var(--theme-accent)] to-[#b30000] rounded-2xl flex items-center justify-center shadow-2xl border border-white/10 flex-shrink-0">
+            <Heart className="w-24 h-24 text-white fill-current" />
           </div>
-          <div className="space-y-2 min-w-0">
-            <span className="text-xs font-bold text-[#ff0000] uppercase tracking-widest font-mono">Auto Playlist</span>
-            <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight truncate">
+          <div className="space-y-2 min-w-0 pb-2">
+            <span className="text-[13px] font-bold text-[var(--theme-accent)] uppercase tracking-widest">Playlist</span>
+            <h1 className="text-4xl md:text-6xl font-extrabold text-white tracking-tight truncate pb-1">
               Liked Music
             </h1>
-            <div className="text-xs text-zinc-400 font-semibold flex items-center gap-1.5">
-              <span>Guest</span>
+            <div className="text-sm text-zinc-400 font-medium flex items-center gap-2">
+              <span className="text-white">Cloud Music</span>
               <span>•</span>
               <span>{likedTracks.length} songs</span>
             </div>
@@ -94,9 +93,9 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
         {likedTracks.length > 0 && (
           <button
             onClick={() => handlePlayAction(likedTracks[0], likedTracks)}
-            className="flex items-center gap-2 bg-[#ff0000] hover:bg-[#cc0000] text-white px-5 py-2.5 rounded-full font-bold text-xs shadow-lg uppercase tracking-wider"
+            className="flex items-center gap-2 bg-[var(--theme-accent)] hover:opacity-80 text-white px-8 py-3 rounded-full font-bold text-[13px] shadow-lg transition-opacity"
           >
-            <Play className="w-4 h-4 fill-current text-white" /> Play
+            <Play className="w-5 h-5 fill-current text-white" /> Play
           </button>
         )}
 

@@ -373,8 +373,8 @@ export const NowPlayingView: React.FC = () => {
 
   return (
     <div
-      className={`absolute inset-0 bg-[#030303] z-30 transition-all duration-300 ease-in-out flex flex-col overflow-hidden select-none ${
-        showNowPlaying ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'
+      className={`absolute inset-0 bg-transparent z-40 transition-all duration-500 ease-out flex flex-col overflow-hidden select-none ${
+        showNowPlaying ? 'translate-y-0 opacity-100' : 'translate-y-[20px] opacity-0 pointer-events-none'
       }`}
     >
       {/* Dynamic Blurred Ambient Background Art */}
@@ -386,20 +386,20 @@ export const NowPlayingView: React.FC = () => {
             e.currentTarget.onerror = null;
             e.currentTarget.src = currentTrack.thumbnailUrl || '';
           }}
-          className="absolute inset-0 w-full h-full object-cover blur-[120px] opacity-30 scale-125 transition-all duration-1000"
+          className="absolute inset-0 w-full h-full object-cover blur-[100px] saturate-[1.5] opacity-90 scale-[1.2] transition-all duration-1000"
           alt=""
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-[#030303]/90 to-[#030303]/85" />
+        <div className="absolute inset-0 bg-black/30" />
       </div>
 
       {/* Header bar */}
-      <header className="h-16 px-6 flex items-center justify-between z-10 flex-shrink-0 border-b border-white/5 bg-[#030303]/40 backdrop-blur-md">
+      <header className="h-16 px-6 flex items-center justify-between z-10 flex-shrink-0 bg-transparent">
         <button 
           onClick={() => setShowNowPlaying(false)} 
-          className="p-2 hover:bg-white/10 rounded-full transition-colors flex-shrink-0 text-zinc-400 hover:text-white"
+          className="p-2 hover:bg-white/10 rounded-full transition-colors flex-shrink-0 text-white/70 hover:text-white"
           title="Minimize player"
         >
-          <ChevronDown className="w-6 h-6" />
+          <ChevronDown className="w-8 h-8 drop-shadow-md" />
         </button>
 
         {/* Video vs Song Toggle Pill */}

@@ -81,10 +81,10 @@ export const HomeView: React.FC = () => {
 
       {/* Quick Picks grid (YT Music layout) */}
       <div className="space-y-4">
-        <div className="flex items-end justify-between">
+        <div className="flex items-end justify-between pt-6">
           <div>
-            <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">Start Radio from a song</p>
-            <h2 className="text-xl font-bold text-white tracking-tight">Quick picks</h2>
+            <p className="text-xs font-bold text-[var(--theme-accent)] uppercase tracking-widest mb-1">Made For You</p>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">Listen Now</h2>
           </div>
           <button
             onClick={loadRecommendations}
