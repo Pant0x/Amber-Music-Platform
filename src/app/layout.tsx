@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { Providers } from './providers'
 import { MediaDeck } from '@/components/MediaDeck';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
@@ -41,6 +42,7 @@ export default function RootLayout({
       <body 
         className="h-[100dvh] w-screen text-zinc-300 font-sans select-none overflow-hidden flex flex-col transition-all duration-1000 bg-black"
       >
+        <Providers>
         {/* Apple Music Ambient Glow Layer */}
         <div 
           className="fixed inset-0 pointer-events-none transition-colors duration-[2000ms] ease-in-out z-0"
@@ -104,7 +106,8 @@ export default function RootLayout({
         </Suspense>
         <ShareModal />
         <GlobalThemeSetter />
-      </body>
+      </Providers>
+    </body>
     </html>
   );
 }
