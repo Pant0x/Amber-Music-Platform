@@ -249,17 +249,6 @@ export async function GET(request: Request) {
     let syncedLines: { text: string; time: number }[] = [];
     let isSynced = false;
 
-    // --- LAYER 0: OFFICIAL YOUTUBE MUSIC LYRICS ---
-    try {
-      const ytLyrics = await fetchOfficialYTMusicLyrics(videoId, cleanTitle, cleanArtist);
-      if (ytLyrics) {
-        lyricsText = ytLyrics;
-        console.log('[API Lyrics] Successfully fetched lyrics from YouTube Music API!');
-      }
-    } catch (err) {
-      console.error('[API Lyrics] Error in YouTube Music lyrics fetch layer:', err);
-    }
-
     // --- LAYER 1: LRCLIB EXACT GET ---
     try {
       const lrcGetUrl = `https://lrclib.net/api/get?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}`;
@@ -275,6 +264,7 @@ export async function GET(request: Request) {
           syncedLines = parseLrc(lrcData.syncedLyrics);
           lyricsText = lrcData.syncedLyrics;
           isSynced = true;
+          console.log('[API Lyrics] Successfully fetched synced lyrics from LRCLIB EXACT GET!');
         } else if (lrcData.plainLyrics) {
           lyricsText = lrcData.plainLyrics;
         }
@@ -284,7 +274,7 @@ export async function GET(request: Request) {
     }
 
     // --- LAYER 2: LRCLIB SEARCH QUERY ---
-    if (!lyricsText) {
+    if (!isSynced) {
       try {
         const query = `${cleanArtist} ${cleanTitle}`;
         const searchRes = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(query)}`, {
@@ -296,12 +286,14 @@ export async function GET(request: Request) {
         if (searchRes.ok) {
           const searchData = await searchRes.json();
           if (searchData && searchData.length > 0) {
-            const bestMatch = searchData[0];
+            // Prefer an item that has syncedLyrics
+            const bestMatch = searchData.find((item: any) => item.syncedLyrics) || searchData[0];
             if (bestMatch.syncedLyrics) {
               syncedLines = parseLrc(bestMatch.syncedLyrics);
               lyricsText = bestMatch.syncedLyrics;
               isSynced = true;
-            } else if (bestMatch.plainLyrics) {
+              console.log('[API Lyrics] Successfully fetched synced lyrics from LRCLIB SEARCH QUERY!');
+            } else if (bestMatch.plainLyrics && !lyricsText) {
               lyricsText = bestMatch.plainLyrics;
             }
           }
@@ -311,11 +303,25 @@ export async function GET(request: Request) {
       }
     }
 
-    // --- LAYER 3: GENIUS WEB SCRAPER FALLBACK ---
+    // --- LAYER 3: OFFICIAL YOUTUBE MUSIC LYRICS FALLBACK ---
+    if (!lyricsText) {
+      try {
+        const ytLyrics = await fetchOfficialYTMusicLyrics(videoId, cleanTitle, cleanArtist);
+        if (ytLyrics) {
+          lyricsText = ytLyrics;
+          console.log('[API Lyrics] Successfully fetched fallback lyrics from YouTube Music API!');
+        }
+      } catch (err) {
+        console.error('[API Lyrics] Error in YouTube Music lyrics fetch layer:', err);
+      }
+    }
+
+    // --- LAYER 4: GENIUS WEB SCRAPER FALLBACK ---
     if (!lyricsText) {
       const geniusText = await fetchLyricsFromGenius(cleanArtist, cleanTitle);
       if (geniusText) {
         lyricsText = geniusText;
+        console.log('[API Lyrics] Successfully fetched fallback lyrics from Genius!');
       }
     }
 

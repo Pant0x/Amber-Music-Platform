@@ -185,23 +185,20 @@ export const BigLyricsView: React.FC = () => {
                       setSeekTrigger(line.time);
                     }
                   }}
-                  className={`text-2xl md:text-4xl lg:text-[2.75rem] font-extrabold leading-[1.15] tracking-tight px-3 py-2 rounded-xl border border-transparent transition-all duration-700 ease-out origin-left ${
+                  className={`text-2xl md:text-4xl lg:text-[2.75rem] font-black leading-[1.2] tracking-tight px-3 py-2 rounded-xl transition-all duration-500 ease-out origin-left select-text ${
                     isClickable ? 'cursor-pointer' : 'cursor-default'
                   } ${
                     !isSynced 
-                      ? 'text-white/90 opacity-100' 
+                      ? 'text-white/90' 
                       : isActive
-                        ? 'text-white scale-[1.02] opacity-100 drop-shadow-xl'
+                        ? 'text-white scale-[1.03] opacity-100 font-extrabold'
                         : isPast
-                          ? 'text-white/40 opacity-100 scale-100'
-                          : 'text-white/60 opacity-100 scale-100 hover:text-white/80'
+                          ? 'text-white/25 scale-[0.97] font-semibold'
+                          : 'text-white/45 scale-[0.97] hover:scale-[0.99] hover:text-white/75 font-semibold'
                   }`}
-                  style={isActive ? { 
-                    textShadow: '0 4px 20px rgba(0,0,0,0.4), 0 0 60px rgba(var(--theme-ambient-r, 255), var(--theme-ambient-g, 255), var(--theme-ambient-b, 255), 0.1)',
-                    filter: 'blur(0px)'
-                  } : { 
-                    filter: !isSynced ? 'blur(0px)' : isPast ? 'blur(1.5px)' : 'blur(0.5px)'
-                  }}
+                  style={isActive ? {
+                    textShadow: '0 0 40px rgba(255,255,255,0.15)'
+                  } : undefined}
                 >
                   {line.text}
                 </p>
