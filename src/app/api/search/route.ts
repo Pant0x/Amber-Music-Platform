@@ -17,62 +17,106 @@ export async function GET(request: Request) {
     return isSpecialSearch ? origQuery : `${origQuery} Official Audio`;
   };
 
-  // YouTube Music search fallback
-  // YouTube Music search fallback
   const runYoutubeSearchFallback = async () => {
-    console.log('[Search API] Falling back to YouTube Music search...');
-    const [ytMusicData, ytArtistsData] = await Promise.all([
-      ytMusicSearch(getSearchQueryWithAudioSuffix(query)),
-      ytMusicSearch(query)
-    ]);
+    console.log('[Search API] Falling back to YouTube Music search (ytmusic-api)...');
+    try {
+      const YTMusic = (await import('ytmusic-api')).default;
+      const yt = new YTMusic();
+      await yt.initialize();
 
-    let artists = ytArtistsData.artists || [];
+      const [ytSongsRes, ytArtistsRes, ytAlbumsRes] = await Promise.all([
+        yt.searchSongs(query).catch(() => []),
+        yt.searchArtists(query).catch(() => []),
+        yt.searchAlbums(query).catch(() => [])
+      ]);
 
-    const cleanQuery = query.toLowerCase().trim();
-    if (cleanQuery === 'fairuz' || cleanQuery === 'fairouz' || cleanQuery === 'fayrouz' || cleanQuery === 'فيروز') {
-      const hasLebanese = artists.some((a: any) => a.id === 'UCzixfFiEFMjhSB3R9UdUdsA');
-      if (!hasLebanese) {
-        artists.unshift({
-          id: 'UCzixfFiEFMjhSB3R9UdUdsA',
-          title: 'Fairuz',
-          channelTitle: 'Artist',
-          thumbnailUrl: 'https://yt3.googleusercontent.com/ZIONSAndglfiCvZdwa0CNCrUFWN6EUvhQxyY6MtqRzzuZQYeg27M80K0LAikAZkmWcTgbSXXkA=w1000-h1000-l90-rj',
-          subtitle: 'Legendary Lebanese Singer',
-          publishedAt: new Date().toISOString(),
-          type: 'channel',
-          origin: 'youtube',
-          channelId: 'UCzixfFiEFMjhSB3R9UdUdsA'
-        });
+      let artists = ytArtistsRes.map((a: any) => ({
+        id: a.artistId,
+        title: a.name,
+        channelTitle: 'Artist',
+        thumbnailUrl: a.thumbnails?.[a.thumbnails.length - 1]?.url || '',
+        subtitle: 'Artist',
+        publishedAt: new Date().toISOString(),
+        type: 'channel',
+        origin: 'youtube',
+        channelId: a.artistId
+      }));
+
+      const cleanQuery = query.toLowerCase().trim();
+      if (cleanQuery === 'fairuz' || cleanQuery === 'fairouz' || cleanQuery === 'fayrouz' || cleanQuery === 'فيروز') {
+        const hasLebanese = artists.some((a: any) => a.id === 'UCzixfFiEFMjhSB3R9UdUdsA');
+        if (!hasLebanese) {
+          artists.unshift({
+            id: 'UCzixfFiEFMjhSB3R9UdUdsA',
+            title: 'Fairuz',
+            channelTitle: 'Artist',
+            thumbnailUrl: 'https://yt3.googleusercontent.com/ZIONSAndglfiCvZdwa0CNCrUFWN6EUvhQxyY6MtqRzzuZQYeg27M80K0LAikAZkmWcTgbSXXkA=w1000-h1000-l90-rj',
+            subtitle: 'Legendary Lebanese Singer',
+            publishedAt: new Date().toISOString(),
+            type: 'channel',
+            origin: 'youtube',
+            channelId: 'UCzixfFiEFMjhSB3R9UdUdsA'
+          });
+        }
+        
+        const hasGerman = artists.some((a: any) => a.id === 'german-fairuz');
+        if (!hasGerman) {
+          artists.push({
+            id: 'german-fairuz',
+            title: 'Fairuz (DE)',
+            channelTitle: 'Artist',
+            thumbnailUrl: 'https://yt3.googleusercontent.com/r-nlAuthMmcTD_7SWnkTM0b60SyLjCD7IbWje50Da6lPquj0kEG5cDLabupRrnufiV4muhbbvwgkURv14w=w1000-h1000-l90-rj',
+            subtitle: 'German Pop/Rapper',
+            publishedAt: new Date().toISOString(),
+            type: 'channel',
+            origin: 'youtube',
+            channelId: 'german-fairuz'
+          });
+        }
       }
-      
-      const hasGerman = artists.some((a: any) => a.id === 'german-fairuz');
-      if (!hasGerman) {
-        artists.push({
-          id: 'german-fairuz',
-          title: 'Fairuz (DE)',
-          channelTitle: 'Artist',
-          thumbnailUrl: 'https://yt3.googleusercontent.com/r-nlAuthMmcTD_7SWnkTM0b60SyLjCD7IbWje50Da6lPquj0kEG5cDLabupRrnufiV4muhbbvwgkURv14w=w1000-h1000-l90-rj',
-          subtitle: 'German Pop/Rapper',
-          publishedAt: new Date().toISOString(),
-          type: 'channel',
-          origin: 'youtube',
-          channelId: 'german-fairuz'
-        });
-      }
+
+      let songs = ytSongsRes.map((s: any) => ({
+        id: s.videoId,
+        title: s.name,
+        channelTitle: s.artist?.name || 'Unknown',
+        thumbnailUrl: s.thumbnails?.[s.thumbnails.length - 1]?.url || '',
+        publishedAt: new Date().toISOString(),
+        type: 'music',
+        origin: 'youtube',
+        playbackMode: 'song',
+        artistId: s.artist?.artistId || '',
+        channelId: s.artist?.artistId || '',
+        duration: s.duration,
+        isExplicit: s.isExplicit || false
+      }));
+
+      let albums = ytAlbumsRes.map((al: any) => ({
+        id: al.albumId,
+        title: al.name,
+        channelTitle: al.artist?.name || 'Unknown',
+        thumbnailUrl: al.thumbnails?.[al.thumbnails.length - 1]?.url || '',
+        publishedAt: new Date().toISOString(),
+        type: 'playlist',
+        releaseType: al.type || 'Album',
+        origin: 'youtube',
+        artistId: al.artist?.artistId || ''
+      }));
+
+      const topResult = artists.length > 0 && query.toLowerCase().includes(artists[0].title.toLowerCase())
+        ? { ...artists[0], resultType: 'artist' }
+        : songs.length > 0 ? { ...songs[0], resultType: 'song' } : null;
+
+      return NextResponse.json({
+        topResult,
+        songs: songs.slice(0, 20),
+        artists: artists.slice(0, 10),
+        albums: albums.slice(0, 10),
+        communityPlaylists: []
+      });
+    } catch (e) {
+      console.error('[Search API ytmusic-api] Error:', e);
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
-
-    // Determine top result: prefer the artist if the raw search query yielded an artist top result
-    const topResult = (ytArtistsData.topResult && (ytArtistsData.topResult.type === 'channel' || ytArtistsData.topResult.resultType === 'artist'))
-      ? ytArtistsData.topResult
-      : ytMusicData.topResult;
-
-    return NextResponse.json(cleanTopicGlobally({
-      topResult,
-      songs: ytMusicData.songs?.slice(0, 20) || [],
-      artists: artists.slice(0, 10),
-      albums: ytMusicData.albums?.slice(0, 10) || [],
-      communityPlaylists: ytMusicData.communityPlaylists?.slice(0, 10) || []
-    }));
   };
   // SerpApi YouTube search fallback
   const runSerpApiSearch = async () => {

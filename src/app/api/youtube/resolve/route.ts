@@ -1,11 +1,24 @@
 import { NextResponse } from 'next/server';
-import { ytMusicSearch } from '@/lib/youtubei';
-import ytAdapter from '@/lib/yt-music-adapter';
+import YTMusic from 'ytmusic-api';
 import { isCorrectMatch, isArtistMatch } from '@/lib/match-utils';
 
 const resolveCache = new Map<string, string>();
-// Bump this version to instantly invalidate all previously cached resolve results.
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v5'; // bumped for ytmusic-api pure audio resolution
+
+let ytmusic: YTMusic | null = null;
+let ytmusicInitPromise: Promise<any> | null = null;
+
+async function getYTMusic() {
+  if (!ytmusic) {
+    ytmusic = new YTMusic();
+    ytmusicInitPromise = ytmusic.initialize();
+  }
+  if (ytmusicInitPromise) {
+    await ytmusicInitPromise;
+    ytmusicInitPromise = null;
+  }
+  return ytmusic;
+}
 
 export async function GET(request: Request) {
   try {
@@ -21,12 +34,12 @@ export async function GET(request: Request) {
     const isExplicitRequest = searchParams.get('explicit') === 'true';
     const album = searchParams.get('album');
 
-    // Use only the primary artist for search queries (first name when comma-separated or featured)
+    // Use only the primary artist for search queries
     const primaryArtist = artist
       .split(/,|\s+&\s+|\s+feat\.?\s+|\s+ft\.?\s+/i)[0]
       .trim();
     
-    // Check resolve cache (versioned to auto-invalidate stale entries)
+    // Check resolve cache
     const cacheKey = `${CACHE_VERSION}_${artist.toLowerCase().trim()}_${title.toLowerCase().trim()}_${album?.toLowerCase().trim() || ''}_${mode}_${isExplicitRequest}`;
     if (resolveCache.has(cacheKey)) {
       const cachedData = resolveCache.get(cacheKey);
@@ -41,162 +54,92 @@ export async function GET(request: Request) {
       }
     }
 
-    let query = mode === 'video' 
-      ? `${primaryArtist} ${title} Official Video` 
-      : `${primaryArtist} ${title} ${album ? album + ' ' : ''}${isExplicitRequest ? 'Explicit ' : ''}Topic`;
-    console.log(`[Resolve API] Searching YouTube Music for (${mode}): "${query}"`);
-    let searchData = await ytMusicSearch(query);
+    const yt = await getYTMusic();
+    
+    // Initial query
+    const query = `${primaryArtist} ${title} ${album ? album : ''} ${isExplicitRequest ? 'Explicit' : ''}`.trim();
+    console.log(`[Resolve API ytmusic-api] Searching (${mode}): "${query}"`);
 
-    // Fallback if no songs found with the specific query (e.g. if the album name caused no results)
-    if (album && mode === 'song' && (!searchData.songs || searchData.songs.length === 0)) {
-      query = `${primaryArtist} ${title} ${isExplicitRequest ? 'Explicit ' : ''}Topic`;
-      console.log(`[Resolve API] Fallback search without album name: "${query}"`);
-      searchData = await ytMusicSearch(query);
+    let results: any[] = [];
+    if (mode === 'video') {
+      results = await yt.searchVideos(query);
+    } else {
+      results = await yt.searchSongs(query);
     }
 
-    // Fallback if no songs found with the explicit query keyword
-    if (isExplicitRequest && mode === 'song' && (!searchData.songs || searchData.songs.length === 0)) {
-      query = `${primaryArtist} ${title} Topic`;
-      console.log(`[Resolve API] Fallback search without explicit keyword: "${query}"`);
-      searchData = await ytMusicSearch(query);
+    // Fallback search without album/explicit if no results found
+    if (results.length === 0) {
+      const fallbackQuery = `${primaryArtist} ${title}`;
+      console.log(`[Resolve API ytmusic-api] Fallback search: "${fallbackQuery}"`);
+      results = mode === 'video' ? await yt.searchVideos(fallbackQuery) : await yt.searchSongs(fallbackQuery);
     }
-
-    const findBestInGroup = (group: any[]) => {
-      const firstItem = group[0];
-      const baseTitle = firstItem.title.toLowerCase().replace(/\b(clean|censored|radio\s+edit|explicit)\b/gi, '').replace(/\[.*\]|\(.*\)/g, '').trim();
-      
-      // Prefer explicit version if requested, otherwise prefer non-clean version
-      if (isExplicitRequest) {
-        const explicitMatch = group.slice(0, 5).find((i: any) => {
-          const iTitle = i.title.toLowerCase().replace(/\b(clean|censored|radio\s+edit|explicit)\b/gi, '').replace(/\[.*\]|\(.*\)/g, '').trim();
-          return iTitle === baseTitle && i.isExplicit;
-        });
-        if (explicitMatch) return explicitMatch;
-      }
-
-      const uncensoredMatch = group.slice(0, 5).find((i: any) => {
-        const iTitle = i.title.toLowerCase().replace(/\b(clean|censored|radio\s+edit|explicit)\b/gi, '').replace(/\[.*\]|\(.*\)/g, '').trim();
-        return iTitle === baseTitle && !/\b(clean|censored|radio\s+edit)\b/i.test(i.title);
-      });
-      return uncensoredMatch || firstItem;
-    };
-
-    const selectBestFromGroup = (group: any[]) => {
-      if (mode === 'song') {
-        // PRIMARY FILTER: isTopicAudio flag (detected from raw subtitle before '- Topic' is stripped).
-        // Topic channel audio is the authoritative audio release on YouTube Music.
-        const topicItems = group.filter(i => i.isTopicAudio === true);
-        if (topicItems.length > 0) {
-          console.log(`[Resolve API] Found ${topicItems.length} Topic channel audio result(s)`);
-          return findBestInGroup(topicItems);
-        }
-
-        // SECONDARY FILTER: exclude VEVO and official artist channels
-        const audioItems = group.filter(i => 
-          !i.channelTitle.toLowerCase().includes('vevo') &&
-          !i.channelTitle.toLowerCase().includes('official')
-        );
-        if (audioItems.length > 0) {
-          console.log(`[Resolve API] No Topic results, using ${audioItems.length} non-VEVO audio result(s)`);
-          return findBestInGroup(audioItems);
-        }
-      } else if (mode === 'video') {
-        const clipItems = group.filter(i => !i.isTopicAudio);
-        if (clipItems.length > 0) return findBestInGroup(clipItems);
-      }
-      return findBestInGroup(group);
-    };
 
     const getBestMatch = (items: any[]) => {
       // Step 1: filter by title and artist correctness
-      const validItems = items.filter(i => isCorrectMatch(title, i.title) && isArtistMatch(artist, i.channelTitle));
+      const validItems = items.filter(i => isCorrectMatch(title, i.name) && isArtistMatch(artist, i.artist?.name || ''));
       if (!validItems || validItems.length === 0) return null;
       
       // Step 2: if album context is provided, STRICTLY require album match.
-      // This is critical for disambiguating duplicate-named songs (e.g. Yeat has 2 songs
-      // named "Back Home" on different albums — without this filter we'd always get the wrong one).
       if (album) {
         const cleanRequestedAlbum = album.toLowerCase().replace(/[^a-z0-9]/g, '');
         const albumMatchItems = validItems.filter(i => {
-          if (!i.albumName) return false;
-          const cleanItemAlbum = i.albumName.toLowerCase().replace(/[^a-z0-9]/g, '');
+          if (!i.album?.name) return false;
+          const cleanItemAlbum = i.album.name.toLowerCase().replace(/[^a-z0-9]/g, '');
           return cleanItemAlbum.includes(cleanRequestedAlbum) || cleanRequestedAlbum.includes(cleanItemAlbum);
         });
         
         if (albumMatchItems.length > 0) {
-          console.log(`[Resolve API] Album filter matched ${albumMatchItems.length} item(s) for album "${album}"`);
-          return selectBestFromGroup(albumMatchItems);
+          console.log(`[Resolve API ytmusic-api] Album filter matched ${albumMatchItems.length} item(s)`);
+          return albumMatchItems[0];
         }
         
-        // If no album-matched items (some songs don't have albumName in search results),
-        // fall through to unfiltered validItems only as last resort.
-        console.log(`[Resolve API] No album-matched items for "${album}", falling back to artist+title match`);
+        console.log(`[Resolve API ytmusic-api] No album-matched items for "${album}", falling back to artist+title match`);
       }
 
-      return selectBestFromGroup(validItems);
+      return validItems[0];
     };
 
-    let videoId = '';
-    let trackMatch: any = null;
+    let match = getBestMatch(results);
     
-    if (mode === 'video') {
-      if (searchData.videos && searchData.videos.length > 0) {
-        const match = getBestMatch(searchData.videos);
-        if (match) {
-          videoId = match.id;
-          trackMatch = match;
-          console.log(`[Resolve API] Found video clip match: "${match.title}" with videoId: ${videoId}`);
+    // Fallback loosely just based on exact title match if all else fails
+    if (!match && results.length > 0) {
+        const looseMatch = results.find(i => isCorrectMatch(title, i.name));
+        if (looseMatch) {
+            match = looseMatch;
+            console.log(`[Resolve API ytmusic-api] Fallback to loose title match: ${match.name}`);
+        } else {
+            // Absolute fallback to top result
+            match = results[0];
+            console.log(`[Resolve API ytmusic-api] Absolute fallback to top result: ${match.name}`);
         }
-      }
-      if (!videoId && searchData.topResult && (searchData.topResult.type === 'video' || searchData.topResult.resultType === 'video')) {
-        if (isCorrectMatch(title, searchData.topResult.title) && isArtistMatch(artist, searchData.topResult.channelTitle || searchData.topResult.author)) {
-          videoId = searchData.topResult.id;
-          trackMatch = searchData.topResult;
-          console.log(`[Resolve API] Found top result video match: "${searchData.topResult.title}" with videoId: ${videoId}`);
-        }
-      }
-      if (!videoId && searchData.songs && searchData.songs.length > 0) {
-        const match = getBestMatch(searchData.songs);
-        if (match) {
-          videoId = match.id;
-          trackMatch = match;
-          console.log(`[Resolve API] Fallback to song match for video: "${match.title}" with videoId: ${videoId}`);
-        }
-      }
-    } else {
-      if (searchData.songs && searchData.songs.length > 0) {
-        const match = getBestMatch(searchData.songs);
-        if (match) {
-          videoId = match.id;
-          trackMatch = match;
-          console.log(`[Resolve API] Found song match: "${match.title}" with videoId: ${videoId}`);
-        }
-      }
-      if (!videoId && searchData.topResult && (searchData.topResult.type === 'music' || searchData.topResult.resultType === 'song')) {
-        if (isCorrectMatch(title, searchData.topResult.title) && isArtistMatch(artist, searchData.topResult.channelTitle || searchData.topResult.author)) {
-          videoId = searchData.topResult.id;
-          trackMatch = searchData.topResult;
-          console.log(`[Resolve API] Found top result match: "${searchData.topResult.title}" with videoId: ${videoId}`);
-        }
-      }
-      // Removed fallback to searchData.videos to strictly avoid playing music videos when song mode is requested.
     }
 
-    if (videoId) {
-      const responseData = { videoId, track: trackMatch };
+    if (match) {
+      // Normalize match object back into expected frontend format
+      const normalizedTrack = {
+        id: match.videoId,
+        title: match.name,
+        channelTitle: match.artist?.name || 'Unknown',
+        thumbnailUrl: match.thumbnails?.[match.thumbnails.length - 1]?.url || '',
+        isExplicit: (match as any).isExplicit || isExplicitRequest, // Approximate explicit badge if matched from explicit query
+        duration: match.duration,
+        albumName: match.album?.name
+      };
+
+      const responseData = { videoId: match.videoId, track: normalizedTrack };
       resolveCache.set(cacheKey, JSON.stringify(responseData));
-      // Optional: limit cache size
       if (resolveCache.size > 500) {
         const firstKey = resolveCache.keys().next().value;
         if (firstKey) resolveCache.delete(firstKey);
       }
       return NextResponse.json(responseData);
     } else {
-      console.log(`[Resolve API] No matches found, returning fallback empty`);
+      console.log(`[Resolve API ytmusic-api] No matches found, returning fallback empty`);
       return NextResponse.json({ videoId: null });
     }
   } catch (error: any) {
-    console.error('[Resolve API] Error resolving track to YouTube ID:', error);
+    console.error('[Resolve API ytmusic-api] Error resolving track:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
