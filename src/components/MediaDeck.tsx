@@ -559,6 +559,9 @@ export const MediaDeck: React.FC = () => {
     setShowNowPlaying(!showNowPlaying);
   };
 
+  const isTopicChannel = currentTrack?.channelTitle?.toLowerCase().includes('topic');
+  const trackNeedsResolve = currentTrack && !currentTrack.youtubeId && (currentTrack.origin !== 'youtube' || !isTopicChannel);
+
   return (
     <div 
       className="fixed z-50 rounded-2xl overflow-hidden pointer-events-none"
@@ -573,8 +576,14 @@ export const MediaDeck: React.FC = () => {
     >
       <ReactPlayer
         ref={playerRef}
-        url={currentTrack.youtubeId ? `https://www.youtube.com/watch?v=${currentTrack.youtubeId}` : currentTrack.origin === 'spotify' ? '' : `https://www.youtube.com/watch?v=${currentTrack.id}`}
-        playing={isPlaying && (currentTrack.origin !== 'spotify' || !!currentTrack.youtubeId)}
+        url={
+          currentTrack.youtubeId 
+            ? `https://www.youtube.com/watch?v=${currentTrack.youtubeId}` 
+            : (trackNeedsResolve || currentTrack.origin === 'spotify') 
+              ? '' 
+              : `https://www.youtube.com/watch?v=${currentTrack.id}`
+        }
+        playing={isPlaying && !trackNeedsResolve && (currentTrack.origin !== 'spotify' || !!currentTrack.youtubeId)}
         volume={volume}
         muted={isMuted}
         onProgress={handlePlayerProgress}
