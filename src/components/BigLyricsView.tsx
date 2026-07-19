@@ -135,7 +135,7 @@ export const BigLyricsView: React.FC = () => {
 
   return (
     <div 
-      className="absolute inset-0 flex flex-col select-none overflow-hidden z-40 animate-scale-in"
+      className="absolute inset-0 flex flex-col select-none overflow-hidden z-40 animate-scale-in bg-zinc-950"
     >
       {/* Immersive blurred album cover background - Apple Music style */}
       {currentTrack.thumbnailUrl && (
@@ -167,12 +167,13 @@ export const BigLyricsView: React.FC = () => {
           <div
             ref={containerRef}
             onScroll={handleUserScroll}
-            className="flex-1 overflow-y-auto space-y-5 no-scrollbar py-[40vh] text-left select-text relative"
+            className={`flex-1 overflow-y-auto space-y-5 no-scrollbar py-[40vh] select-text relative ${globalLyricsData.isSynced ? 'text-left' : 'text-center max-w-4xl mx-auto'}`}
           >
             {globalLyricsData.lines.map((line, idx) => {
-              const isActive = idx === activeLineIndex;
-              const isPast = idx < activeLineIndex;
-              const isClickable = globalLyricsData.isSynced && line.time !== -999;
+              const isSynced = globalLyricsData.isSynced;
+              const isActive = isSynced && idx === activeLineIndex;
+              const isPast = isSynced && idx < activeLineIndex;
+              const isClickable = isSynced && line.time !== -999;
               
               return (
                 <p
@@ -187,11 +188,13 @@ export const BigLyricsView: React.FC = () => {
                   className={`text-2xl md:text-4xl lg:text-[2.75rem] font-extrabold leading-[1.15] tracking-tight px-3 py-2 rounded-xl border border-transparent transition-all duration-500 ease-out ${
                     isClickable ? 'cursor-pointer' : 'cursor-default'
                   } ${
-                    isActive
-                      ? 'text-white scale-[1.015] opacity-100'
-                      : isPast
-                        ? 'text-white/20 opacity-40'
-                        : 'text-white/25 opacity-35 hover:opacity-60 hover:text-white/40'
+                    !isSynced 
+                      ? 'text-white/90 opacity-100' // Unsynced: fully bright
+                      : isActive
+                        ? 'text-white scale-[1.015] opacity-100'
+                        : isPast
+                          ? 'text-white/20 opacity-40'
+                          : 'text-white/25 opacity-35 hover:opacity-60 hover:text-white/40'
                   }`}
                   style={isActive ? { 
                     textShadow: '0 4px 20px rgba(0,0,0,0.6), 0 0 60px rgba(var(--theme-ambient-r, 255), var(--theme-ambient-g, 255), var(--theme-ambient-b, 255), 0.1)',
