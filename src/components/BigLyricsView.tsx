@@ -187,22 +187,22 @@ export const BigLyricsView: React.FC = () => {
                       setSeekTrigger(line.time);
                     }
                   }}
-                  className={`text-2xl md:text-4xl lg:text-[2.75rem] font-black px-3 py-3 rounded-xl transition-all duration-500 ease-out select-text ${
+                  className={`text-2xl md:text-4xl lg:text-[2.75rem] px-3 py-3 rounded-xl transition-all duration-500 ease-out select-text ${
                     isArabic 
-                      ? 'tracking-normal leading-[1.45] text-right origin-right' 
+                      ? 'font-bold tracking-normal leading-[1.45] text-right origin-right' 
                       : isSynced 
-                        ? 'tracking-tight leading-[1.2] text-left origin-left' 
-                        : 'tracking-tight leading-[1.2] text-center'
+                        ? 'font-black tracking-tight leading-[1.2] text-left origin-left' 
+                        : 'font-black tracking-tight leading-[1.2] text-center'
                   } ${
                     isClickable ? 'cursor-pointer' : 'cursor-default'
                   } ${
                     !isSynced 
                       ? 'text-white/90' 
                       : isActive
-                        ? 'text-white scale-[1.03] opacity-100 font-extrabold'
+                        ? 'text-white scale-[1.03] opacity-100'
                         : isPast
-                          ? 'text-white/25 scale-[0.97] font-semibold'
-                          : 'text-white/45 scale-[0.97] hover:scale-[0.99] hover:text-white/75 font-semibold'
+                          ? 'text-white/25 scale-[0.97]'
+                          : 'text-white/45 scale-[0.97] hover:scale-[0.99] hover:text-white/75'
                   }`}
                   style={isActive ? {
                     textShadow: '0 0 40px rgba(255,255,255,0.15)'

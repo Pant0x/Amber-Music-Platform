@@ -337,8 +337,15 @@ export async function GET(request: Request) {
 
         if (searchData && searchData.length > 0) {
           let matchedItem = null;
+          
+          // First pass: look for a verified match with synced lyrics
           for (const item of searchData) {
-            if (item.syncedLyrics) {
+            const trackName = item.trackName || item.name || '';
+            const artistName = item.artistName || '';
+            const titleMatch = isCorrectMatch(cleanTitle, trackName);
+            const artistMatch = isArtistMatch(cleanArtist, artistName);
+            
+            if (titleMatch && artistMatch && item.syncedLyrics) {
               const parsed = parseAndVerifyLrc(item.syncedLyrics);
               if (parsed) {
                 matchedItem = { item, parsed };
@@ -347,14 +354,31 @@ export async function GET(request: Request) {
             }
           }
 
+          // Second pass: look for a verified match with plain lyrics if no synced match found
+          if (!matchedItem) {
+            for (const item of searchData) {
+              const trackName = item.trackName || item.name || '';
+              const artistName = item.artistName || '';
+              const titleMatch = isCorrectMatch(cleanTitle, trackName);
+              const artistMatch = isArtistMatch(cleanArtist, artistName);
+              
+              if (titleMatch && artistMatch && (item.plainLyrics || item.syncedLyrics)) {
+                matchedItem = { item, parsed: null };
+                break;
+              }
+            }
+          }
+
           if (matchedItem) {
-            syncedLines = matchedItem.parsed;
-            lyricsText = matchedItem.item.syncedLyrics;
-            isSynced = true;
-            console.log('[API Lyrics] Successfully fetched synced lyrics from LRCLIB SEARCH QUERY!');
-          } else {
-            const bestMatch = searchData[0];
-            lyricsText = bestMatch.plainLyrics || bestMatch.syncedLyrics || '';
+            if (matchedItem.parsed) {
+              syncedLines = matchedItem.parsed;
+              lyricsText = matchedItem.item.syncedLyrics;
+              isSynced = true;
+              console.log('[API Lyrics] Successfully fetched verified synced lyrics from LRCLIB SEARCH QUERY!');
+            } else {
+              lyricsText = matchedItem.item.plainLyrics || matchedItem.item.syncedLyrics || '';
+              console.log('[API Lyrics] Successfully fetched verified plain lyrics from LRCLIB SEARCH QUERY!');
+            }
           }
         }
       } catch (err) {
