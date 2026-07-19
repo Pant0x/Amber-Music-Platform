@@ -20,7 +20,8 @@ import {
   ExternalLink,
   Maximize2,
   PlusCircle,
-  Check
+  Check,
+  X
 } from 'lucide-react';
 import { ArtistLinks } from './pages/shared';
 
@@ -71,13 +72,19 @@ export const BottomPlayerBar: React.FC = () => {
     pushNavState,
     currentPlaylistId,
     currentChannelId,
-    artistSubTab
+    artistSubTab,
+    queue
   } = usePlayerStore();
 
   const [isMuted, setIsMuted] = useState(false);
   const [prevVolume, setPrevVolume] = useState(volume);
   const [isShuffle, setIsShuffle] = useState(false);
   const [showPlaylistMenu, setShowPlaylistMenu] = useState(false);
+  const [showQueueMobile, setShowQueueMobile] = useState(false);
+
+  useEffect(() => {
+    setShowQueueMobile(false);
+  }, [currentTrack?.id]);
 
   // Global lyrics caching and fetching
   const lyricsCache = React.useRef(new Map<string, any>());
@@ -162,9 +169,30 @@ export const BottomPlayerBar: React.FC = () => {
 
   const toggleSidebarView = (view: 'now-playing' | 'queue' | 'connect') => {
     if (rightSidebarView === view) {
-      setRightSidebarView('now-playing'); // revert to now-playing instead of hiding completely
+      setRightSidebarView('now-playing');
     } else {
       setRightSidebarView(view);
+    }
+  };
+
+  const handleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  };
+
+  const handlePiP = async () => {
+    const video = document.querySelector('video');
+    if (video) {
+      try {
+        if (document.pictureInPictureElement) {
+          await document.exitPictureInPicture();
+        } else {
+          await video.requestPictureInPicture();
+        }
+      } catch {}
     }
   };
 
@@ -358,15 +386,48 @@ export const BottomPlayerBar: React.FC = () => {
         </button>
 
         {/* Queue Button */}
-        <button 
-          onClick={() => toggleSidebarView('queue')}
-          className={`p-1.5 rounded-md hover:bg-white/5 transition-all ${
-            rightSidebarView === 'queue' ? 'text-[var(--theme-accent)]' : 'text-zinc-400 hover:text-white'
-          }`}
-          title="Queue"
-        >
-          <ListMusic className="w-4.5 h-4.5" />
-        </button>
+        <div className="relative">
+          <button 
+            onClick={() => {
+              if (window.innerWidth < 1024) {
+                setShowQueueMobile(!showQueueMobile);
+              } else {
+                toggleSidebarView('queue');
+              }
+            }}
+            className={`p-1.5 rounded-md hover:bg-white/5 transition-all ${
+              rightSidebarView === 'queue' ? 'text-[var(--theme-accent)]' : 'text-zinc-400 hover:text-white'
+            }`}
+            title="Queue"
+          >
+            <ListMusic className="w-4.5 h-4.5" />
+          </button>
+          {showQueueMobile && (
+            <div className="fixed inset-0 z-50 bg-black/80 flex items-end">
+              <div className="w-full bg-zinc-900 rounded-t-2xl max-h-[70vh] overflow-y-auto p-4 animate-slide-in">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-bold text-white">Queue ({queue.length})</h3>
+                  <button onClick={() => setShowQueueMobile(false)} className="p-1 text-zinc-400 hover:text-white">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                {queue.map((track, idx) => {
+                  const qParsed = parseFeaturedArtists(track.title);
+                  return (
+                    <div key={`mq-${track.id}-${idx}`} className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5">
+                      <img src={upgradeThumbnailUrl(track.thumbnailUrl) || ''} className="w-10 h-10 rounded-md object-cover" alt="" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold text-white truncate">{qParsed.title}</p>
+                        <p className="text-xs text-zinc-400 truncate">{track.channelTitle}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+                {queue.length === 0 && <p className="text-zinc-500 text-sm text-center py-8">Queue is empty</p>}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Connection Button */}
         <button 
@@ -407,14 +468,16 @@ export const BottomPlayerBar: React.FC = () => {
 
         {/* Picture in picture */}
         <button 
+          onClick={handlePiP}
           className="p-1.5 text-zinc-400 hover:text-white transition-all hidden sm:block"
           title="Miniplayer (PiP)"
         >
           <ExternalLink className="w-4.5 h-4.5" />
         </button>
 
-        {/* Fullscreen (Ignore logic for now, just show button) */}
+        {/* Fullscreen */}
         <button 
+          onClick={handleFullscreen}
           className="p-1.5 text-zinc-400 hover:text-white transition-all hidden sm:block"
           title="Fullscreen"
         >

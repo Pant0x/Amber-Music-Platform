@@ -28,6 +28,10 @@
   --font-mono: 'SF Mono', 'JetBrains Mono', monospace;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -192,6 +196,16 @@ body {
 }
 .yt-volume-group:hover .yt-volume-slider::-moz-range-thumb {
   opacity: 1;
+}
+
+/* Animations */
+@keyframes slide-in {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.25s ease-out;
 }
 
 /* Micro Animations */

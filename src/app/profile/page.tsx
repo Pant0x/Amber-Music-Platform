@@ -15,13 +15,16 @@ import {
   Trash2, 
   Check, 
   Edit2, 
-  ExternalLink 
+  ExternalLink, 
+  LogIn 
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useUser, SignInButton } from '@clerk/nextjs';
 import { PlayingEqualizer, ExplicitBadge } from '@/components/pages/shared';
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { isSignedIn, user } = useUser();
   const {
     playlists,
     likedTracks,
@@ -94,6 +97,15 @@ export default function ProfilePage() {
     }
   }, [subscribedChannels]);
 
+  // Sync Clerk data to store
+  useEffect(() => {
+    if (isSignedIn && user) {
+      const name = user.fullName || user.username || user.primaryEmailAddress?.emailAddress || '';
+      if (name) setDisplayName(name);
+      if (user.imageUrl) setAvatarUrl(user.imageUrl);
+    }
+  }, [isSignedIn, user, setDisplayName, setAvatarUrl]);
+
   // Playback handlers
   const handlePlaySong = (track: Track, contextList: Track[]) => {
     playTrack(track, contextList);
@@ -125,6 +137,22 @@ export default function ProfilePage() {
     return currentTrack?.id === track.id;
   };
 
+  if (!isSignedIn) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center">
+        <User className="w-16 h-16 text-zinc-600" />
+        <h2 className="text-2xl font-bold text-white">Sign in to view your profile</h2>
+        <p className="text-zinc-400 max-w-md">Connect your account to see your playlists, liked tracks, and listening history.</p>
+        <SignInButton mode="modal">
+          <button className="flex items-center gap-2 px-6 py-3 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium transition-all hover:scale-105">
+            <LogIn className="w-5 h-5" />
+            Sign In
+          </button>
+        </SignInButton>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-10 pb-20 max-w-6xl mx-auto animate-fade-in select-none">
       
@@ -132,25 +160,25 @@ export default function ProfilePage() {
       <div className="flex flex-col md:flex-row items-center gap-6 p-6 md:p-8 rounded-3xl bg-white/[0.02] border border-white/5 relative overflow-hidden backdrop-blur-md shadow-2xl">
         <div className="absolute inset-0 bg-gradient-to-r from-[#ff0000]/5 to-[#0055ff]/5 pointer-events-none z-0" />
         
-        {/* User Picture */}
-        <div className="relative z-10 flex-shrink-0 group">
-          <div className={`w-28 h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center text-white text-4xl font-bold uppercase shadow-2xl border-2 border-white/10 relative overflow-hidden ${
-            avatarUrl && avatarUrl.startsWith('bg-') ? avatarUrl : 'bg-[#0055ff]'
-          }`}>
-            {avatarUrl && (avatarUrl.startsWith('http') || avatarUrl.startsWith('/')) ? (
-              <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
-            ) : (
-              displayName ? displayName.charAt(0) : 'A'
-            )}
+          {/* User Picture */}
+          <div className="relative z-10 flex-shrink-0 group">
+            <div className="w-28 h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center text-white text-4xl font-bold uppercase shadow-2xl border-2 border-white/10 relative overflow-hidden bg-[#0055ff]">
+              {user?.imageUrl ? (
+                <img src={user.imageUrl} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              ) : avatarUrl && (avatarUrl.startsWith('http') || avatarUrl.startsWith('/')) ? (
+                <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span>{displayName ? displayName.charAt(0).toUpperCase() : '?'}</span>
+              )}
+            </div>
+            <button 
+              onClick={() => setShowAvatarEditor(!showAvatarEditor)}
+              className="absolute bottom-1 right-1 p-2 rounded-full bg-zinc-900 border border-white/10 text-white hover:bg-zinc-800 transition-colors shadow-lg cursor-pointer"
+              title="Change Avatar"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+            </button>
           </div>
-          <button 
-            onClick={() => setShowAvatarEditor(!showAvatarEditor)}
-            className="absolute bottom-1 right-1 p-2 rounded-full bg-zinc-900 border border-white/10 text-white hover:bg-zinc-800 transition-colors shadow-lg cursor-pointer"
-            title="Change Avatar"
-          >
-            <Edit2 className="w-3.5 h-3.5" />
-          </button>
-        </div>
 
         {/* User Details */}
         <div className="relative z-10 text-center md:text-left flex-1 space-y-2">

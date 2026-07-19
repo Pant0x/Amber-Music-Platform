@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, X, Play, ChevronLeft, ChevronRight, Clock, TrendingUp } from 'lucide-react';
+import { Search, X, Play, ChevronLeft, ChevronRight, Clock, TrendingUp, User, LogIn } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useRouter, usePathname } from 'next/navigation';
+import { useUser, SignInButton, UserButton } from '@clerk/nextjs';
 
 export const Header: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const { isSignedIn, user } = useUser();
   const {
     searchQuery,
     setSearchQuery,
@@ -16,26 +18,23 @@ export const Header: React.FC = () => {
     removeSearchQueryFromHistory,
     clearSearchHistory,
     setShowNowPlaying,
-    displayName,
     setDisplayName,
-    avatarUrl,
     setAvatarUrl,
-    playlists,
-    likedTracks,
-    subscribedChannels,
-    history
   } = usePlayerStore();
 
   const [mounted, setMounted] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [showProfileModal, setShowProfileModal] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [tempAvatarUrl, setTempAvatarUrl] = useState('');
   const [trendingQueries, setTrendingQueries] = useState<any[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Fetch trending searches on mount
+  useEffect(() => {
+    if (isSignedIn && user) {
+      setDisplayName(user.fullName || user.username || user.primaryEmailAddress?.emailAddress || 'User');
+      setAvatarUrl(user.imageUrl || '');
+    }
+  }, [isSignedIn, user, setDisplayName, setAvatarUrl]);
+
   useEffect(() => {
     const fetchTrending = async () => {
       try {
@@ -51,26 +50,15 @@ export const Header: React.FC = () => {
     fetchTrending();
   }, []);
 
-  // Sync edit states when displayName/avatarUrl resolve
-  useEffect(() => {
-    setNewName(displayName || '');
-  }, [displayName]);
-
-  useEffect(() => {
-    setTempAvatarUrl(avatarUrl || '');
-  }, [avatarUrl]);
-
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Autocomplete suggestions fetcher
   useEffect(() => {
     if (!searchQuery || !searchQuery.trim()) {
       setSuggestions([]);
       return;
     }
-
     const timer = setTimeout(async () => {
       try {
         const res = await fetch(`/api/search/suggestions?q=${encodeURIComponent(searchQuery)}`);
@@ -82,11 +70,9 @@ export const Header: React.FC = () => {
         console.error('Suggestions fetch error:', err);
       }
     }, 200);
-
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Click outside detection to close suggestions
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -112,14 +98,10 @@ export const Header: React.FC = () => {
   };
 
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Escape') {
-      setShowDropdown(false);
-    }
+    if (e.key === 'Escape') setShowDropdown(false);
     if (e.key === 'Enter') {
       const q = searchQuery.trim();
-      if (q) {
-        selectQuery(q);
-      }
+      if (q) selectQuery(q);
     }
   };
 
@@ -129,24 +111,18 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header 
+    <header
       className="h-16 w-full px-6 flex items-center justify-between select-none relative z-50 flex-shrink-0 transition-all duration-1000 backdrop-blur-xl border-b border-white/[0.03]"
       style={{ background: 'var(--theme-main-bg, #030303)' }}
     >
-
-      {/* 1. LEFT SIDE: Navigation Chevrons */}
       <div className="flex items-center gap-4 flex-shrink-0">
-
         <div className="flex items-center gap-1.5 bg-white/5 border border-white/5 p-1 rounded-full min-h-[30px] min-w-[70px]">
           {mounted && (
             <>
               <button
                 onClick={() => {
-                  if (window.history.length > 1) {
-                    router.back();
-                  } else {
-                    router.push('/');
-                  }
+                  if (window.history.length > 1) router.back();
+                  else router.push('/');
                 }}
                 className="p-1.5 rounded-full transition-colors hover:bg-white/10 text-zinc-400 hover:text-white"
                 title="Back"
@@ -167,7 +143,6 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. CENTER SIDE: Wide Search Pill */}
       <div className="flex-1 max-w-2xl mx-12 hidden md:block" ref={dropdownRef}>
         <div className="relative w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
@@ -196,11 +171,8 @@ export const Header: React.FC = () => {
             </button>
           )}
 
-          {/* Suggestions Dropdown */}
           {showDropdown && (
             <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-[#161616]/98 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 py-3 animate-fade-in max-h-[420px] overflow-y-auto custom-scrollbar select-none">
-              
-              {/* Context: Query is NOT empty - display autocomplete suggestions */}
               {searchQuery.trim().length > 0 ? (
                 <div className="space-y-1">
                   {suggestions.map((suggestion, idx) => (
@@ -216,76 +188,42 @@ export const Header: React.FC = () => {
                   {suggestions.length === 0 && (
                     <div className="flex items-center gap-3 px-4 py-2 text-sm text-zinc-500">
                       <Search className="w-4 h-4" />
-                      <span className="font-medium truncate">Search for "{searchQuery}"</span>
+                      <span className="font-medium truncate">Search for &quot;{searchQuery}&quot;</span>
                     </div>
                   )}
                 </div>
               ) : (
-                // Context: Query IS empty - display Recent Searches & Recommended/Trending
                 <div className="space-y-4">
-                  {/* Recent Searches */}
                   {searchHistory && searchHistory.length > 0 && (
                     <div>
                       <div className="flex items-center justify-between px-4 pb-1">
                         <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">Recent searches</span>
-                        <button
-                          onClick={clearSearchHistory}
-                          className="text-[10px] font-semibold text-zinc-400 hover:text-white transition-colors"
-                        >
-                          Clear all
-                        </button>
+                        <button onClick={clearSearchHistory} className="text-[10px] font-semibold text-zinc-400 hover:text-white transition-colors">Clear all</button>
                       </div>
                       <div className="space-y-0.5 max-h-[160px] overflow-y-auto">
                         {[...searchHistory].reverse().map((item, idx) => (
-                          <div
-                            key={`history-${idx}`}
-                            onClick={() => selectQuery(item)}
-                            className="group flex items-center justify-between px-4 py-2 hover:bg-white/5 cursor-pointer transition-colors"
-                          >
+                          <div key={`history-${idx}`} onClick={() => selectQuery(item)} className="group flex items-center justify-between px-4 py-2 hover:bg-white/5 cursor-pointer transition-colors">
                             <div className="flex items-center gap-3 text-sm text-zinc-300 group-hover:text-white truncate">
                               <Clock className="w-4 h-4 text-zinc-500 flex-shrink-0" />
                               <span className="truncate font-medium">{item}</span>
                             </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeSearchQueryFromHistory(item);
-                              }}
-                              className="text-zinc-500 hover:text-white p-1 rounded transition-colors opacity-0 group-hover:opacity-100"
-                              title="Delete from history"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); removeSearchQueryFromHistory(item); }} className="text-zinc-500 hover:text-white p-1 rounded transition-colors opacity-0 group-hover:opacity-100"><X className="w-3.5 h-3.5" /></button>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
-
-                  {/* Recommended/Trending Artists & Genres */}
                   <div>
                     <div className="px-4 pb-1">
-                      <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
-                        <TrendingUp className="w-3.5 h-3.5" /> Recommended
-                      </span>
+                      <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5" /> Recommended</span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 p-3">
-                      {(trendingQueries && trendingQueries.length > 0
-                        ? trendingQueries
-                        : [
-                            { name: 'Yeat', type: 'Artist' },
-                            { name: 'Drake', type: 'Artist' },
-                            { name: 'Don Toliver', type: 'Artist' },
-                            { name: 'The Beatles', type: 'Artist' },
-                            { name: 'Travis Scott', type: 'Artist' },
-                            { name: 'Lofi Chill', type: 'Genre' }
-                          ]
-                      ).map((item) => (
-                        <div
-                          key={item.name}
-                          onClick={() => selectQuery(item.name)}
-                          className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer border border-white/5 transition-all text-left group"
-                        >
+                      {(trendingQueries && trendingQueries.length > 0 ? trendingQueries : [
+                        { name: 'Yeat', type: 'Artist' }, { name: 'Drake', type: 'Artist' },
+                        { name: 'Don Toliver', type: 'Artist' }, { name: 'The Beatles', type: 'Artist' },
+                        { name: 'Travis Scott', type: 'Artist' }, { name: 'Lofi Chill', type: 'Genre' }
+                      ]).map((item) => (
+                        <div key={item.name} onClick={() => selectQuery(item.name)} className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer border border-white/5 transition-all text-left group">
                           <div className="min-w-0">
                             <h4 className="text-xs font-bold text-zinc-200 group-hover:text-white truncate transition-colors">{item.name}</h4>
                             <p className="text-[9px] text-zinc-500 mt-0.5 uppercase tracking-wider font-semibold">{item.type}</p>
@@ -299,14 +237,11 @@ export const Header: React.FC = () => {
               )}
             </div>
           )}
-
         </div>
       </div>
 
-      {/* 3. RIGHT SIDE: Mobile Search Button Only */}
       <div className="flex items-center gap-4 flex-shrink-0">
-
-        {/* Mobile Search Button */}
+        {/* Mobile search button */}
         <button
           onClick={() => {
             if (pathname !== '/search') {
@@ -318,8 +253,35 @@ export const Header: React.FC = () => {
         >
           <Search className="w-5 h-5" />
         </button>
-      </div>
 
+        {/* User avatar / Sign In */}
+        {isSignedIn ? (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.push('/profile')}
+              className="flex items-center gap-2 p-1.5 rounded-full hover:bg-white/5 transition-colors"
+            >
+              <img
+                src={user?.imageUrl || ''}
+                alt="Profile"
+                className="w-8 h-8 rounded-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+              <span className="text-sm font-medium text-white hidden sm:block max-w-[100px] truncate">
+                {user?.fullName || user?.username || 'User'}
+              </span>
+            </button>
+            <UserButton />
+          </div>
+        ) : (
+          <SignInButton mode="modal">
+            <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-all hover:scale-105">
+              <LogIn className="w-4 h-4" />
+              <span>Sign In</span>
+            </button>
+          </SignInButton>
+        )}
+      </div>
     </header>
   );
 };

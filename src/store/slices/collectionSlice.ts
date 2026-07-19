@@ -9,8 +9,8 @@ export const createCollectionSlice: StateCreator<StoreState, [], [], CollectionS
   currentChannelDetails: null,
   nowPlayingChannelDetails: null,
   subscribedChannels: [],
-  displayName: 'Anonymous Listener',
-  avatarUrl: 'bg-gradient-to-tr from-blue-600 to-indigo-900',
+  displayName: '',
+  avatarUrl: '',
   shareTrack: null,
 
   setDisplayName: (name) => set({ displayName: name }),
