@@ -1,15 +1,16 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, X, Play, ChevronLeft, ChevronRight, Clock, TrendingUp, User, LogIn } from 'lucide-react';
+import { Search, X, Play, ChevronLeft, ChevronRight, Clock, TrendingUp, User, LogIn, BadgeCheck } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useRouter, usePathname } from 'next/navigation';
-import { useUser, SignInButton, UserButton } from '@clerk/nextjs';
+import { useUser, useClerk } from '@clerk/nextjs';
 
 export const Header: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
   const { isSignedIn, user } = useUser();
+  const { signOut } = useClerk();
   const {
     searchQuery,
     setSearchQuery,
@@ -259,27 +260,36 @@ export const Header: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => router.push('/profile')}
-              className="flex items-center gap-2 p-1.5 rounded-full hover:bg-white/5 transition-colors"
+              className="flex items-center gap-2 p-1.5 rounded-full hover:bg-white/5 transition-colors group relative"
             >
-              <img
-                src={user?.imageUrl || ''}
-                alt="Profile"
-                className="w-8 h-8 rounded-full object-cover"
-                referrerPolicy="no-referrer"
-              />
+              <div className="relative">
+                <img
+                  src={user?.imageUrl || ''}
+                  alt="Profile"
+                  className="w-8 h-8 rounded-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
               <span className="text-sm font-medium text-white hidden sm:block max-w-[100px] truncate">
                 {user?.fullName || user?.username || 'User'}
               </span>
             </button>
-            <UserButton />
+            <button
+              onClick={() => signOut()}
+              className="p-2 text-zinc-400 hover:text-white transition-colors"
+              title="Sign Out"
+            >
+              <LogIn className="w-4 h-4 rotate-180" />
+            </button>
           </div>
         ) : (
-          <SignInButton mode="modal">
-            <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-all hover:scale-105">
-              <LogIn className="w-4 h-4" />
-              <span>Sign In</span>
-            </button>
-          </SignInButton>
+          <button
+            onClick={() => router.push('/sign-in')}
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-all hover:scale-105"
+          >
+            <LogIn className="w-4 h-4" />
+            <span>Sign In</span>
+          </button>
         )}
       </div>
     </header>

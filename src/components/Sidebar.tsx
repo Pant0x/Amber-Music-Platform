@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Home, Compass, Library, Plus, Music, Heart, User, Cloud } from 'lucide-react';
+import { Home, Compass, Library, Plus, Music, Heart, User, Cloud, FileAudio } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { usePlayerStore } from '@/store/usePlayerStore';
 
@@ -74,6 +74,7 @@ export const Sidebar: React.FC = () => {
         <nav className="flex flex-col gap-0.5">
           <NavItem tab="library" icon={Library} label="Recently Added" path="/library" />
           <NavItem tab="liked" icon={Heart} label="Liked Songs" path="/liked" />
+          <NavItem tab="library" icon={FileAudio} label="My Files" path="/files" />
         </nav>
       </div>
 

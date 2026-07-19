@@ -15,6 +15,8 @@ export interface Track {
   duration?: string;
   isExplicit?: boolean;
   isEnriched?: boolean;
+  isLocal?: boolean;
+  audioUrl?: string;
   albumName?: string;
   albumId?: string;
 }

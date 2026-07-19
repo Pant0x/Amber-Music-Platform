@@ -24,7 +24,8 @@ import {
   Tv,
   HelpCircle,
   Info,
-  ExternalLink
+  ExternalLink,
+  Disc
 } from 'lucide-react';
 
 const upgradeThumbnailUrl = (url: string | undefined): string => {
@@ -229,6 +230,41 @@ export const PlayerDock: React.FC = () => {
   }
 
   // 2. CONNECT SIDEBAR VIEW
+  const [devices, setDevices] = useState<any[]>([])
+  const [devicesLoading, setDevicesLoading] = useState(false)
+
+  const fetchDevices = useCallback(async () => {
+    setDevicesLoading(true)
+    try {
+      const res = await fetch('/api/devices')
+      if (res.ok) {
+        const data = await res.json()
+        setDevices(data.devices || [])
+      }
+    } catch {} finally {
+      setDevicesLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (rightSidebarView === 'connect') fetchDevices()
+  }, [rightSidebarView, fetchDevices])
+
+  const handleTransfer = async (deviceId: string) => {
+    try {
+      await fetch('/api/devices/transfer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetDeviceId: deviceId,
+          track: currentTrack,
+          position: playedSeconds,
+          playing: isPlaying,
+        }),
+      })
+    } catch {}
+  }
+
   if (rightSidebarView === 'connect') {
     return (
       <div 
@@ -246,30 +282,43 @@ export const PlayerDock: React.FC = () => {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto space-y-4 custom-scrollbar pr-1">
-          {/* Active device */}
-          <div className="flex items-center gap-4 p-3 rounded-2xl bg-white/5 border border-[#1db954]/25 cursor-pointer">
-            <div className="w-10 h-10 rounded-full bg-[#1db954]/10 flex items-center justify-center flex-shrink-0 text-[#1db954]">
-              <Laptop className="w-5 h-5" />
+        <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-1">
+          {devicesLoading ? (
+            <div className="flex justify-center py-8"><Disc className="w-5 h-5 animate-spin text-zinc-400" /></div>
+          ) : devices.length === 0 ? (
+            <div className="text-center py-12">
+              <Laptop className="w-10 h-10 text-zinc-600 mx-auto mb-3" />
+              <p className="text-sm text-zinc-400 font-medium">No devices found</p>
+              <p className="text-xs text-zinc-500 mt-1">Open this page on another device to connect</p>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold text-[#1db954]">Wired Connection</p>
-              <p className="text-[10px] text-zinc-400 mt-0.5 font-medium">Active Listening</p>
-            </div>
-          </div>
-
-          {/* LG TV Available Device */}
-          <div className="flex items-center gap-4 p-3 rounded-2xl hover:bg-white/5 cursor-pointer transition-all duration-200">
-            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0 text-zinc-400">
-              <Tv className="w-5 h-5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold text-zinc-350">[LG] webOS TV UP7750PVB</p>
-            </div>
-          </div>
+          ) : (
+            devices.map((device: any) => (
+              <div key={device.id} onClick={() => handleTransfer(device.id)}
+                className={`flex items-center gap-4 p-3 rounded-2xl cursor-pointer transition-all ${
+                  device.is_active ? 'bg-white/5 border border-[#1db954]/25' : 'hover:bg-white/5 border border-transparent'
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  device.is_active ? 'bg-[#1db954]/10 text-[#1db954]' : 'bg-white/5 text-zinc-400'
+                }`}>
+                  {device.device_type === 'tv' ? <Tv className="w-5 h-5" /> : <Laptop className="w-5 h-5" />}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className={`text-xs font-bold ${device.is_active ? 'text-[#1db954]' : 'text-white'} truncate`}>
+                    {device.name}
+                  </p>
+                  <p className="text-[10px] text-zinc-400 mt-0.5 font-medium">
+                    {device.is_active ? 'Active Listening' : device.device_type === 'tv' ? 'Available' : 'Click to connect'}
+                  </p>
+                </div>
+              </div>
+            ))
+          )}
+          <button onClick={fetchDevices} className="w-full text-xs text-zinc-400 hover:text-white font-semibold py-2 transition-colors">
+            Refresh devices
+          </button>
         </div>
 
-        {/* Bottom Menu help triggers */}
         <div className="mt-auto border-t border-white/5 pt-4 space-y-3 flex-shrink-0 text-[11px] font-semibold text-zinc-400">
           <a href="#" className="flex items-center justify-between hover:text-white transition-colors py-1">
             <span>Don't see your device?</span>

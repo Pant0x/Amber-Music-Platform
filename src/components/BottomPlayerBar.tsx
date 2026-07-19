@@ -73,7 +73,9 @@ export const BottomPlayerBar: React.FC = () => {
     currentPlaylistId,
     currentChannelId,
     artistSubTab,
-    queue
+    queue,
+    setShowNowPlaying,
+    setNowPlayingTab
   } = usePlayerStore();
 
   const [isMuted, setIsMuted] = useState(false);
@@ -176,11 +178,8 @@ export const BottomPlayerBar: React.FC = () => {
   };
 
   const handleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-    } else {
-      document.exitFullscreen().catch(() => {});
-    }
+    setShowNowPlaying(true);
+    setNowPlayingTab('player');
   };
 
   const handlePiP = async () => {
