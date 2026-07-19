@@ -261,10 +261,16 @@ export async function GET(request: Request) {
       if (lrcRes.ok) {
         const lrcData = await lrcRes.json();
         if (lrcData.syncedLyrics) {
-          syncedLines = parseLrc(lrcData.syncedLyrics);
-          lyricsText = lrcData.syncedLyrics;
-          isSynced = true;
-          console.log('[API Lyrics] Successfully fetched synced lyrics from LRCLIB EXACT GET!');
+          const parsedLines = parseLrc(lrcData.syncedLyrics);
+          const hasTime = parsedLines.some(line => line.time !== -999);
+          if (hasTime) {
+            syncedLines = parsedLines;
+            lyricsText = lrcData.syncedLyrics;
+            isSynced = true;
+            console.log('[API Lyrics] Successfully fetched synced lyrics from LRCLIB EXACT GET!');
+          } else {
+            lyricsText = lrcData.plainLyrics || lrcData.syncedLyrics;
+          }
         } else if (lrcData.plainLyrics) {
           lyricsText = lrcData.plainLyrics;
         }
@@ -286,15 +292,26 @@ export async function GET(request: Request) {
         if (searchRes.ok) {
           const searchData = await searchRes.json();
           if (searchData && searchData.length > 0) {
-            // Prefer an item that has syncedLyrics
-            const bestMatch = searchData.find((item: any) => item.syncedLyrics) || searchData[0];
-            if (bestMatch.syncedLyrics) {
-              syncedLines = parseLrc(bestMatch.syncedLyrics);
-              lyricsText = bestMatch.syncedLyrics;
+            // Find the best match that has actual timestamps in its syncedLyrics
+            let matchedItem = null;
+            for (const item of searchData) {
+              if (item.syncedLyrics) {
+                const parsed = parseLrc(item.syncedLyrics);
+                if (parsed.some(line => line.time !== -999)) {
+                  matchedItem = { item, parsed };
+                  break;
+                }
+              }
+            }
+
+            if (matchedItem) {
+              syncedLines = matchedItem.parsed;
+              lyricsText = matchedItem.item.syncedLyrics;
               isSynced = true;
               console.log('[API Lyrics] Successfully fetched synced lyrics from LRCLIB SEARCH QUERY!');
-            } else if (bestMatch.plainLyrics && !lyricsText) {
-              lyricsText = bestMatch.plainLyrics;
+            } else {
+              const bestMatch = searchData[0];
+              lyricsText = bestMatch.plainLyrics || bestMatch.syncedLyrics || '';
             }
           }
         }
