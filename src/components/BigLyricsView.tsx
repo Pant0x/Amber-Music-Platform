@@ -185,22 +185,22 @@ export const BigLyricsView: React.FC = () => {
                       setSeekTrigger(line.time);
                     }
                   }}
-                  className={`text-2xl md:text-4xl lg:text-[2.75rem] font-extrabold leading-[1.15] tracking-tight px-3 py-2 rounded-xl border border-transparent transition-all duration-500 ease-out ${
+                  className={`text-2xl md:text-4xl lg:text-[2.75rem] font-extrabold leading-[1.15] tracking-tight px-3 py-2 rounded-xl border border-transparent transition-all duration-700 ease-out origin-left ${
                     isClickable ? 'cursor-pointer' : 'cursor-default'
                   } ${
                     !isSynced 
-                      ? 'text-white/90 opacity-100' // Unsynced: fully bright
+                      ? 'text-white/90 opacity-100' 
                       : isActive
-                        ? 'text-white scale-[1.015] opacity-100'
+                        ? 'text-white scale-[1.02] opacity-100 drop-shadow-xl'
                         : isPast
-                          ? 'text-white/20 opacity-40'
-                          : 'text-white/25 opacity-35 hover:opacity-60 hover:text-white/40'
+                          ? 'text-white/40 opacity-100 scale-100'
+                          : 'text-white/60 opacity-100 scale-100 hover:text-white/80'
                   }`}
                   style={isActive ? { 
-                    textShadow: '0 4px 20px rgba(0,0,0,0.6), 0 0 60px rgba(var(--theme-ambient-r, 255), var(--theme-ambient-g, 255), var(--theme-ambient-b, 255), 0.1)',
-                    filter: 'none'
+                    textShadow: '0 4px 20px rgba(0,0,0,0.4), 0 0 60px rgba(var(--theme-ambient-r, 255), var(--theme-ambient-g, 255), var(--theme-ambient-b, 255), 0.1)',
+                    filter: 'blur(0px)'
                   } : { 
-                    filter: isActive ? 'none' : 'blur(0px)'
+                    filter: !isSynced ? 'blur(0px)' : isPast ? 'blur(1.5px)' : 'blur(0.5px)'
                   }}
                 >
                   {line.text}
