@@ -404,17 +404,6 @@ export const MediaDeck: React.FC = () => {
     if (queue.length === 0) return;
     const nextTrack = queue[0];
     
-    const isNextTopic = nextTrack.channelTitle?.toLowerCase().includes('topic');
-
-    if (!nextTrack.youtubeId && nextTrack.origin === 'youtube' && isNextTopic) {
-      usePlayerStore.setState((state) => {
-        const newQueue = [...state.queue];
-        newQueue[0] = { ...newQueue[0], youtubeId: nextTrack.id };
-        return { queue: newQueue };
-      });
-      return;
-    }
-
     if (!nextTrack.youtubeId) {
       console.log(`[MediaDeck] Pre-resolving next track in queue: "${nextTrack.title}"`);
       const resolveNext = async () => {
@@ -435,15 +424,13 @@ export const MediaDeck: React.FC = () => {
                     return { 
                       ...t, 
                       youtubeId: data.videoId,
+                      // Only enrich supplemental metadata — never overwrite title/artist from resolver
                       ...(data.track && {
-                        title: data.track.title,
-                        channelTitle: data.track.channelTitle,
-                        thumbnailUrl: data.track.thumbnailUrl,
-                        albumName: data.track.albumName,
-                        albumId: data.track.albumId,
-                        duration: data.track.duration,
-                        isExplicit: data.track.isExplicit,
-                        type: data.track.type
+                        ...(data.track.thumbnailUrl && { thumbnailUrl: data.track.thumbnailUrl }),
+                        ...(data.track.albumName && { albumName: data.track.albumName }),
+                        ...(data.track.albumId && { albumId: data.track.albumId }),
+                        ...(data.track.duration && { duration: data.track.duration }),
+                        ...(data.track.isExplicit !== undefined && { isExplicit: data.track.isExplicit }),
                       })
                     };
                   }
@@ -565,8 +552,9 @@ export const MediaDeck: React.FC = () => {
     setShowNowPlaying(!showNowPlaying);
   };
 
-  const isTopicChannel = currentTrack?.channelTitle?.toLowerCase().includes('topic');
-  const trackNeedsResolve = currentTrack && !currentTrack.youtubeId && (currentTrack.origin !== 'youtube' || !isTopicChannel);
+  // trackNeedsResolve = true while we wait for the YouTube ID to be resolved.
+  // Never play while unresolved — the raw currentTrack.id may be a VEVO/video clip.
+  const trackNeedsResolve = currentTrack && !currentTrack.youtubeId && currentTrack.origin !== 'spotify';
 
   return (
     <div 
@@ -587,7 +575,7 @@ export const MediaDeck: React.FC = () => {
             ? `https://www.youtube.com/watch?v=${currentTrack.youtubeId}` 
             : currentTrack.origin === 'spotify' 
               ? '' 
-              : `https://www.youtube.com/watch?v=${currentTrack.id}`
+              : '' // Wait for resolution — never load raw ID (could be VEVO/video clip)
         }
         playing={isPlaying && !trackNeedsResolve}
         volume={volume}

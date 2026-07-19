@@ -121,6 +121,16 @@ const runYoutubePlaylistFallback = async (playlistId: string) => {
       metadata.channelId = tracks[0].artistId;
     }
 
+    // Stamp albumName and albumId onto every track from an album browse.
+    // This is critical so the resolver can distinguish between two songs
+    // with the same name on different albums (e.g. "Back Home" on 2093 vs another album).
+    if (playlistId.startsWith('MPRE') && metadata.title) {
+      for (const track of tracks) {
+        track.albumName = metadata.title;
+        track.albumId = playlistId;
+      }
+    }
+
     const result = cleanTopicGlobally({ metadata, tracks });
     if (playlistCache.size > 100) {
       playlistCache.clear();
