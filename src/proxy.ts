@@ -17,13 +17,18 @@ const isPublicRoute = createRouteMatcher([
   '/api/search(.*)',
   '/api/recommendations(.*)',
   '/api/track(.*)',
+  '/admin/login(.*)',
 ])
 
-export default clerkMiddleware(async (auth, request) => {
-  if (!isPublicRoute(request)) {
-    await auth.protect()
-  }
-})
+const hasClerkKeys = typeof process !== 'undefined' && !!(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY)
+
+export const proxy = hasClerkKeys
+  ? clerkMiddleware(async (auth, request) => {
+      if (!isPublicRoute(request)) {
+        await auth.protect()
+      }
+    })
+  : () => {}
 
 export const config = {
   matcher: [
