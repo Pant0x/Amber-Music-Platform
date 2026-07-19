@@ -333,16 +333,13 @@ export const MediaDeck: React.FC = () => {
   useEffect(() => {
     if (!currentTrack) return;
     
-    const isVideoOrVevo = currentTrack.channelTitle?.toLowerCase().includes('vevo') || 
-                          currentTrack.channelTitle?.toLowerCase().includes('official') ||
-                          currentTrack.title?.toLowerCase().includes('video clip') ||
-                          currentTrack.title?.toLowerCase().includes('music video');
+    const isTopicChannel = currentTrack.channelTitle?.toLowerCase().includes('topic');
 
-    // If we already have a direct YouTube origin track, we don't need to resolve,
-    // unless it is a VEVO or video clip track that we want to redirect to the official release.
-    const needsResolve = !currentTrack.youtubeId && (currentTrack.origin !== 'youtube' || isVideoOrVevo);
+    // If we have a direct YouTube track from a Topic channel, we play it directly.
+    // Otherwise, we force resolution to find the clean official Topic release.
+    const needsResolve = !currentTrack.youtubeId && (currentTrack.origin !== 'youtube' || !isTopicChannel);
     
-    if (!currentTrack.youtubeId && currentTrack.origin === 'youtube' && !isVideoOrVevo) {
+    if (!currentTrack.youtubeId && currentTrack.origin === 'youtube' && isTopicChannel) {
       setYoutubeIdForCurrentTrack(currentTrack.id);
     }
     
@@ -401,12 +398,9 @@ export const MediaDeck: React.FC = () => {
     if (queue.length === 0) return;
     const nextTrack = queue[0];
     
-    const isNextVideoOrVevo = nextTrack.channelTitle?.toLowerCase().includes('vevo') || 
-                              nextTrack.channelTitle?.toLowerCase().includes('official') ||
-                              nextTrack.title?.toLowerCase().includes('video clip') ||
-                              nextTrack.title?.toLowerCase().includes('music video');
+    const isNextTopic = nextTrack.channelTitle?.toLowerCase().includes('topic');
 
-    if (!nextTrack.youtubeId && nextTrack.origin === 'youtube' && !isNextVideoOrVevo) {
+    if (!nextTrack.youtubeId && nextTrack.origin === 'youtube' && isNextTopic) {
       usePlayerStore.setState((state) => {
         const newQueue = [...state.queue];
         newQueue[0] = { ...newQueue[0], youtubeId: nextTrack.id };
