@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import { getSpotifyApi } from '@/lib/spotify';
 import { ytMusicBrowse, parseTrackSubtitle, cleanArtistName, upgradeThumbnailUrl, cleanTopicGlobally } from '@/lib/youtubei';
 
+const playlistCache = new Map<string, any>();
+// Bump to invalidate stale cached playlists (e.g. after adding albumName to tracks).
+const PLAYLIST_CACHE_VERSION = 'v2';
+
 const runYoutubePlaylistFallback = async (playlistId: string) => {
   console.log(`[Playlist API] Falling back to YouTube Music for playlistId: ${playlistId}`);
   try {
@@ -135,7 +139,7 @@ const runYoutubePlaylistFallback = async (playlistId: string) => {
     if (playlistCache.size > 100) {
       playlistCache.clear();
     }
-    playlistCache.set(playlistId, result);
+    playlistCache.set(`${PLAYLIST_CACHE_VERSION}_${playlistId}`, result);
 
     return NextResponse.json(result);
   } catch (err) {
@@ -143,8 +147,6 @@ const runYoutubePlaylistFallback = async (playlistId: string) => {
     return NextResponse.json({ error: 'Failed to retrieve playlist details' }, { status: 500 });
   }
 };
-
-const playlistCache = new Map<string, any>();
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -154,8 +156,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Missing playlist or album ID' }, { status: 400 });
   }
 
-  if (playlistCache.has(playlistId)) {
-    const cached = playlistCache.get(playlistId);
+  const cacheKey = `${PLAYLIST_CACHE_VERSION}_${playlistId}`;
+  if (playlistCache.has(cacheKey)) {
+    const cached = playlistCache.get(cacheKey);
     console.log(`[Playlist API] Cache HIT for playlistId: "${playlistId}"`);
     return NextResponse.json(cached);
   }
@@ -214,7 +217,7 @@ export async function GET(request: Request) {
       if (playlistCache.size > 100) {
         playlistCache.clear();
       }
-      playlistCache.set(playlistId, playlistResult);
+      playlistCache.set(cacheKey, playlistResult);
       return NextResponse.json(playlistResult);
     } catch (playlistError) {
       console.log(`[Playlist API] Fetch as playlist failed, trying as album: ${playlistId}`);
@@ -259,7 +262,7 @@ export async function GET(request: Request) {
       if (playlistCache.size > 100) {
         playlistCache.clear();
       }
-      playlistCache.set(playlistId, albumResult);
+      playlistCache.set(cacheKey, albumResult);
       return NextResponse.json(albumResult);
     }
   } catch (error: any) {

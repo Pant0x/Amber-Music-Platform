@@ -4,6 +4,8 @@ import ytAdapter from '@/lib/yt-music-adapter';
 import { isCorrectMatch, isArtistMatch } from '@/lib/match-utils';
 
 const resolveCache = new Map<string, string>();
+// Bump this version to instantly invalidate all previously cached resolve results.
+const CACHE_VERSION = 'v3';
 
 export async function GET(request: Request) {
   try {
@@ -24,8 +26,8 @@ export async function GET(request: Request) {
       .split(/,|\s+&\s+|\s+feat\.?\s+|\s+ft\.?\s+/i)[0]
       .trim();
     
-    // Check resolve cache
-    const cacheKey = `${artist.toLowerCase().trim()}_${title.toLowerCase().trim()}_${album?.toLowerCase().trim() || ''}_${mode}_${isExplicitRequest}`;
+    // Check resolve cache (versioned to auto-invalidate stale entries)
+    const cacheKey = `${CACHE_VERSION}_${artist.toLowerCase().trim()}_${title.toLowerCase().trim()}_${album?.toLowerCase().trim() || ''}_${mode}_${isExplicitRequest}`;
     if (resolveCache.has(cacheKey)) {
       const cachedData = resolveCache.get(cacheKey);
       if (cachedData) {
@@ -63,11 +65,14 @@ export async function GET(request: Request) {
       const firstItem = group[0];
       const baseTitle = firstItem.title.toLowerCase().replace(/\b(clean|censored|radio\s+edit|explicit)\b/gi, '').replace(/\[.*\]|\(.*\)/g, '').trim();
       
-      const explicitMatch = group.slice(0, 5).find((i: any) => {
-        const iTitle = i.title.toLowerCase().replace(/\b(clean|censored|radio\s+edit|explicit)\b/gi, '').replace(/\[.*\]|\(.*\)/g, '').trim();
-        return iTitle === baseTitle && i.isExplicit;
-      });
-      if (explicitMatch) return explicitMatch;
+      // Prefer explicit version if requested, otherwise prefer non-clean version
+      if (isExplicitRequest) {
+        const explicitMatch = group.slice(0, 5).find((i: any) => {
+          const iTitle = i.title.toLowerCase().replace(/\b(clean|censored|radio\s+edit|explicit)\b/gi, '').replace(/\[.*\]|\(.*\)/g, '').trim();
+          return iTitle === baseTitle && i.isExplicit;
+        });
+        if (explicitMatch) return explicitMatch;
+      }
 
       const uncensoredMatch = group.slice(0, 5).find((i: any) => {
         const iTitle = i.title.toLowerCase().replace(/\b(clean|censored|radio\s+edit|explicit)\b/gi, '').replace(/\[.*\]|\(.*\)/g, '').trim();
@@ -78,39 +83,38 @@ export async function GET(request: Request) {
 
     const selectBestFromGroup = (group: any[]) => {
       if (mode === 'song') {
-        // Enforce Topic channels strictly for songs to guarantee audio releases
-        const topicItems = group.filter(i => 
-          i.channelTitle.toLowerCase().includes('topic')
-        );
+        // PRIMARY FILTER: isTopicAudio flag (detected from raw subtitle before '- Topic' is stripped).
+        // Topic channel audio is the authoritative audio release on YouTube Music.
+        const topicItems = group.filter(i => i.isTopicAudio === true);
         if (topicItems.length > 0) {
+          console.log(`[Resolve API] Found ${topicItems.length} Topic channel audio result(s)`);
           return findBestInGroup(topicItems);
         }
 
-        // If no explicit topic channel, aggressively filter out VEVO and main channels!
-        const strictAudioItems = group.filter(i => 
+        // SECONDARY FILTER: exclude VEVO and official artist channels
+        const audioItems = group.filter(i => 
           !i.channelTitle.toLowerCase().includes('vevo') &&
-          i.channelTitle.toLowerCase() !== artist.toLowerCase() &&
           !i.channelTitle.toLowerCase().includes('official')
         );
-        if (strictAudioItems.length > 0) {
-          return findBestInGroup(strictAudioItems);
+        if (audioItems.length > 0) {
+          console.log(`[Resolve API] No Topic results, using ${audioItems.length} non-VEVO audio result(s)`);
+          return findBestInGroup(audioItems);
         }
       } else if (mode === 'video') {
-        // Enforce non-Topic channels (official artist channel/VEVO) for music videos
-        const clipItems = group.filter(i => !i.channelTitle.toLowerCase().includes('topic'));
-        if (clipItems.length > 0) {
-          return findBestInGroup(clipItems);
-        }
+        const clipItems = group.filter(i => !i.isTopicAudio);
+        if (clipItems.length > 0) return findBestInGroup(clipItems);
       }
       return findBestInGroup(group);
     };
 
     const getBestMatch = (items: any[]) => {
-      // Filter out items that are not correct title matches or artist matches
+      // Step 1: filter by title and artist correctness
       const validItems = items.filter(i => isCorrectMatch(title, i.title) && isArtistMatch(artist, i.channelTitle));
       if (!validItems || validItems.length === 0) return null;
       
-      // If we have an album constraint, filter/prioritize items matching the album name!
+      // Step 2: if album context is provided, STRICTLY require album match.
+      // This is critical for disambiguating duplicate-named songs (e.g. Yeat has 2 songs
+      // named "Back Home" on different albums — without this filter we'd always get the wrong one).
       if (album) {
         const cleanRequestedAlbum = album.toLowerCase().replace(/[^a-z0-9]/g, '');
         const albumMatchItems = validItems.filter(i => {
@@ -118,9 +122,15 @@ export async function GET(request: Request) {
           const cleanItemAlbum = i.albumName.toLowerCase().replace(/[^a-z0-9]/g, '');
           return cleanItemAlbum.includes(cleanRequestedAlbum) || cleanRequestedAlbum.includes(cleanItemAlbum);
         });
+        
         if (albumMatchItems.length > 0) {
+          console.log(`[Resolve API] Album filter matched ${albumMatchItems.length} item(s) for album "${album}"`);
           return selectBestFromGroup(albumMatchItems);
         }
+        
+        // If no album-matched items (some songs don't have albumName in search results),
+        // fall through to unfiltered validItems only as last resort.
+        console.log(`[Resolve API] No album-matched items for "${album}", falling back to artist+title match`);
       }
 
       return selectBestFromGroup(validItems);

@@ -277,6 +277,12 @@ export async function ytMusicSearch(query: string, params?: string) {
           const { artistName, artistId: subArtistId } = parseTrackSubtitle(subtitleRuns, title);
           const durationRun = subtitleRuns.find((r: any) => r?.text && /^\d+:\d{1,2}$/.test(r.text.trim()));
           const durationStr = durationRun ? durationRun.text.trim() : '3:00';
+
+          // Detect Topic channel audio from raw subtitle runs BEFORE cleanArtistName strips the suffix.
+          // A Topic channel artist run will contain text ending with '- Topic'.
+          const isTopicAudio = subtitleRuns.some((r: any) => 
+            r?.text && /[-\u2013\u2014]\s*Topic\s*$/i.test(r.text.trim())
+          );
           
           const albumRun = subtitleRuns.find((r: any) => {
             const bId = r.navigationEndpoint?.browseEndpoint?.browseId || '';
@@ -296,6 +302,7 @@ export async function ytMusicSearch(query: string, params?: string) {
             channelId: subArtistId || '',
             duration: durationStr,
             isExplicit,
+            isTopicAudio,
             albumName,
             albumId
           });
