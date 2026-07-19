@@ -113,14 +113,7 @@ export const createPlaybackSlice: StateCreator<StoreState, [], [], PlaybackSlice
     const state = get();
     if (state.queue.length > 0) {
       const next = state.queue[0];
-      const newQueue = state.queue.slice(1);
-      state.playTrack(next);
-      set({
-        queue: newQueue,
-        history: state.currentTrack
-          ? [state.currentTrack, ...state.history.filter(t => t.id !== state.currentTrack?.id)].slice(0, 50)
-          : state.history
-      });
+      state.playTrack(next, state.queue);
     } else if (state.repeatMode === 'all' && state.contextQueue.length > 0) {
       const next = state.contextQueue[0];
       state.playTrack(next, state.contextQueue);

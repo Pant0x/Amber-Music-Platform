@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, X, Play, ChevronLeft, ChevronRight, Clock, TrendingUp, User, LogIn, BadgeCheck } from 'lucide-react';
+import { Search, X, Play, ChevronLeft, ChevronRight, Clock, TrendingUp, User, LogIn, BadgeCheck, Star } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useRouter, usePathname } from 'next/navigation';
 import { useUser, useClerk } from '@clerk/nextjs';
@@ -142,6 +142,15 @@ export const Header: React.FC = () => {
             </>
           )}
         </div>
+        {/* Brand Logo */}
+        <button
+          onClick={handleLogoClick}
+          className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 transition-colors ml-2"
+          title="Go Home"
+        >
+          <Star className="w-5 h-5 text-[#ff0000] fill-current" />
+          <span className="text-sm font-bold text-white hidden sm:block">Pantooty</span>
+        </button>
       </div>
 
       <div className="flex-1 max-w-2xl mx-12 hidden md:block" ref={dropdownRef}>
