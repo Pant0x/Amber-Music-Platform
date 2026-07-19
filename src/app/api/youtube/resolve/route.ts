@@ -36,7 +36,7 @@ export async function GET(request: Request) {
 
     const query = mode === 'video' 
       ? `${artist} ${title} Official Video` 
-      : `${artist} ${title}${isExplicitRequest ? ' Explicit' : ''}`;
+      : `${artist} ${title} Topic`;
     console.log(`[Resolve API] Searching YouTube Music for (${mode}): "${query}"`);
     const searchData = await ytMusicSearch(query);
 
@@ -69,6 +69,16 @@ export async function GET(request: Request) {
         );
         if (topicItems.length > 0) {
           return findBestInGroup(topicItems);
+        }
+
+        // If no explicit topic channel, aggressively filter out VEVO and main channels!
+        const strictAudioItems = validItems.filter(i => 
+          !i.channelTitle.toLowerCase().includes('vevo') &&
+          i.channelTitle.toLowerCase() !== artist.toLowerCase() &&
+          !i.channelTitle.toLowerCase().includes('official')
+        );
+        if (strictAudioItems.length > 0) {
+          return findBestInGroup(strictAudioItems);
         }
       } else if (mode === 'video') {
         // Enforce non-Topic channels (official artist channel/VEVO) for music videos

@@ -7,6 +7,7 @@ import { ExplicitBadge, ArtistLinks, Carousel, isActiveTrack, PlayingEqualizer }
 import { cleanVisualName } from '@/utils/text';
 import { AlbumCoverPlayOverlay } from '../AlbumCoverPlayOverlay';
 import { useRouter } from 'next/navigation';
+import { AnimatedPage } from '../AnimatedPage';
 
 export const ArtistView: React.FC = () => {
   const {
@@ -145,7 +146,7 @@ export const ArtistView: React.FC = () => {
   }
 
   return (
-    <div className="animate-fade-in space-y-0">
+    <AnimatedPage className="space-y-0">
       
       {/* Header Banner - Spotify/YT Music 1:1 Layout */}
       <div 
@@ -682,6 +683,6 @@ export const ArtistView: React.FC = () => {
         </div>
       )}
 
-    </div>
+    </AnimatedPage>
   );
 };

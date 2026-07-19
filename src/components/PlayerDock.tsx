@@ -94,7 +94,7 @@ export const PlayerDock: React.FC = () => {
   if (rightSidebarView === 'queue') {
     return (
       <div 
-        className="hidden lg:flex w-[380px] flex-col select-none h-full flex-shrink-0 overflow-hidden relative z-20 transition-all duration-1000 p-6"
+        className="hidden lg:flex w-[380px] flex-col select-none h-full flex-shrink-0 overflow-hidden relative z-20 transition-all duration-1000 p-6 backdrop-blur-2xl border-l border-white/[0.04]"
         style={{ background: 'var(--theme-player-bg, #0a0909)' }}
       >
         <div className="flex items-center justify-between mb-6 flex-shrink-0">
@@ -226,7 +226,7 @@ export const PlayerDock: React.FC = () => {
   if (rightSidebarView === 'connect') {
     return (
       <div 
-        className="hidden lg:flex w-[380px] flex-col select-none h-full flex-shrink-0 overflow-hidden relative z-20 transition-all duration-1000 p-6"
+        className="hidden lg:flex w-[380px] flex-col select-none h-full flex-shrink-0 overflow-hidden relative z-20 transition-all duration-1000 p-6 backdrop-blur-2xl border-l border-white/[0.04]"
         style={{ background: 'var(--theme-player-bg, #0a0909)' }}
       >
         <div className="flex items-center justify-between mb-6 flex-shrink-0">
@@ -282,7 +282,7 @@ export const PlayerDock: React.FC = () => {
 
   return (
     <div 
-      className="hidden lg:flex w-[380px] flex-col select-none h-full flex-shrink-0 overflow-hidden relative z-20 transition-all duration-1000"
+      className="hidden lg:flex w-[380px] flex-col select-none h-full flex-shrink-0 overflow-hidden relative z-20 transition-all duration-1000 backdrop-blur-2xl border-l border-white/[0.04]"
       style={{ background: 'var(--theme-player-bg, #0a0909)' }}
     >
       

@@ -49,15 +49,15 @@ export const TrackCover: React.FC<TrackCoverProps> = ({
         >
           {isCurrentPlaying ? (
             <div className="flex items-end gap-[3px] h-[18px] justify-center pb-[2px]">
-              <span style={{ animationPlayState: isCurrentPlaying ? 'running' : 'paused' }} className="w-[3px] h-3 bg-[#ff0000] rounded-t-sm animate-wave-1" />
-              <span style={{ animationPlayState: isCurrentPlaying ? 'running' : 'paused' }} className="w-[3px] h-[18px] bg-[#ff0000] rounded-t-sm animate-wave-2" />
-              <span style={{ animationPlayState: isCurrentPlaying ? 'running' : 'paused' }} className="w-[3px] h-[10px] bg-[#ff0000] rounded-t-sm animate-wave-3" />
+              <span style={{ animationPlayState: isCurrentPlaying ? 'running' : 'paused', backgroundColor: 'var(--theme-accent, #ff0000)' }} className="w-[3px] h-3 rounded-t-sm animate-wave-1" />
+              <span style={{ animationPlayState: isCurrentPlaying ? 'running' : 'paused', backgroundColor: 'var(--theme-accent, #ff0000)' }} className="w-[3px] h-[18px] rounded-t-sm animate-wave-2" />
+              <span style={{ animationPlayState: isCurrentPlaying ? 'running' : 'paused', backgroundColor: 'var(--theme-accent, #ff0000)' }} className="w-[3px] h-[10px] rounded-t-sm animate-wave-3" />
               <div className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center rounded">
                 <Pause className="w-5 h-5 fill-current text-white" />
               </div>
             </div>
           ) : isActive ? (
-            <Play className="w-5 h-5 fill-current text-[#ff0000]" />
+            <Play className="w-5 h-5 fill-current" style={{ color: 'var(--theme-accent, #ff0000)' }} />
           ) : (
             <Play className="w-5 h-5 fill-current text-white ml-0.5" />
           )}

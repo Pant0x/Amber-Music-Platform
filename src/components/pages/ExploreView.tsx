@@ -4,6 +4,7 @@ import { Track } from '@/types/music-player';
 import { Disc } from 'lucide-react';
 import { TrackCover } from '../TrackCover';
 import { Carousel, ArtistLinks } from './shared';
+import { AnimatedPage } from '../AnimatedPage';
 
 export const ExploreView: React.FC = () => {
   const { hideExplicit } = usePlayerStore();
@@ -31,7 +32,7 @@ export const ExploreView: React.FC = () => {
   }, []);
 
   return (
-    <div className="animate-fade-in space-y-8">
+    <AnimatedPage className="space-y-8">
       <h1 className="text-3xl font-extrabold text-white tracking-tight">Explore</h1>
 
       {exploreLoading ? (
@@ -104,6 +105,6 @@ export const ExploreView: React.FC = () => {
           )}
         </div>
       )}
-    </div>
+    </AnimatedPage>
   );
 };

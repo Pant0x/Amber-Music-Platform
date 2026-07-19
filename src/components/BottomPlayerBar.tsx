@@ -169,7 +169,7 @@ export const BottomPlayerBar: React.FC = () => {
 
   return (
     <div 
-      className="h-[80px] w-screen bg-[#090909] text-white border-t border-white/5 px-4 flex items-center justify-between select-none relative z-50 flex-shrink-0 transition-all duration-1000"
+      className="h-[80px] w-screen text-white border-t border-white/[0.04] px-4 flex items-center justify-between select-none relative z-50 flex-shrink-0 transition-all duration-1000 backdrop-blur-2xl"
       style={{ background: 'var(--theme-player-bg, #090909)' }}
     >
       {/* 1. LEFT SECTION: Track Info */}

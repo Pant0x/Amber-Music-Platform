@@ -4,6 +4,7 @@ import { Track } from '@/types/music-player';
 import { Disc } from 'lucide-react';
 import { TrackCover } from '../TrackCover';
 import { Carousel, ArtistLinks, isActiveTrack, ExplicitBadge } from './shared';
+import { AnimatedPage, HoverCard } from '../AnimatedPage';
 
 const MOOD_CHIPS = [
   { id: 'focus', label: 'Focus' },
@@ -57,7 +58,7 @@ export const HomeView: React.FC = () => {
   }, [selectedMood, history.length, searchHistory.length]);
 
   return (
-    <div className="animate-fade-in space-y-8">
+    <AnimatedPage className="space-y-8">
       {/* Mood/Filter Chips */}
       <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1">
         {MOOD_CHIPS.map((chip) => {
@@ -162,15 +163,16 @@ export const HomeView: React.FC = () => {
               .filter((v, i, a) => a.findIndex(t => t.id === v.id) === i)
               .slice(0, 12)
               .map((track) => (
-                <div
+                <HoverCard
                   key={`la-${track.id}`}
-                  onClick={() => usePlayerStore.getState().playTrack(track, history)}
                   className="group bg-[#0d0d0d] hover:bg-[#1a1a1a] p-3 rounded-lg transition-all duration-200 cursor-pointer relative shadow-lg flex-shrink-0 w-36 sm:w-44 snap-start border border-white/5"
                 >
-                  <TrackCover track={track} contextTracks={history} sizeClass="aspect-square w-full rounded-md mb-3" />
-                  <h4 className="text-xs font-bold text-white truncate mb-0.5">{track.title}</h4>
-                  <p className="text-[10px] text-zinc-400 truncate mt-0.5"><ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} /></p>
-                </div>
+                  <div onClick={() => usePlayerStore.getState().playTrack(track, history)}>
+                    <TrackCover track={track} contextTracks={history} sizeClass="aspect-square w-full rounded-md mb-3" />
+                    <h4 className="text-xs font-bold text-white truncate mb-0.5">{track.title}</h4>
+                    <p className="text-[10px] text-zinc-400 truncate mt-0.5"><ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} /></p>
+                  </div>
+                </HoverCard>
               ))}
           </Carousel>
         </div>
@@ -182,19 +184,20 @@ export const HomeView: React.FC = () => {
           <h2 className="text-xl font-bold text-white tracking-tight">Mixed for you</h2>
           <Carousel>
             {recommendations.slice(8, 20).map((track) => (
-              <div
+              <HoverCard
                 key={`mix-${track.id}`}
-                onClick={() => usePlayerStore.getState().playTrack(track, recommendations)}
                 className="group bg-[#0d0d0d] hover:bg-[#1a1a1a] p-3 rounded-lg transition-all duration-200 cursor-pointer relative shadow-lg flex-shrink-0 w-36 sm:w-44 snap-start border border-white/5"
               >
-                <TrackCover track={track} contextTracks={recommendations} sizeClass="aspect-square w-full rounded-md mb-3" />
-                <h4 className="text-xs font-bold text-white truncate mb-0.5">{track.title}</h4>
-                <p className="text-[10px] text-zinc-400 truncate mt-0.5"><ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} /></p>
-              </div>
+                <div onClick={() => usePlayerStore.getState().playTrack(track, recommendations)}>
+                  <TrackCover track={track} contextTracks={recommendations} sizeClass="aspect-square w-full rounded-md mb-3" />
+                  <h4 className="text-xs font-bold text-white truncate mb-0.5">{track.title}</h4>
+                  <p className="text-[10px] text-zinc-400 truncate mt-0.5"><ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} /></p>
+                </div>
+              </HoverCard>
             ))}
           </Carousel>
         </div>
       )}
-    </div>
+    </AnimatedPage>
   );
 };

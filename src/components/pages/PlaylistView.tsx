@@ -4,6 +4,7 @@ import { Track } from '@/types/music-player';
 import { Play, Pause, Music, Trash2, X, Disc, Heart } from 'lucide-react';
 import { TrackCover } from '../TrackCover';
 import { ExplicitBadge, ArtistLinks, PlayingEqualizer, isActiveTrack } from './shared';
+import { AnimatedPage } from '../AnimatedPage';
 
 export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) => {
   const {
@@ -68,7 +69,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
 
   if (mode === 'liked') {
     return (
-      <div className="animate-fade-in space-y-6">
+      <AnimatedPage className="space-y-6">
         <div 
           className="flex flex-col md:flex-row items-end gap-6 -mx-6 p-6 pt-12 transition-all duration-1000"
           style={{ backgroundImage: 'linear-gradient(to bottom, rgba(179, 0, 0, 0.2), var(--theme-main-bg, #030303))' }}
@@ -199,13 +200,13 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
             })
           )}
         </div>
-      </div>
+    </AnimatedPage>
     );
   }
 
   // Otherwise, custom or YouTube playlist details
   return (
-    <div className="animate-fade-in space-y-6">
+    <AnimatedPage className="space-y-6">
       {activePlaylist ? (
         <div className="animate-fade-in space-y-6">
           <div 
@@ -545,6 +546,6 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
       ) : (
         <div className="py-20 text-center text-xs text-zinc-500 italic">Playlist not found.</div>
       )}
-    </div>
+    </AnimatedPage>
   );
 };

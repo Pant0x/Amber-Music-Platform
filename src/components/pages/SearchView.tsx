@@ -6,6 +6,7 @@ import { TrackCover } from '../TrackCover';
 import { ExplicitBadge, ArtistLinks, PlayingEqualizer, isActiveTrack } from './shared';
 import { cleanVisualName } from '@/utils/text';
 import { AlbumCoverPlayOverlay } from '../AlbumCoverPlayOverlay';
+import { AnimatedPage } from '../AnimatedPage';
 
 export const SearchView: React.FC = () => {
   const {
@@ -140,7 +141,7 @@ export const SearchView: React.FC = () => {
   }, [searchQuery]);
 
   return (
-    <div className="animate-fade-in space-y-6">
+    <AnimatedPage className="space-y-6">
       {/* Search filters chips */}
       <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1 select-none">
         {([
@@ -616,6 +617,6 @@ export const SearchView: React.FC = () => {
           )}
         </div>
       )}
-    </div>
+    </AnimatedPage>
   );
 };

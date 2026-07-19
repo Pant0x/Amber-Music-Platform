@@ -120,20 +120,20 @@ export const ArtistLinks: React.FC<ArtistLinksProps> = ({
   );
 };
 
-export const PlayingEqualizer: React.FC<{ isPlaying: boolean; color?: string }> = ({ isPlaying, color = '#ff0000' }) => {
+export const PlayingEqualizer: React.FC<{ isPlaying: boolean; color?: string }> = ({ isPlaying, color = 'var(--theme-accent, #ff0000)' }) => {
   return (
     <div className="flex items-end gap-[2px] h-[14px] w-[12px] justify-center flex-shrink-0">
       <div 
         style={{ animationPlayState: isPlaying ? 'running' : 'paused', backgroundColor: color }} 
-        className="w-[2px] h-1 bg-[#ff0000] rounded-t-sm animate-wave-1" 
+        className="w-[2px] h-1 rounded-t-sm animate-wave-1" 
       />
       <div 
         style={{ animationPlayState: isPlaying ? 'running' : 'paused', backgroundColor: color }} 
-        className="w-[2px] h-2 bg-[#ff0000] rounded-t-sm animate-wave-2" 
+        className="w-[2px] h-2 rounded-t-sm animate-wave-2" 
       />
       <div 
         style={{ animationPlayState: isPlaying ? 'running' : 'paused', backgroundColor: color }} 
-        className="w-[2px] h-1.5 bg-[#ff0000] rounded-t-sm animate-wave-3" 
+        className="w-[2px] h-1.5 rounded-t-sm animate-wave-3" 
       />
     </div>
   );

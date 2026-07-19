@@ -36,7 +36,7 @@ export const Sidebar: React.FC = () => {
 
   return (
     <aside 
-      className="hidden md:flex w-[240px] flex-col select-none h-full flex-shrink-0 text-zinc-400 font-semibold p-4 transition-all duration-1000"
+      className="hidden md:flex w-[240px] flex-col select-none h-full flex-shrink-0 text-zinc-400 font-semibold p-4 transition-all duration-1000 backdrop-blur-2xl border-r border-white/[0.04]"
       style={{ background: 'var(--theme-sidebar-bg, #120d0d)' }}
     >
       

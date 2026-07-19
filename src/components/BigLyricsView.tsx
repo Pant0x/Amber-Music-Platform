@@ -5,6 +5,18 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { Music, Disc } from 'lucide-react';
 import { parseFeaturedArtists } from '@/utils/text';
 
+const upgradeThumbnailUrl = (url: string | undefined): string => {
+  if (!url) return '';
+  if (url.includes('googleusercontent.com')) {
+    return url.replace(/=w\d+-h\d+.*$/, '=w544-h544-l90-rj').replace(/=s\d+.*$/, '=w544-h544-l90-rj');
+  }
+  if (url.includes('i.ytimg.com/vi/') || url.includes('img.youtube.com/vi/')) {
+    const cleanUrl = url.split('?')[0];
+    return cleanUrl.replace(/\/(default|mqdefault|sddefault|hqdefault|maxresdefault)\.jpg/, '/maxresdefault.jpg');
+  }
+  return url;
+};
+
 export const BigLyricsView: React.FC = () => {
   const {
     currentTrack,
@@ -119,40 +131,47 @@ export const BigLyricsView: React.FC = () => {
     );
   }
 
+  const parsed = parseFeaturedArtists(currentTrack.title);
+
   return (
     <div 
-      className="absolute inset-0 flex flex-col select-none overflow-hidden z-40 animate-fade-in bg-[#030303]"
+      className="absolute inset-0 flex flex-col select-none overflow-hidden z-40 animate-scale-in"
     >
-      {/* Blurred album cover background */}
+      {/* Immersive blurred album cover background - Apple Music style */}
       {currentTrack.thumbnailUrl && (
         <div 
-          className="absolute inset-0 z-0 opacity-40 scale-[1.2] blur-[80px]"
+          className="absolute inset-0 z-0 opacity-50 scale-[1.3] blur-[100px] saturate-[1.4]"
           style={{
-            backgroundImage: `url(${currentTrack.thumbnailUrl})`,
+            backgroundImage: `url(${upgradeThumbnailUrl(currentTrack.thumbnailUrl)})`,
             backgroundPosition: 'center',
             backgroundSize: 'cover',
           }}
         />
       )}
-      {/* Dark gradient overlay to make lyrics readable */}
-      <div className="absolute inset-0 z-0 bg-gradient-to-b from-black/40 via-black/60 to-black/80" />
+      {/* Multi-layer gradient overlay for deep readability */}
+      <div className="absolute inset-0 z-0 bg-gradient-to-b from-black/50 via-black/65 to-black/85" />
+      <div className="absolute inset-0 z-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
 
-      <div className="flex-1 flex flex-col min-h-0 relative z-10 px-6 md:px-16 lg:px-24">
+      <div className="flex-1 flex flex-col min-h-0 relative z-10 px-6 md:px-16 lg:px-28">
         {globalLyricsLoading ? (
-          <div className="flex-1 flex flex-col justify-center space-y-6 max-w-2xl mx-auto w-full pt-10">
-            <div className="h-7 bg-white/5 rounded-lg w-3/4 animate-pulse" />
-            <div className="h-7 bg-white/5 rounded-lg w-1/2 animate-pulse" />
-            <div className="h-7 bg-white/5 rounded-lg w-5/6 animate-pulse" />
-            <div className="h-7 bg-white/5 rounded-lg w-2/3 animate-pulse" />
+          <div className="flex-1 flex flex-col justify-center space-y-8 max-w-2xl mx-auto w-full pt-10">
+            {[...Array(5)].map((_, i) => (
+              <div 
+                key={i} 
+                className="h-8 bg-white/5 rounded-xl animate-shimmer" 
+                style={{ width: `${60 + Math.random() * 30}%`, animationDelay: `${i * 150}ms` }}
+              />
+            ))}
           </div>
         ) : globalLyricsData?.lines ? (
           <div
             ref={containerRef}
             onScroll={handleUserScroll}
-            className="flex-1 overflow-y-auto space-y-6 custom-scrollbar py-[35vh] text-left select-text relative"
+            className="flex-1 overflow-y-auto space-y-5 no-scrollbar py-[40vh] text-left select-text relative"
           >
             {globalLyricsData.lines.map((line, idx) => {
               const isActive = idx === activeLineIndex;
+              const isPast = idx < activeLineIndex;
               const isClickable = globalLyricsData.isSynced && line.time !== -999;
               
               return (
@@ -165,14 +184,21 @@ export const BigLyricsView: React.FC = () => {
                       setSeekTrigger(line.time);
                     }
                   }}
-                  className={`text-xl md:text-3xl lg:text-4xl font-black leading-tight tracking-tight transition-all duration-300 px-4 py-2 rounded-xl border border-transparent ${
-                    isClickable ? 'cursor-pointer hover:scale-[1.01]' : 'cursor-default'
+                  className={`text-2xl md:text-4xl lg:text-[2.75rem] font-extrabold leading-[1.15] tracking-tight px-3 py-2 rounded-xl border border-transparent transition-all duration-500 ease-out ${
+                    isClickable ? 'cursor-pointer' : 'cursor-default'
                   } ${
                     isActive
-                      ? 'text-white scale-[1.02] filter drop-shadow-md'
-                      : 'text-zinc-650 opacity-45 hover:opacity-80 hover:text-zinc-300'
+                      ? 'text-white scale-[1.015] opacity-100'
+                      : isPast
+                        ? 'text-white/20 opacity-40'
+                        : 'text-white/25 opacity-35 hover:opacity-60 hover:text-white/40'
                   }`}
-                  style={isActive ? { textShadow: '0 4px 12px rgba(0,0,0,0.5)' } : {}}
+                  style={isActive ? { 
+                    textShadow: '0 4px 20px rgba(0,0,0,0.6), 0 0 60px rgba(var(--theme-ambient-r, 255), var(--theme-ambient-g, 255), var(--theme-ambient-b, 255), 0.1)',
+                    filter: 'none'
+                  } : { 
+                    filter: isActive ? 'none' : 'blur(0px)'
+                  }}
                 >
                   {line.text}
                 </p>
@@ -180,9 +206,12 @@ export const BigLyricsView: React.FC = () => {
             })}
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-center">
-            <Disc className="w-12 h-12 stroke-[1.5] text-zinc-600 mb-3 animate-spin duration-[4000ms]" />
-            <p className="text-zinc-400 text-sm font-semibold">Lyrics are not available for this track.</p>
+          <div className="flex-1 flex flex-col items-center justify-center text-center gap-4">
+            <Disc className="w-16 h-16 stroke-[1] text-white/15 animate-spin" style={{ animationDuration: '4s' }} />
+            <div>
+              <p className="text-white/40 text-base font-semibold">Lyrics not available</p>
+              <p className="text-white/20 text-sm mt-1 font-medium">{parsed.title} — {currentTrack.channelTitle}</p>
+            </div>
           </div>
         )}
       </div>
