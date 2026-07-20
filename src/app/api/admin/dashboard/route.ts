@@ -26,10 +26,11 @@ export async function GET() {
     })
   }
 
-  const [usersRes, tracksRes, playsRes] = await Promise.all([
+  const [usersRes, tracksRes, playsRes, pendingArtistsRes] = await Promise.all([
     supabaseAdmin.from('profiles').select('user_id, display_name, created_at').order('created_at', { ascending: false }).limit(20),
     supabaseAdmin.from('artist_tracks').select('id, title, artist_name, plays_count, created_at').order('created_at', { ascending: false }).limit(20),
     supabaseAdmin.from('artist_tracks').select('plays_count'),
+    supabaseAdmin.from('profiles').select('user_id, display_name, avatar_url, bio, created_at').eq('artist_status', 'pending').order('created_at', { ascending: true }),
   ])
 
   const totalPlays = playsRes.data?.reduce((sum, t) => sum + (t.plays_count || 0), 0) ?? 0
@@ -46,5 +47,6 @@ export async function GET() {
       created_at: u.created_at,
     })) ?? [],
     tracks: tracksRes.data ?? [],
+    pending_artists: pendingArtistsRes.data ?? [],
   })
 }

@@ -1,10 +1,11 @@
 -- Profiles table for user data synced from Clerk
 CREATE TABLE IF NOT EXISTS public.profiles (
-  user_id UUID PRIMARY KEY,
+  user_id TEXT PRIMARY KEY,
   display_name TEXT,
   avatar_url TEXT,
   bio TEXT DEFAULT '',
   is_artist BOOLEAN DEFAULT false,
+  artist_status TEXT DEFAULT 'none', -- 'none', 'pending', 'approved'
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -15,7 +16,7 @@ CREATE POLICY "profiles_select_public" ON public.profiles
 
 -- Allow authenticated users to update their own profile
 CREATE POLICY "profiles_update_own" ON public.profiles
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING ((auth.jwt() ->> 'sub') = user_id);
 
 -- Allow service role full access (webhooks)
 CREATE POLICY "profiles_service_role_all" ON public.profiles
@@ -24,7 +25,7 @@ CREATE POLICY "profiles_service_role_all" ON public.profiles
 -- Artist tracks table
 CREATE TABLE IF NOT EXISTS public.artist_tracks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  artist_id UUID REFERENCES public.profiles(user_id) NOT NULL,
+  artist_id TEXT REFERENCES public.profiles(user_id) NOT NULL,
   title TEXT NOT NULL,
   artist_name TEXT NOT NULL,
   genre TEXT,
@@ -45,33 +46,33 @@ CREATE TABLE IF NOT EXISTS public.artist_tracks (
 
 -- Allow public read for public tracks
 CREATE POLICY "artist_tracks_select_public" ON public.artist_tracks
-  FOR SELECT USING (is_public = true OR auth.uid() = artist_id);
+  FOR SELECT USING (is_public = true OR (auth.jwt() ->> 'sub') = artist_id);
 
 -- Allow artists to CRUD their own tracks
 CREATE POLICY "artist_tracks_manage_own" ON public.artist_tracks
-  FOR ALL USING (auth.uid() = artist_id);
+  FOR ALL USING ((auth.jwt() ->> 'sub') = artist_id);
 
 -- Artist follows
 CREATE TABLE IF NOT EXISTS public.artist_follows (
-  follower_id UUID REFERENCES public.profiles(user_id),
-  artist_id UUID REFERENCES public.profiles(user_id),
+  follower_id TEXT REFERENCES public.profiles(user_id),
+  artist_id TEXT REFERENCES public.profiles(user_id),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   PRIMARY KEY (follower_id, artist_id)
 );
 
 CREATE POLICY "artist_follows_select_own" ON public.artist_follows
-  FOR SELECT USING (auth.uid() = follower_id OR auth.uid() = artist_id);
+  FOR SELECT USING ((auth.jwt() ->> 'sub') = follower_id OR (auth.jwt() ->> 'sub') = artist_id);
 
 CREATE POLICY "artist_follows_insert_own" ON public.artist_follows
-  FOR INSERT WITH CHECK (auth.uid() = follower_id);
+  FOR INSERT WITH CHECK ((auth.jwt() ->> 'sub') = follower_id);
 
 CREATE POLICY "artist_follows_delete_own" ON public.artist_follows
-  FOR DELETE USING (auth.uid() = follower_id);
+  FOR DELETE USING ((auth.jwt() ->> 'sub') = follower_id);
 
 -- Devices table for sync
 CREATE TABLE IF NOT EXISTS public.devices (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL,
+  user_id TEXT NOT NULL,
   name TEXT NOT NULL,
   device_type TEXT DEFAULT 'browser',
   last_seen TIMESTAMPTZ DEFAULT NOW(),
@@ -82,12 +83,12 @@ CREATE TABLE IF NOT EXISTS public.devices (
 );
 
 CREATE POLICY "devices_manage_own" ON public.devices
-  FOR ALL USING (auth.uid() = user_id);
+  FOR ALL USING ((auth.jwt() ->> 'sub') = user_id);
 
 -- User uploaded files
 CREATE TABLE IF NOT EXISTS public.user_files (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL,
+  user_id TEXT NOT NULL,
   title TEXT NOT NULL,
   artist TEXT,
   album TEXT,
@@ -103,13 +104,13 @@ CREATE TABLE IF NOT EXISTS public.user_files (
 );
 
 CREATE POLICY "user_files_manage_own" ON public.user_files
-  FOR ALL USING (auth.uid() = user_id);
+  FOR ALL USING ((auth.jwt() ->> 'sub') = user_id);
 
 -- Allow anyone with share_token to read unlisted files
 CREATE POLICY "user_files_select_unlisted" ON public.user_files
   FOR SELECT USING (
     privacy_tier = 'unlisted' AND share_token IS NOT NULL
-    OR auth.uid() = user_id
+    OR (auth.jwt() ->> 'sub') = user_id
   );
 
 -- User sync data table (replaces user_ip_data)
@@ -127,5 +128,4 @@ CREATE TABLE IF NOT EXISTS public.user_sync_data (
 ALTER TABLE public.user_sync_data ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "user_sync_data_manage_own" ON public.user_sync_data
-  FOR ALL USING (auth.uid()::text = user_id);
-
+  FOR ALL USING ((auth.jwt() ->> 'sub') = user_id);

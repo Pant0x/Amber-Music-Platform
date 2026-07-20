@@ -15,7 +15,15 @@ export async function POST(req: Request) {
 
   const { data, error } = await supabase
     .from('profiles')
-    .upsert({ user_id: userId, display_name: displayName || null, bio: bio || '', avatar_url: avatarUrl || null, is_artist: true }, { onConflict: 'user_id' })
+    .upsert({ 
+      user_id: userId, 
+      display_name: displayName || null, 
+      bio: bio || '', 
+      avatar_url: avatarUrl || null, 
+      is_artist: false, 
+      artist_status: 'pending',
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id' })
     .select()
     .single()
 

@@ -268,7 +268,7 @@ export async function GET(request: Request) {
 
     // --- LAYER 1: LRCLIB EXACT GET ---
     try {
-      const lrcGetUrl = `https://lrclib.net/api/get?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}`;
+      const lrcGetUrl = `https://lrclib.net/api/get?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}&duration=${totalSeconds}`;
       const lrcRes = await fetch(lrcGetUrl, {
         headers: {
           'User-Agent': 'CloudMusic/1.0.0 (https://github.com/better-lyrics/better-lyrics)'
@@ -344,8 +344,9 @@ export async function GET(request: Request) {
             const artistName = item.artistName || '';
             const titleMatch = isCorrectMatch(cleanTitle, trackName);
             const artistMatch = isArtistMatch(cleanArtist, artistName);
+            const durationMatch = !item.duration || !totalSeconds || Math.abs(item.duration - totalSeconds) <= 10;
             
-            if (titleMatch && artistMatch && item.syncedLyrics) {
+            if (titleMatch && artistMatch && durationMatch && item.syncedLyrics) {
               const parsed = parseAndVerifyLrc(item.syncedLyrics);
               if (parsed) {
                 matchedItem = { item, parsed };
@@ -361,8 +362,9 @@ export async function GET(request: Request) {
               const artistName = item.artistName || '';
               const titleMatch = isCorrectMatch(cleanTitle, trackName);
               const artistMatch = isArtistMatch(cleanArtist, artistName);
+              const durationMatch = !item.duration || !totalSeconds || Math.abs(item.duration - totalSeconds) <= 10;
               
-              if (titleMatch && artistMatch && (item.plainLyrics || item.syncedLyrics)) {
+              if (titleMatch && artistMatch && durationMatch && (item.plainLyrics || item.syncedLyrics)) {
                 matchedItem = { item, parsed: null };
                 break;
               }

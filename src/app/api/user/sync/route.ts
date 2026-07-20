@@ -1,8 +1,38 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase-server';
 
 export const dynamic = 'force-dynamic';
+
+async function ensureUserProfile(userId: string) {
+  if (!supabaseAdmin) return;
+  try {
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (!profile) {
+      const client = await clerkClient();
+      const clerkUser = await client.users.getUser(userId);
+      const displayName = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || clerkUser.username || 'Listener';
+      
+      await supabaseAdmin
+        .from('profiles')
+        .upsert({
+          user_id: userId,
+          display_name: displayName,
+          avatar_url: clerkUser.imageUrl || null,
+          is_artist: false,
+          artist_status: 'none',
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id' });
+    }
+  } catch (e) {
+    console.warn('[User Sync API] Auto-profile creation failed:', e);
+  }
+}
 
 // GET: fetch database status/data for the logged-in user
 export async function GET() {
@@ -11,6 +41,8 @@ export async function GET() {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    await ensureUserProfile(userId);
 
     if (!supabaseAdmin) {
       return NextResponse.json({
@@ -66,6 +98,8 @@ export async function POST(request: Request) {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    await ensureUserProfile(userId);
 
     const rawBody = await request.text();
     

@@ -11,6 +11,9 @@ export async function GET() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  const { data } = await supabase.from('profiles').select('is_artist').eq('user_id', userId).single()
-  return NextResponse.json({ isArtist: data?.is_artist || false })
+  const { data } = await supabase.from('profiles').select('is_artist, artist_status').eq('user_id', userId).single()
+  return NextResponse.json({ 
+    isArtist: data?.is_artist || false,
+    artistStatus: data?.artist_status || 'none'
+  })
 }
