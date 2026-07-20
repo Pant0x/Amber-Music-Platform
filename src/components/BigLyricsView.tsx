@@ -5,14 +5,20 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { Music, Disc } from 'lucide-react';
 import { parseFeaturedArtists } from '@/utils/text';
 
-const upgradeThumbnailUrl = (url: string | undefined): string => {
-  if (!url) return '';
+const upgradeThumbnailUrl = (url: string | undefined, youtubeId?: string): string => {
+  if (!url) {
+    if (youtubeId) return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+    return '';
+  }
+  if (youtubeId && (url.includes('googleusercontent.com') || url.includes('ggpht.com'))) {
+    return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+  }
   if (url.includes('googleusercontent.com')) {
     return url.replace(/=w\d+-h\d+.*$/, '=w544-h544-l90-rj').replace(/=s\d+.*$/, '=w544-h544-l90-rj');
   }
   if (url.includes('i.ytimg.com/vi/') || url.includes('img.youtube.com/vi/')) {
     const cleanUrl = url.split('?')[0];
-    return cleanUrl.replace(/\/(default|mqdefault|sddefault|hqdefault|maxresdefault)\.jpg/, '/maxresdefault.jpg');
+    return cleanUrl.replace(/\/(default|mqdefault|sddefault|hqdefault|maxresdefault)\.jpg/, '/hqdefault.jpg');
   }
   return url;
 };
@@ -142,7 +148,7 @@ export const BigLyricsView: React.FC = () => {
         <div 
           className="absolute inset-0 z-0 opacity-50 scale-[1.3] blur-[100px] saturate-[1.4]"
           style={{
-            backgroundImage: `url(${upgradeThumbnailUrl(currentTrack.thumbnailUrl)})`,
+            backgroundImage: `url(${upgradeThumbnailUrl(currentTrack.thumbnailUrl, currentTrack.youtubeId || currentTrack.id)})`,
             backgroundPosition: 'center',
             backgroundSize: 'cover',
           }}

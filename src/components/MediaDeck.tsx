@@ -29,6 +29,24 @@ import {
 
 const ReactPlayer = dynamic(() => import('react-player/youtube'), { ssr: false }) as any;
 
+const upgradeThumbnailUrl = (url: string | undefined, youtubeId?: string): string => {
+  if (!url) {
+    if (youtubeId) return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+    return '';
+  }
+  if (youtubeId && (url.includes('googleusercontent.com') || url.includes('ggpht.com'))) {
+    return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+  }
+  if (url.includes('googleusercontent.com')) {
+    return url.replace(/=w\d+-h\d+.*$/, '=w544-h544-l90-rj').replace(/=s\d+.*$/, '=w544-h544-l90-rj');
+  }
+  if (url.includes('i.ytimg.com/vi/') || url.includes('img.youtube.com/vi/')) {
+    const cleanUrl = url.split('?')[0];
+    return cleanUrl.replace(/\/(default|mqdefault|sddefault|hqdefault|maxresdefault)\.jpg/, '/hqdefault.jpg');
+  }
+  return url;
+};
+
 export const MediaDeck: React.FC = () => {
   const {
     currentTrack,
@@ -173,6 +191,67 @@ export const MediaDeck: React.FC = () => {
     playedSecondsRef.current = 0;
     lastProgressSyncTimeRef.current = Date.now();
   }, [currentTrack?.id]);
+
+  // Media Session API - Update Lockscreen/System metadata
+  useEffect(() => {
+    if (!currentTrack || typeof window === 'undefined' || !('mediaSession' in navigator)) return;
+
+    const trackArtist = currentTrack.channelTitle || 'Unknown Artist';
+    const trackAlbum = currentTrack.albumName || 'Sonora';
+    const trackArt = upgradeThumbnailUrl(currentTrack.thumbnailUrl, currentTrack.youtubeId || currentTrack.id);
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: currentTrack.title,
+      artist: trackArtist,
+      album: trackAlbum,
+      artwork: [
+        { src: trackArt || '', sizes: '96x96', type: 'image/jpeg' },
+        { src: trackArt || '', sizes: '128x128', type: 'image/jpeg' },
+        { src: trackArt || '', sizes: '192x192', type: 'image/jpeg' },
+        { src: trackArt || '', sizes: '256x256', type: 'image/jpeg' },
+        { src: trackArt || '', sizes: '384x384', type: 'image/jpeg' },
+        { src: trackArt || '', sizes: '512x512', type: 'image/jpeg' },
+      ],
+    });
+  }, [currentTrack]);
+
+  // Media Session API - Playback State Sync
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('mediaSession' in navigator)) return;
+    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+  }, [isPlaying]);
+
+  // Media Session API - Register HW controls (headphones, keyboard buttons)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('mediaSession' in navigator)) return;
+
+    try {
+      navigator.mediaSession.setActionHandler('play', () => setPlaying(true));
+      navigator.mediaSession.setActionHandler('pause', () => setPlaying(false));
+      navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack());
+      navigator.mediaSession.setActionHandler('previoustrack', () => prevTrack());
+      navigator.mediaSession.setActionHandler('seekto', (details) => {
+        if (details.seekTime !== undefined && playerRef.current) {
+          playerRef.current.seekTo(details.seekTime);
+          setProgress((prev) => ({ ...prev, playedSeconds: details.seekTime! }));
+          setStorePlayedSeconds(details.seekTime);
+        }
+      });
+    } catch (e) {
+      console.warn('[Media Session] Action registration error:', e);
+    }
+
+    return () => {
+      if (!('mediaSession' in navigator)) return;
+      try {
+        navigator.mediaSession.setActionHandler('play', null);
+        navigator.mediaSession.setActionHandler('pause', null);
+        navigator.mediaSession.setActionHandler('nexttrack', null);
+        navigator.mediaSession.setActionHandler('previoustrack', null);
+        navigator.mediaSession.setActionHandler('seekto', null);
+      } catch {}
+    };
+  }, [nextTrack, prevTrack, setPlaying, setStorePlayedSeconds]);
 
   const seekTrigger = usePlayerStore((s) => s.seekTrigger);
   const setSeekTrigger = usePlayerStore((s) => s.setSeekTrigger);

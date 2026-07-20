@@ -26,14 +26,20 @@ import {
 } from 'lucide-react';
 import { ArtistLinks } from './pages/shared';
 
-const upgradeThumbnailUrl = (url: string | undefined): string => {
-  if (!url) return '';
+const upgradeThumbnailUrl = (url: string | undefined, youtubeId?: string): string => {
+  if (!url) {
+    if (youtubeId) return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+    return '';
+  }
+  if (youtubeId && (url.includes('googleusercontent.com') || url.includes('ggpht.com'))) {
+    return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+  }
   if (url.includes('googleusercontent.com')) {
     return url.replace(/=w\d+-h\d+.*$/, '=w544-h544-l90-rj').replace(/=s\d+.*$/, '=w544-h544-l90-rj');
   }
   if (url.includes('i.ytimg.com/vi/') || url.includes('img.youtube.com/vi/')) {
     const cleanUrl = url.split('?')[0];
-    return cleanUrl.replace(/\/(default|mqdefault|sddefault|hqdefault|maxresdefault)\.jpg/, '/maxresdefault.jpg');
+    return cleanUrl.replace(/\/(default|mqdefault|sddefault|hqdefault|maxresdefault)\.jpg/, '/hqdefault.jpg');
   }
   return url;
 };
@@ -219,7 +225,7 @@ export const BottomPlayerBar: React.FC = () => {
       <div className="flex items-center gap-3 w-[30%] min-w-[200px]">
         <div className="w-14 h-14 rounded-lg overflow-hidden bg-zinc-900 border border-white/5 flex-shrink-0 shadow-md shadow-black/40">
           <img 
-            src={upgradeThumbnailUrl(currentTrack.thumbnailUrl) || undefined} 
+            src={upgradeThumbnailUrl(currentTrack.thumbnailUrl, currentTrack.youtubeId || currentTrack.id) || undefined} 
             alt="" 
             className="w-full h-full object-cover"
             onError={(e) => {

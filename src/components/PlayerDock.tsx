@@ -28,14 +28,20 @@ import {
   Disc
 } from 'lucide-react';
 
-const upgradeThumbnailUrl = (url: string | undefined): string => {
-  if (!url) return '';
+const upgradeThumbnailUrl = (url: string | undefined, youtubeId?: string): string => {
+  if (!url) {
+    if (youtubeId) return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+    return '';
+  }
+  if (youtubeId && (url.includes('googleusercontent.com') || url.includes('ggpht.com'))) {
+    return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+  }
   if (url.includes('googleusercontent.com')) {
     return url.replace(/=w\d+-h\d+.*$/, '=w1080-h1080-l90-rj').replace(/=s\d+.*$/, '=w1080-h1080-l90-rj');
   }
   if (url.includes('i.ytimg.com/vi/') || url.includes('img.youtube.com/vi/')) {
     const cleanUrl = url.split('?')[0];
-    return cleanUrl.replace(/\/(default|mqdefault|sddefault|hqdefault|maxresdefault)\.jpg/, '/maxresdefault.jpg');
+    return cleanUrl.replace(/\/(default|mqdefault|sddefault|hqdefault|maxresdefault)\.jpg/, '/hqdefault.jpg');
   }
   return url;
 };
@@ -126,7 +132,7 @@ export const PlayerDock: React.FC = () => {
             <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Now playing</span>
             <div className="flex items-center gap-3 p-2 rounded-xl bg-white/5 border border-white/5">
               <img 
-                src={upgradeThumbnailUrl(currentTrack.thumbnailUrl) || undefined} 
+                src={upgradeThumbnailUrl(currentTrack.thumbnailUrl, currentTrack.youtubeId || currentTrack.id) || undefined} 
                 className="w-10 h-10 rounded-md object-cover flex-shrink-0" 
                 alt="" 
                 onError={(e) => {
@@ -164,7 +170,7 @@ export const PlayerDock: React.FC = () => {
                     className="group flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 cursor-pointer transition-all duration-200"
                   >
                     <img 
-                      src={upgradeThumbnailUrl(track.thumbnailUrl) || undefined} 
+                      src={upgradeThumbnailUrl(track.thumbnailUrl, track.youtubeId || track.id) || undefined} 
                       className="w-9 h-9 rounded-md object-cover flex-shrink-0" 
                       alt="" 
                       onError={(e) => {
@@ -206,7 +212,7 @@ export const PlayerDock: React.FC = () => {
                       className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 cursor-pointer transition-all duration-200"
                     >
                       <img 
-                        src={upgradeThumbnailUrl(track.thumbnailUrl) || undefined} 
+                        src={upgradeThumbnailUrl(track.thumbnailUrl, track.youtubeId || track.id) || undefined} 
                         className="w-9 h-9 rounded-md object-cover flex-shrink-0" 
                         alt="" 
                         onError={(e) => {
@@ -350,7 +356,7 @@ export const PlayerDock: React.FC = () => {
           style={{ boxShadow: '0 8px 30px rgba(0, 0, 0, 0.6)' }}
         >
           <img
-            src={upgradeThumbnailUrl(currentTrack.thumbnailUrl) || undefined}
+            src={upgradeThumbnailUrl(currentTrack.thumbnailUrl, currentTrack.youtubeId || currentTrack.id) || undefined}
             referrerPolicy="no-referrer"
             onError={(e) => {
               e.currentTarget.onerror = null;

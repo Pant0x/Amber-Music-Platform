@@ -25,8 +25,14 @@ import {
   ArrowDownToLine
 } from 'lucide-react';
 
-const upgradeThumbnailUrl = (url: string | undefined): string => {
-  if (!url) return '';
+const upgradeThumbnailUrl = (url: string | undefined, youtubeId?: string): string => {
+  if (!url) {
+    if (youtubeId) return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+    return '';
+  }
+  if (youtubeId && (url.includes('googleusercontent.com') || url.includes('ggpht.com'))) {
+    return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+  }
   if (url.includes('googleusercontent.com')) {
     return url.replace(/=w\d+-h\d+.*$/, '=w544-h544-l90-rj').replace(/=s\d+.*$/, '=w544-h544-l90-rj');
   }
@@ -166,11 +172,10 @@ export const NowPlayingView: React.FC = () => {
               txt.includes('lyricist:')
             );
           });
-          const hasTimestamps = cleanLines.some((l: any) => l.time !== undefined && l.time !== -999);
           const enriched = { 
             ...data, 
             lines: cleanLines,
-            isSynced: data.isSynced || hasTimestamps 
+            isSynced: data.isSynced
           };
           lyricsCache.current.set(cacheKey, enriched);
           setLyricsData(enriched);
@@ -424,7 +429,7 @@ export const NowPlayingView: React.FC = () => {
 
               <div className="relative w-[70vw] h-[70vw] sm:w-[50vw] sm:h-[50vw] lg:w-[380px] lg:h-[380px] aspect-square rounded-2xl shadow-[0_30px_80px_-10px_rgba(0,0,0,0.9)] overflow-hidden bg-zinc-900 group z-10">
                 <img
-                  src={upgradeThumbnailUrl(currentTrack.thumbnailUrl)   || undefined}
+                  src={upgradeThumbnailUrl(currentTrack.thumbnailUrl, currentTrack.youtubeId || currentTrack.id)   || undefined}
                   referrerPolicy="no-referrer"
                   onError={(e) => {
                     e.currentTarget.onerror = null;
