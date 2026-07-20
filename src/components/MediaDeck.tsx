@@ -148,6 +148,23 @@ export const MediaDeck: React.FC = () => {
   const isTransitioningRef = useRef(false);
   const lastProgressSyncTimeRef = useRef(Date.now());
   const playedSecondsRef = useRef(0);
+  const silentAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    const SILENCE_DATA = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAAA";
+    if (!silentAudioRef.current && typeof window !== 'undefined') {
+      const audio = new Audio(SILENCE_DATA);
+      audio.loop = true;
+      audio.volume = 0.001;
+      silentAudioRef.current = audio;
+    }
+
+    if (isPlaying) {
+      silentAudioRef.current?.play().catch(() => {});
+    } else {
+      silentAudioRef.current?.pause();
+    }
+  }, [isPlaying]);
 
   // Reset ready state when track changes
   useEffect(() => {
