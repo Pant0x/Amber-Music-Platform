@@ -24,21 +24,21 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Pantooty — Listen to Anything",
+  title: "Sonora — Listen to Anything",
   description: "Free music streaming powered by YouTube Music. Search millions of songs, build playlists, and discover new music — no subscription needed.",
   referrer: "no-referrer",
   openGraph: {
-    title: "Pantooty — Listen to Anything",
+    title: "Sonora — Listen to Anything",
     description: "Free music streaming. No subscription. Search, playlist, and discover — powered by YouTube Music.",
     type: "website",
-    siteName: "Pantooty",
+    siteName: "Sonora",
   },
   twitter: {
     card: "summary",
-    title: "Pantooty — Listen to Anything",
+    title: "Sonora — Listen to Anything",
     description: "Free music streaming. No subscription needed.",
   },
-  keywords: ["music", "streaming", "free", "playlist", "youtube music", "pantooty"],
+  keywords: ["music", "streaming", "free", "playlist", "youtube music", "Sonora"],
 };
 
 export default function RootLayout({

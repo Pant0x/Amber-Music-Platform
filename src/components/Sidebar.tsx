@@ -57,12 +57,12 @@ export const Sidebar: React.FC = () => {
       {/* Brand Header */}
       <div className="flex items-center gap-2 px-3 py-4 mb-4 flex-shrink-0">
         <Star className="w-6 h-6 text-[#ff0000] fill-current" />
-        <h1 className="text-lg font-bold tracking-tight text-white leading-none mt-1">Pantooty</h1>
+        <h1 className="text-lg font-bold tracking-tight text-white leading-none mt-1">Sonora</h1>
       </div>
 
       {/* 1. Main Navigation Items */}
       <div className="flex-shrink-0 mb-6">
-        <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest px-3 block mb-2">Pantooty</span>
+        <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest px-3 block mb-2">Sonora</span>
         <nav className="flex flex-col gap-0.5">
           <NavItem tab="home" icon={Home} label="Home" path="/" />
           <NavItem tab="explore" icon={Compass} label="Browse" path="/explore" />
