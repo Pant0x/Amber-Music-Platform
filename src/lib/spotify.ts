@@ -21,14 +21,14 @@ export async function getSpotifyApi(): Promise<SpotifyWebApi> {
   const now = Date.now();
   if (now >= tokenExpirationTime) {
     try {
-      console.log('[Spotify Helper] Fetching new client credentials token...');
+      console.debug('[Spotify Helper] Fetching new client credentials token...');
       const data = await spotifyApiInstance.clientCredentialsGrant();
       const accessToken = data.body['access_token'];
       const expiresIn = data.body['expires_in']; // usually 3600 seconds
       
       spotifyApiInstance.setAccessToken(accessToken);
       tokenExpirationTime = now + (expiresIn - 60) * 1000; // Refresh 1 minute early
-      console.log('[Spotify Helper] Access token successfully set and scheduled for renewal.');
+      console.debug('[Spotify Helper] Access token successfully set and scheduled for renewal.');
     } catch (err) {
       console.error('[Spotify Helper] Failed to authenticate with Spotify API:', err);
       throw err;

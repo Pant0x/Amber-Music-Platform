@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
 import { usePlayerStore } from '@/store/usePlayerStore'
 import { Link2, Loader2, ArrowRightLeft, Music, CheckCircle2, AlertCircle, Play, Plus, ListMusic } from 'lucide-react'
+import { genId } from '@/utils/text'
 
 interface PreviewTrack {
   title: string
@@ -75,7 +76,7 @@ export default function PlaylistTransferPage() {
         body: JSON.stringify({
           name: previewData.name,
           tracks: previewData.tracks.map(t => ({
-            id: t.youtubeId || `yt-${Math.random().toString(36).substring(2, 9)}`,
+            id: t.youtubeId || genId('yt'),
             title: t.title,
             channelTitle: t.artist,
             thumbnailUrl: t.thumbnailUrl || '',
@@ -115,7 +116,7 @@ export default function PlaylistTransferPage() {
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center">
         <ArrowRightLeft className="w-16 h-16 text-zinc-600 animate-pulse" />
         <h2 className="text-2xl font-bold text-white">Sign in to Transfer Playlists</h2>
-        <p className="text-zinc-400 max-w-sm">Import your playlists from Spotify, YouTube, or Deezer into Sonora in one click.</p>
+        <p className="text-zinc-400 max-w-sm">Import your playlists from Spotify, YouTube, or Deezer into Kiwi in one click.</p>
         <button onClick={() => router.push('/sign-in')} className="px-6 py-3 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium transition-all">
           Sign In
         </button>
@@ -135,7 +136,7 @@ export default function PlaylistTransferPage() {
           </div>
           <div>
             <h1 className="text-xl font-black tracking-tight text-white">Playlist Transfer</h1>
-            <p className="text-xs text-zinc-400 mt-1">Convert Spotify, YouTube, or Deezer playlists directly into Sonora.</p>
+            <p className="text-xs text-zinc-400 mt-1">Convert Spotify, YouTube, or Deezer playlists directly into Kiwi.</p>
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
+import { genId } from '@/utils/text'
 
 export async function POST(request: Request) {
   const { userId } = await auth()
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
   const currentPlaylists = Array.isArray(userData?.playlists) ? userData.playlists : []
 
   const newPlaylist = {
-    id: `pl_${Math.random().toString(36).substring(2, 9)}`,
+    id: genId('pl'),
     name: name.trim(),
     tracks,
     createdAt: new Date().toISOString(),

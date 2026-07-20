@@ -15,7 +15,7 @@ export async function GET(request: Request) {
 
     if (nextCache.has(videoId)) {
       const cached = nextCache.get(videoId);
-      console.log(`[API Next] Cache HIT for videoId: "${videoId}"`);
+      console.debug(`[API Next] Cache HIT for videoId: "${videoId}"`);
       return NextResponse.json(cached);
     }
 

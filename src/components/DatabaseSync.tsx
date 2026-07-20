@@ -32,26 +32,26 @@ export const DatabaseSync: React.FC = () => {
         pathname.startsWith('/admin');
       
       if (!isAuthOrAdminPage) {
-        console.log('[Sync] Redirecting new user to onboarding');
+        console.debug('[Sync] Redirecting new user to onboarding');
         router.push('/onboarding');
       }
     }
   }, [isHydrated, isLoaded, isSignedIn, onboardingCompleted, pathname, router]);
 
-  // 2. Initial Load: Fetch DB data on hydration
+  // 2. Initial Load: Fetch DB data on hydration (signed-in only)
   useEffect(() => {
-    if (isHydrated && !initialLoadRef.current) {
+    if (isHydrated && isSignedIn && !initialLoadRef.current) {
       initialLoadRef.current = true;
       fetchDatabaseData();
     }
-  }, [isHydrated, fetchDatabaseData]);
+  }, [isHydrated, isSignedIn, fetchDatabaseData]);
 
   const lastSyncHash = useRef<string>('');
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // 3. State Watcher: Sync local changes to DB (debounced by 5 seconds)
+  // 3. State Watcher: Sync local changes to DB (debounced by 5 seconds, signed-in only)
   useEffect(() => {
-    if (!isHydrated || !initialLoadRef.current) return;
+    if (!isHydrated || !isSignedIn || !initialLoadRef.current) return;
 
     const payloadString = JSON.stringify({
       display_name: displayName,

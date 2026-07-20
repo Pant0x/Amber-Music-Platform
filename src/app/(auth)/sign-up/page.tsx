@@ -59,12 +59,12 @@ export default function SignUpPage() {
         <div className="w-9 h-9 rounded-xl bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/30">
           <Music2 className="w-5 h-5 text-white" />
         </div>
-        <span className="text-white font-extrabold text-2xl tracking-tight">Sonora</span>
+        <span className="text-white font-extrabold text-2xl tracking-tight">Kiwi</span>
       </div>
 
       {/* Heading */}
       <div className="relative z-10 text-center mb-6 space-y-1.5">
-        <h1 className="text-3xl font-extrabold text-white tracking-tight">Join Sonora</h1>
+        <h1 className="text-3xl font-extrabold text-white tracking-tight">Join Kiwi</h1>
         <p className="text-zinc-400 text-sm">Free music streaming · No subscription needed</p>
       </div>
 

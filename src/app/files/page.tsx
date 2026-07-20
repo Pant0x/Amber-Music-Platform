@@ -9,6 +9,7 @@ import {
   Music, Upload, Play, Pause, Trash2, Share2, Clock, User, Globe, Lock, Eye,
   FileAudio, Loader2, X, Check, LogIn, Copy, FolderPlus, CheckSquare, Square, Edit
 } from 'lucide-react'
+import { genId, genToken } from '@/utils/text'
 
 interface LocalFile {
   id: string
@@ -220,7 +221,7 @@ export default function FilesPage() {
     }))
 
     const newPlaylist = {
-      id: `pl_${Math.random().toString(36).substring(2, 9)}`,
+      id: genId('pl'),
       name: playlistName.trim(),
       tracks: playlistTracks,
       createdAt: new Date().toISOString()
@@ -270,7 +271,7 @@ export default function FilesPage() {
         album: editAlbum.trim() || null,
         privacy_tier: editPrivacy,
         // Regenerate or wipe share token dynamically based on state
-        share_token: editPrivacy === 'unlisted' ? (f.share_token || 'temp_' + Math.random().toString(36).substring(2, 10)) : null
+        share_token: editPrivacy === 'unlisted' ? (f.share_token || genToken()) : null
       } : f))
 
       setEditingFile(null)

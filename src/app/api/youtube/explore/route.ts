@@ -5,7 +5,7 @@ import { ytMusicSearch, cleanArtistName, upgradeThumbnailUrl, cleanTopicGlobally
 export const revalidate = 3600; // Cache for 1 hour to prevent Spotify rate limits
 
 const runYoutubeExploreFallback = async () => {
-  console.log('[Explore API] Falling back to YouTube Music Explore data...');
+  console.debug('[Explore API] Falling back to YouTube Music Explore data...');
   try {
     // Parallel searches for popular hits and new releases on YouTube Music
     const [chartsRes, newReleasesRes] = await Promise.all([

@@ -14,7 +14,7 @@ export async function GET(request: Request) {
 
     // 1. If it looks like a Spotify ID (typically 22 chars alphanumeric)
     if (id.length === 22 && !id.includes('-') && !id.includes('_')) {
-      console.log(`[Track Resolve API] Resolving Spotify Track ID: ${id}`);
+      console.debug(`[Track Resolve API] Resolving Spotify Track ID: ${id}`);
       try {
         const spotifyApi = await getSpotifyApi();
         const trackRes = await spotifyApi.getTrack(id);
@@ -46,7 +46,7 @@ export async function GET(request: Request) {
     }
 
     // 2. Fallback / YouTube Video ID lookup using public NoEmbed oEmbed API
-    console.log(`[Track Resolve API] Resolving YouTube Video ID: ${id}`);
+    console.debug(`[Track Resolve API] Resolving YouTube Video ID: ${id}`);
     try {
       const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${encodeURIComponent(id)}`);
       if (res.ok) {

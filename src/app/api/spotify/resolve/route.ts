@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     const cacheKey = `${artist?.toLowerCase().trim() || ''}_${title.toLowerCase().trim()}`;
     if (spotifyResolveCache.has(cacheKey)) {
       const cached = spotifyResolveCache.get(cacheKey);
-      console.log(`[Spotify Resolve API] Cache HIT for key: "${cacheKey}"`);
+      console.debug(`[Spotify Resolve API] Cache HIT for key: "${cacheKey}"`);
       return NextResponse.json(cached);
     }
 
@@ -61,7 +61,7 @@ export async function GET(request: Request) {
 
     // 1. Try Spotify first
     try {
-      console.log(`[Spotify Resolve API] Searching Spotify for: "${query}"`);
+      console.debug(`[Spotify Resolve API] Searching Spotify for: "${query}"`);
       const spotifyApi = await getSpotifyApi();
       const searchRes = await spotifyApi.searchTracks(query, { limit: 5 });
       const tracks = searchRes.body.tracks?.items || [];
@@ -83,7 +83,7 @@ export async function GET(request: Request) {
     // 2. Fall back to YouTube Music search if Spotify failed or returned nothing
     if (!enrichedData) {
       try {
-        console.log(`[Spotify Resolve API] Querying YouTube Music fallback for: "${query}"`);
+        console.debug(`[Spotify Resolve API] Querying YouTube Music fallback for: "${query}"`);
         const { ytMusicSearch } = await import('@/lib/youtubei');
         const searchRes = await ytMusicSearch(query);
         const songs = searchRes.songs || [];

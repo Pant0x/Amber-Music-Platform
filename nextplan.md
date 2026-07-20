@@ -1,4 +1,4 @@
-# MASTER PRODUCTION PLAN — Pantooty Music Player
+# MASTER PRODUCTION PLAN — Kiwi Music Player
 
 **Goal**: Transform the current codebase into a production-ready, professional music player matching Apple Music/Spotify quality.
 

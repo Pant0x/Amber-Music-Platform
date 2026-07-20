@@ -169,7 +169,7 @@ export default function OnboardingPage() {
         <div className="w-8 h-8 rounded-xl bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/30">
           <Music2 className="w-4 h-4 text-white" />
         </div>
-        <span className="text-white font-extrabold text-xl tracking-tight">Sonora</span>
+        <span className="text-white font-extrabold text-xl tracking-tight">Kiwi</span>
       </div>
 
       {/* ── Card ── */}
@@ -308,7 +308,7 @@ export default function OnboardingPage() {
                 </div>
               </div>
               <h2 className="text-3xl font-extrabold text-white tracking-tight">You're in, {name.split(' ')[0]}!</h2>
-              <p className="text-zinc-400 text-sm">Sonora is ready. Here's what you've got:</p>
+              <p className="text-zinc-400 text-sm">Kiwi is ready. Here's what you've got:</p>
             </div>
 
             {/* Feature list */}

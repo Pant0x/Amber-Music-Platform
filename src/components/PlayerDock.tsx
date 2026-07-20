@@ -116,7 +116,7 @@ export const PlayerDock: React.FC = () => {
             className="p-1.5 rounded-full hover:bg-white/5 text-zinc-400 hover:text-white transition-all"
             title="Close Queue"
           >
-            <X className="w-4.5 h-4.5" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -174,7 +174,7 @@ export const PlayerDock: React.FC = () => {
                     />
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-bold text-white truncate">{trParsed.title}</p>
-                      <p className="text-[10px] text-zinc-450 truncate mt-0.5 font-medium">{track.channelTitle}</p>
+                      <p className="text-[10px] text-zinc-400 truncate mt-0.5 font-medium">{track.channelTitle}</p>
                     </div>
                     <button 
                       onClick={(e) => { e.stopPropagation(); removeFromQueue(track.id); }}
@@ -216,7 +216,7 @@ export const PlayerDock: React.FC = () => {
                       />
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-bold text-white truncate">{histParsed.title}</p>
-                        <p className="text-[10px] text-zinc-450 truncate mt-0.5 font-medium">{track.channelTitle}</p>
+                        <p className="text-[10px] text-zinc-400 truncate mt-0.5 font-medium">{track.channelTitle}</p>
                       </div>
                     </div>
                   );
@@ -278,7 +278,7 @@ export const PlayerDock: React.FC = () => {
             className="p-1.5 rounded-full hover:bg-white/5 text-zinc-400 hover:text-white transition-all"
             title="Close Connect"
           >
-            <X className="w-4.5 h-4.5" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -421,7 +421,7 @@ export const PlayerDock: React.FC = () => {
                 <div className="flex items-center justify-between mt-1">
                   <p className="text-[11px] text-zinc-300 font-semibold drop-shadow-md">
                     {nowPlayingChannelDetails?.profile?.subscriberCountText || 
-                     (nowPlayingChannelDetails?.profile?.subscriberCount ? `${new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(Number(nowPlayingChannelDetails.profile.subscriberCount))} monthly listeners` : '12.4M monthly listeners')}
+                     (nowPlayingChannelDetails?.profile?.subscriberCount ? `${new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(Number(nowPlayingChannelDetails.profile.subscriberCount))} monthly listeners` : `${new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(Math.floor(Math.random() * 10000000) + 100000)} monthly listeners`)}
                   </p>
                   
                   {/* Follow Toggle button */}

@@ -7,7 +7,7 @@ const playlistCache = new Map<string, any>();
 const PLAYLIST_CACHE_VERSION = 'v2';
 
 const runYoutubePlaylistFallback = async (playlistId: string) => {
-  console.log(`[Playlist API] Falling back to YouTube Music for playlistId: ${playlistId}`);
+  console.debug(`[Playlist API] Falling back to YouTube Music for playlistId: ${playlistId}`);
   try {
     const data = await ytMusicBrowse(playlistId);
     
@@ -160,7 +160,7 @@ export async function GET(request: Request) {
   const cacheKey = `${PLAYLIST_CACHE_VERSION}_${playlistId}`;
   if (playlistCache.has(cacheKey)) {
     const cached = playlistCache.get(cacheKey);
-    console.log(`[Playlist API] Cache HIT for playlistId: "${playlistId}"`);
+    console.debug(`[Playlist API] Cache HIT for playlistId: "${playlistId}"`);
     return NextResponse.json(cached);
   }
 
@@ -175,7 +175,7 @@ export async function GET(request: Request) {
 
     // Try fetching it as a Spotify Playlist
     try {
-      console.log(`[Playlist API] Trying to fetch as playlist: ${playlistId}`);
+      console.debug(`[Playlist API] Trying to fetch as playlist: ${playlistId}`);
       const playlistRes = await spotifyApi.getPlaylist(playlistId);
       const playlistData = playlistRes.body;
 
@@ -221,7 +221,7 @@ export async function GET(request: Request) {
       playlistCache.set(cacheKey, playlistResult);
       return NextResponse.json(playlistResult);
     } catch (playlistError) {
-      console.log(`[Playlist API] Fetch as playlist failed, trying as album: ${playlistId}`);
+      console.debug(`[Playlist API] Fetch as playlist failed, trying as album: ${playlistId}`);
       
       // Fallback: try fetching it as an Album
       const albumRes = await spotifyApi.getAlbum(playlistId);

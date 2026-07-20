@@ -1,4 +1,4 @@
-# Pantooty Music Player — Production Readiness Fixes
+# Kiwi Music Player — Production Readiness Fixes
 
 ## 🔴 CRITICAL (Must Fix Before Production)
 

@@ -179,7 +179,7 @@ export const BottomPlayerBar: React.FC = () => {
 
   const handleFullscreen = () => {
     setShowNowPlaying(true);
-    setNowPlayingTab('player');
+    setNowPlayingTab('upnext');
   };
 
   const handlePiP = async () => {
@@ -231,7 +231,7 @@ export const BottomPlayerBar: React.FC = () => {
             }`}
             title={isLiked ? 'Remove from Liked' : 'Save to Liked'}
           >
-            {isLiked ? <Check className="w-4 h-4 text-[var(--theme-accent)]" /> : <Heart className="w-4 h-4" />}
+            {isLiked ? <Heart className="w-5 h-5 fill-current text-[var(--theme-accent)]" /> : <Heart className="w-5 h-5" />}
           </button>
           
           <div className="relative">
@@ -291,7 +291,7 @@ export const BottomPlayerBar: React.FC = () => {
             }`}
             title="Shuffle"
           >
-            <Shuffle className="w-4.5 h-4.5" />
+            <Shuffle className="w-5 h-5" />
           </button>
           
           <button 
@@ -308,9 +308,9 @@ export const BottomPlayerBar: React.FC = () => {
             title={isPlaying ? 'Pause' : 'Play'}
           >
             {isPlaying ? (
-              <Pause className="w-4.5 h-4.5 fill-current text-black" />
+              <Pause className="w-5 h-5 fill-current text-black" />
             ) : (
-              <Play className="w-4.5 h-4.5 fill-current text-black ml-0.5" />
+              <Play className="w-5 h-5 fill-current text-black ml-0.5" />
             )}
           </button>
           
@@ -333,7 +333,7 @@ export const BottomPlayerBar: React.FC = () => {
             }`}
             title={`Repeat mode: ${repeatMode}`}
           >
-            <Repeat className="w-4.5 h-4.5" />
+            <Repeat className="w-5 h-5" />
             {repeatMode === 'one' && (
               <span className="absolute top-[-3px] right-[-3px] text-[7px] font-bold bg-[var(--theme-accent)] text-white w-2.5 h-2.5 rounded-full flex items-center justify-center font-sans shadow-sm">
                 1
@@ -381,7 +381,7 @@ export const BottomPlayerBar: React.FC = () => {
           }`}
           title="Lyrics"
         >
-          <Mic2 className="w-4.5 h-4.5" />
+          <Mic2 className="w-5 h-5" />
         </button>
 
         {/* Queue Button */}
@@ -399,7 +399,7 @@ export const BottomPlayerBar: React.FC = () => {
             }`}
             title="Queue"
           >
-            <ListMusic className="w-4.5 h-4.5" />
+            <ListMusic className="w-5 h-5" />
           </button>
           {showQueueMobile && (
             <div className="fixed inset-0 z-50 bg-black/80 flex items-end">
@@ -436,7 +436,7 @@ export const BottomPlayerBar: React.FC = () => {
           }`}
           title="Connect to a device"
         >
-          <Laptop2 className="w-4.5 h-4.5" />
+          <Laptop2 className="w-5 h-5" />
         </button>
 
         {/* Volume controls */}
@@ -446,7 +446,7 @@ export const BottomPlayerBar: React.FC = () => {
             className="text-zinc-400 hover:text-white transition-colors p-1"
             title={isMuted ? 'Unmute' : 'Mute'}
           >
-            {isMuted || volume === 0 ? <VolumeX className="w-4.5 h-4.5" /> : <Volume2 className="w-4.5 h-4.5" />}
+            {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
           </button>
           <div className="relative flex-1 flex items-center group py-2">
             <input 
@@ -471,7 +471,7 @@ export const BottomPlayerBar: React.FC = () => {
           className="p-1.5 text-zinc-400 hover:text-white transition-all hidden sm:block"
           title="Miniplayer (PiP)"
         >
-          <ExternalLink className="w-4.5 h-4.5" />
+          <ExternalLink className="w-5 h-5" />
         </button>
 
         {/* Fullscreen */}
@@ -480,7 +480,7 @@ export const BottomPlayerBar: React.FC = () => {
           className="p-1.5 text-zinc-400 hover:text-white transition-all hidden sm:block"
           title="Fullscreen"
         >
-          <Maximize2 className="w-4.5 h-4.5" />
+          <Maximize2 className="w-5 h-5" />
         </button>
       </div>
       </div>

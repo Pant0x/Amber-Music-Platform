@@ -1,6 +1,5 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import { createJSONStorage } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import type { StoreState } from '@/store/types'
 import { createPlaybackSlice } from '@/store/slices/playbackSlice'
 import { createNavigationSlice } from '@/store/slices/navigationSlice'
@@ -21,7 +20,7 @@ export const usePlayerStore = create<StoreState>()(
     }),
     {
       name: 'yt-music-storage-v1',
-      storage: createJSONStorage(() => (typeof window !== 'undefined' ? sessionStorage : {
+      storage: createJSONStorage(() => (typeof window !== 'undefined' ? localStorage : {
         getItem: () => null,
         setItem: () => {},
         removeItem: () => {}

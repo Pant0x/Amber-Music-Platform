@@ -85,7 +85,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
               Liked Music
             </h1>
             <div className="text-sm text-zinc-400 font-medium flex items-center gap-2">
-              <span className="text-white">Sonora</span>
+              <span className="text-white">Kiwi</span>
               <span>•</span>
               <span>{likedTracks.length} songs</span>
             </div>

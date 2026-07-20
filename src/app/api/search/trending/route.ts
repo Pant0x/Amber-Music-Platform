@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const serpApiKey = process.env.SERPAPI_API_KEY;
     if (serpApiKey) {
-      console.log('[Trending API] Querying SerpApi for trending searches...');
+      console.debug('[Trending API] Querying SerpApi for trending searches...');
       try {
         const url = `https://serpapi.com/search.json?engine=google_trends_trending_now&geo=US&api_key=${serpApiKey}`;
         const res = await fetch(url);

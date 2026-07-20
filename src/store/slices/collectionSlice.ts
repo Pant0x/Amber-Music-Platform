@@ -1,6 +1,7 @@
 import type { StateCreator } from 'zustand'
 import type { Track, Playlist } from '@/types/music-player'
 import type { StoreState, CollectionSlice } from '@/store/types'
+import { genId } from '@/utils/text'
 
 export const createCollectionSlice: StateCreator<StoreState, [], [], CollectionSlice> = (set, get) => ({
   playlists: [],
@@ -43,7 +44,7 @@ export const createCollectionSlice: StateCreator<StoreState, [], [], CollectionS
 
   createPlaylist: (name) => set((state) => {
     const newPlaylist: Playlist = {
-      id: `pl_${Math.random().toString(36).substring(2, 9)}`,
+      id: genId('pl'),
       name: name.trim() || `My Playlist #${state.playlists.length + 1}`,
       tracks: [],
       createdAt: new Date().toISOString()

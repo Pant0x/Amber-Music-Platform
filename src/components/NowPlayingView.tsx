@@ -63,8 +63,6 @@ export const NowPlayingView: React.FC = () => {
     viewChannel,
     showNowPlaying,
     setShowNowPlaying,
-    playbackMode,
-    setPlaybackMode,
     nowPlayingTab,
     setNowPlayingTab,
     playedSeconds,
@@ -402,30 +400,6 @@ export const NowPlayingView: React.FC = () => {
           <ChevronDown className="w-8 h-8 drop-shadow-md" />
         </button>
 
-        {/* Video vs Song Toggle Pill */}
-        <div className="flex bg-zinc-900/80 border border-white/5 p-1 rounded-full text-xs font-bold shadow-lg">
-          <button
-            onClick={() => setPlaybackMode('song')}
-            className={`px-6 py-1.5 rounded-full transition-all duration-300 font-semibold tracking-wide ${
-              playbackMode === 'song'
-                ? 'bg-white text-black shadow-md'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            Song
-          </button>
-          <button
-            onClick={() => setPlaybackMode('video')}
-            className={`px-6 py-1.5 rounded-full transition-all duration-300 font-semibold tracking-wide ${
-              playbackMode === 'video'
-                ? 'bg-white text-black shadow-md'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            Video
-          </button>
-        </div>
-
         <div className="w-10"></div> {/* Spacer */}
       </header>
 
@@ -433,13 +407,9 @@ export const NowPlayingView: React.FC = () => {
       <div className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-8 p-4 lg:p-8 overflow-hidden z-10">
         
         {/* Left Side: Interactive Canvas */}
-        <div className={`flex-[7] flex flex-col items-center justify-center min-w-0 h-full relative ${
-          nowPlayingTab === 'player' ? 'flex' : 'hidden lg:flex'
-        }`}>
+        <div className="flex-[7] flex flex-col items-center justify-center min-w-0 h-full relative">
           
-          {playbackMode === 'song' ? (
-            /* Song Mode Cover Art Canvas */
-            <div className="w-full flex flex-col items-center justify-center animate-fade-in relative">
+          <div className="w-full flex flex-col items-center justify-center animate-fade-in relative">
               {/* Backglow Ambient Neon Effect */}
               <div className="absolute w-[280px] h-[280px] rounded-full bg-[#ff0000]/20 blur-[80px] pointer-events-none -translate-x-8 -translate-y-8 animate-pulse z-0" />
               <div className="absolute w-[280px] h-[280px] rounded-full bg-[#0055ff]/15 blur-[80px] pointer-events-none translate-x-8 translate-y-8 animate-pulse z-0" />
@@ -549,138 +519,19 @@ export const NowPlayingView: React.FC = () => {
                 </div>
               </div>
             </div>
-          ) : (
-            /* Video Mode Canvas (Portal Target) */
-            <div className="w-full flex flex-col items-center justify-center animate-fade-in">
-              <div className="w-full max-w-[620px] aspect-video bg-black border border-white/10 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] overflow-hidden relative">
-                {/* The react-player DOM elements will be injected here via portal */}
-                <div id="now-playing-video-portal" className="w-full h-full relative z-10" />
-                
-                {/* Floating Loading Layer */}
-                <div className="absolute inset-0 bg-[#070707] flex items-center justify-center z-0">
-                  <Disc className="w-8 h-8 animate-spin text-[#ff0000]" />
-                </div>
-              </div>
-
-              {/* Title & Artist info */}
-              <div className="w-full max-w-[620px] mt-6 flex justify-between items-center bg-black/20 backdrop-blur-md p-4 rounded-xl border border-white/5">
-                <div className="min-w-0 flex-1 mr-4">
-                  {(() => {
-                    const parsed = parseFeaturedArtists(currentTrack.title);
-                    return (
-                      <>
-                        <h2 className="text-lg lg:text-xl font-extrabold text-white truncate leading-tight flex items-center gap-1">
-                          {parsed.title}
-                          {currentTrack.isExplicit && <ExplicitBadge />}
-                        </h2>
-                        {parsed.featured.length > 0 && (
-                          <p className="text-[11px] text-zinc-500 font-medium leading-none mt-0.5 truncate">
-                            feat.{' '}
-                            {parsed.featured.map((featName, idx) => (
-                              <React.Fragment key={featName}>
-                                {idx > 0 && ', '}
-                                <span
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    viewChannel(featName);
-                                    setShowNowPlaying(false);
-                                  }}
-                                  className="hover:underline hover:text-white cursor-pointer"
-                                >
-                                  {featName}
-                                </span>
-                              </React.Fragment>
-                            ))}
-                          </p>
-                        )}
-                        <p className="text-xs lg:text-sm text-zinc-400 truncate mt-1.5 font-medium">
-                          {(() => {
-                            const artistNames = currentTrack.channelTitle
-                              ? currentTrack.channelTitle.split(/,|\s+&\s+|\s+and\s+/i).map((n: string) => n.trim()).filter(Boolean)
-                              : [];
-                            if (artistNames.length === 0) return 'Unknown Artist';
-                            return artistNames.map((name: string, idx: number) => {
-                              const cleanName = cleanVisualName(name);
-                              return (
-                                <React.Fragment key={name}>
-                                  {idx > 0 && <span className="text-zinc-500">, </span>}
-                                  <span
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const artistId = idx === 0 ? currentTrack.channelId || currentTrack.artistId : undefined;
-                                      viewChannel(cleanName, artistId);
-                                      setShowNowPlaying(false);
-                                    }}
-                                    className="hover:underline hover:text-white cursor-pointer"
-                                  >
-                                    {cleanName}
-                                  </span>
-                                </React.Fragment>
-                              );
-                            });
-                          })()}
-                        </p>
-                      </>
-                    );
-                  })()}
-                </div>
-
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <button
-                    onClick={handleDislikeClick}
-                    className={`p-2 rounded-full hover:bg-white/5 transition-colors ${
-                      isDisliked ? 'text-red-500' : 'text-zinc-400 hover:text-white'
-                    }`}
-                    title="Dislike"
-                  >
-                    <ThumbsDown className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={handleLikeClick}
-                    className={`p-2 rounded-full hover:bg-white/5 transition-colors ${
-                      isLiked ? 'text-red-500' : 'text-zinc-400 hover:text-white'
-                    }`}
-                    title="Like"
-                  >
-                    <ThumbsUp className={`w-5 h-5 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
-                  </button>
-                  <button
-                    onClick={() => setShareTrack(currentTrack)}
-                    className="p-2 rounded-full hover:bg-white/5 text-zinc-400 hover:text-white transition-colors"
-                    title="Share Song"
-                  >
-                    <Share2 className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
 
         </div>
 
         {/* Right Side: Glassmorphic Tabs Details Panel */}
         <div className={`flex-[5] flex flex-col bg-zinc-950/45 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-xl shadow-2xl relative transition-all duration-300 ${
-          nowPlayingTab !== 'player' ? 'flex-1 h-full' : 'h-14 lg:h-full lg:flex-[5] flex'
+          'flex-1 h-full lg:flex-[5] flex'
         }`}>
           
           {/* Tab Header Selector */}
           <div className="flex border-b border-white/5 bg-black/20 text-xs font-bold tracking-wider select-none flex-shrink-0">
-            {(['player', 'upnext', 'lyrics', 'related'] as const).map((tab) => {
-              if (tab === 'player') {
-                return (
-                  <button
-                    key={tab}
-                    onClick={() => setNowPlayingTab(tab)}
-                    className={`lg:hidden flex-1 py-4 text-center border-b-2 hover:text-white transition-all duration-200 cursor-pointer ${
-                      nowPlayingTab === tab ? 'border-[#ff0000] text-white' : 'border-transparent text-zinc-400'
-                    }`}
-                  >
-                    PLAYER
-                  </button>
-                );
-              }
+            {(['upnext', 'lyrics', 'related'] as const).map((tab) => {
               const label = tab === 'upnext' ? 'UP NEXT' : tab === 'lyrics' ? 'LYRICS' : 'RELATED';
-              const active = nowPlayingTab === tab || (tab === 'upnext' && nowPlayingTab === 'player');
+              const active = nowPlayingTab === tab;
               return (
                 <button
                   key={tab}
@@ -699,7 +550,7 @@ export const NowPlayingView: React.FC = () => {
           <div className="flex-1 overflow-hidden relative">
 
             {/* TAB: UP NEXT */}
-            {(nowPlayingTab === 'upnext' || nowPlayingTab === 'player') && (
+            {nowPlayingTab === 'upnext' && (
               <div className="absolute inset-0 flex flex-col overflow-hidden p-4 animate-fade-in">
                 <div className="flex items-center justify-between pb-3 border-b border-white/5 mb-3 flex-shrink-0">
                   <div className="flex items-center gap-4">

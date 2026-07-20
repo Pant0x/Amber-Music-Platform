@@ -46,7 +46,7 @@ export async function GET(request: Request) {
       if (cachedData) {
         try {
           const parsedData = JSON.parse(cachedData);
-          console.log(`[Resolve API] Cache HIT for key: "${cacheKey}" -> videoId: ${parsedData.videoId}`);
+          console.debug(`[Resolve API] Cache HIT for key: "${cacheKey}" -> videoId: ${parsedData.videoId}`);
           return NextResponse.json(parsedData);
         } catch (e) {
           return NextResponse.json({ videoId: cachedData });
@@ -58,7 +58,7 @@ export async function GET(request: Request) {
     
     // Initial query
     const query = `${primaryArtist} ${title} ${album ? album : ''} ${isExplicitRequest ? 'Explicit' : ''}`.trim();
-    console.log(`[Resolve API ytmusic-api] Searching (${mode}): "${query}"`);
+    console.debug(`[Resolve API ytmusic-api] Searching (${mode}): "${query}"`);
 
     let results: any[] = [];
     if (mode === 'video') {
@@ -70,7 +70,7 @@ export async function GET(request: Request) {
     // Fallback search without album/explicit if no results found
     if (results.length === 0) {
       const fallbackQuery = `${primaryArtist} ${title}`;
-      console.log(`[Resolve API ytmusic-api] Fallback search: "${fallbackQuery}"`);
+      console.debug(`[Resolve API ytmusic-api] Fallback search: "${fallbackQuery}"`);
       results = mode === 'video' ? await yt.searchVideos(fallbackQuery) : await yt.searchSongs(fallbackQuery);
     }
 
@@ -89,11 +89,11 @@ export async function GET(request: Request) {
         });
         
         if (albumMatchItems.length > 0) {
-          console.log(`[Resolve API ytmusic-api] Album filter matched ${albumMatchItems.length} item(s)`);
+          console.debug(`[Resolve API ytmusic-api] Album filter matched ${albumMatchItems.length} item(s)`);
           return albumMatchItems[0];
         }
         
-        console.log(`[Resolve API ytmusic-api] No album-matched items for "${album}", falling back to artist+title match`);
+        console.debug(`[Resolve API ytmusic-api] No album-matched items for "${album}", falling back to artist+title match`);
       }
 
       return validItems[0];
@@ -106,11 +106,11 @@ export async function GET(request: Request) {
         const looseMatch = results.find(i => isCorrectMatch(title, i.name));
         if (looseMatch) {
             match = looseMatch;
-            console.log(`[Resolve API ytmusic-api] Fallback to loose title match: ${match.name}`);
+            console.debug(`[Resolve API ytmusic-api] Fallback to loose title match: ${match.name}`);
         } else {
             // Absolute fallback to top result
             match = results[0];
-            console.log(`[Resolve API ytmusic-api] Absolute fallback to top result: ${match.name}`);
+            console.debug(`[Resolve API ytmusic-api] Absolute fallback to top result: ${match.name}`);
         }
     }
 
@@ -134,7 +134,7 @@ export async function GET(request: Request) {
       }
       return NextResponse.json(responseData);
     } else {
-      console.log(`[Resolve API ytmusic-api] No matches found, returning fallback empty`);
+      console.debug(`[Resolve API ytmusic-api] No matches found, returning fallback empty`);
       return NextResponse.json({ videoId: null });
     }
   } catch (error: any) {

@@ -1,4 +1,4 @@
-# MASTER PRODUCTION PLAN V2 — Pantooty Music Platform
+# MASTER PRODUCTION PLAN V2 — Kiwi Music Platform
 
 > **Prompt-Ready Specification** — Copy this entire document and give to any AI agent for context.
 

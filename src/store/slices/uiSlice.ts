@@ -5,8 +5,7 @@ export const createUISlice: StateCreator<StoreState, [], [], UISlice> = (set, ge
   showQueuePanel: false,
   rightSidebarView: 'now-playing',
   showNowPlaying: false,
-  playbackMode: 'song',
-  nowPlayingTab: 'player',
+  nowPlayingTab: 'upnext',
   isMinimized: false,
   hideExplicit: false,
 
@@ -19,20 +18,6 @@ export const createUISlice: StateCreator<StoreState, [], [], UISlice> = (set, ge
   })),
 
   toggleNowPlaying: () => set((state) => ({ showNowPlaying: !state.showNowPlaying })),
-
-  setPlaybackMode: (playbackMode) => set((state) => {
-    const currentTrack = state.currentTrack;
-    if (currentTrack) {
-      return {
-        playbackMode,
-        currentTrack: {
-          ...currentTrack,
-          youtubeId: undefined
-        }
-      };
-    }
-    return { playbackMode };
-  }),
 
   setNowPlayingTab: (nowPlayingTab) => set({ nowPlayingTab }),
   setIsMinimized: (isMinimized) => set({ isMinimized }),

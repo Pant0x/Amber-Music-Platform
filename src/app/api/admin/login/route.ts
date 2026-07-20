@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import crypto from 'crypto'
 
 export async function POST(request: Request) {
   const { username, password } = await request.json()
@@ -16,9 +17,11 @@ export async function POST(request: Request) {
   }
 
   const cookieStore = await cookies()
-  const token = Buffer.from(`${username}:${password}`).toString('base64')
+  const token = crypto.randomBytes(32).toString('hex')
+  const expiry = Date.now() + 24 * 60 * 60 * 1000
+  const sessionData = JSON.stringify({ username, expiry })
 
-  cookieStore.set('admin_token', token, {
+  cookieStore.set('admin_token', `${token}.${Buffer.from(sessionData).toString('base64')}`, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',

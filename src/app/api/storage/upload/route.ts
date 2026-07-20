@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
+import { genId } from '@/utils/text'
 
 export async function POST(request: Request) {
   const { userId } = await auth()
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
   }
 
   const ext = file.name.split('.').pop() || 'bin'
-  const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${ext}`
+  const fileName = `${Date.now()}_${genId('file')}.${ext}`
   const filePath = `${folder}/${fileName}`
 
   const arrayBuffer = await file.arrayBuffer()

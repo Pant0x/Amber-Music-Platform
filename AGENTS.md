@@ -4,11 +4,11 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
-# Pantooty Music Player — Project Context
+# Kiwi Music Player — Project Context
 
 ## Tech Stack
 - **Framework**: Next.js 16 App Router
-- **State**: Zustand v5 (persisted to sessionStorage as `yt-music-storage-v1`)
+- **State**: Zustand v5 (persisted to localStorage as `yt-music-storage-v1`)
 - **Styling**: Tailwind CSS v4
 - **Auth**: Clerk v7 (`@clerk/nextjs`)
 - **Database**: Supabase (free tier, service_role key server-only)

@@ -21,6 +21,19 @@ export interface ParsedTitle {
   featured: string[];
 }
 
+let _idCounter = 0;
+export function genId(prefix = 'id'): string {
+  _idCounter++;
+  return `${prefix}_${Date.now().toString(36)}_${_idCounter.toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+}
+
+export function genToken(): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < 32; i++) result += chars[Math.floor(Math.random() * chars.length)];
+  return result;
+}
+
 export function parseFeaturedArtists(title: string): ParsedTitle {
   if (!title) return { title: '', featured: [] };
   const featRegex = /\s*[([{-]?(?:feat|featuring|ft|with|w\/)\.?\s+([^)\]}]+)[)\]}]?/i;

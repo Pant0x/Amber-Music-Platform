@@ -18,7 +18,7 @@ export async function GET(request: Request) {
   };
 
   const runYoutubeSearchFallback = async () => {
-    console.log('[Search API] Falling back to YouTube Music search (ytmusic-api)...');
+    console.debug('[Search API] Falling back to YouTube Music search (ytmusic-api)...');
     try {
       const YTMusic = (await import('ytmusic-api')).default;
       const yt = new YTMusic();
@@ -125,7 +125,7 @@ export async function GET(request: Request) {
       return await runYoutubeSearchFallback();
     }
 
-    console.log('[Search API] Querying SerpApi for search results...');
+    console.debug('[Search API] Querying SerpApi for search results...');
     try {
       const url = `https://serpapi.com/search.json?engine=youtube&search_query=${encodeURIComponent(query)}&api_key=${serpApiKey}`;
       const res = await fetch(url);

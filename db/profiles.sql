@@ -139,3 +139,14 @@ ALTER TABLE public.user_sync_data ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "user_sync_data_manage_own" ON public.user_sync_data
   FOR ALL USING ((auth.jwt() ->> 'sub') = user_id);
+
+-- Performance indexes
+CREATE INDEX IF NOT EXISTS idx_artist_tracks_artist_id ON public.artist_tracks(artist_id);
+CREATE INDEX IF NOT EXISTS idx_artist_tracks_created_at ON public.artist_tracks(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_artist_tracks_genre ON public.artist_tracks(genre);
+CREATE INDEX IF NOT EXISTS idx_devices_user_id ON public.devices(user_id);
+CREATE INDEX IF NOT EXISTS idx_devices_last_seen ON public.devices(last_seen DESC);
+CREATE INDEX IF NOT EXISTS idx_user_files_user_id ON public.user_files(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_files_share_token ON public.user_files(share_token) WHERE share_token IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_artist_follows_follower ON public.artist_follows(follower_id);
+CREATE INDEX IF NOT EXISTS idx_artist_follows_artist ON public.artist_follows(artist_id);

@@ -98,8 +98,7 @@ export interface UISlice {
   showQueuePanel: boolean;
   rightSidebarView: 'now-playing' | 'queue' | 'connect';
   showNowPlaying: boolean;
-  playbackMode: 'song' | 'video';
-  nowPlayingTab: 'player' | 'upnext' | 'lyrics' | 'related';
+  nowPlayingTab: 'upnext' | 'lyrics' | 'related';
   isMinimized: boolean;
   hideExplicit: boolean;
 
@@ -107,8 +106,7 @@ export interface UISlice {
   setRightSidebarView: (view: 'now-playing' | 'queue' | 'connect') => void;
   setShowNowPlaying: (show: boolean) => void;
   toggleNowPlaying: () => void;
-  setPlaybackMode: (mode: 'song' | 'video') => void;
-  setNowPlayingTab: (tab: 'player' | 'upnext' | 'lyrics' | 'related') => void;
+  setNowPlayingTab: (tab: 'upnext' | 'lyrics' | 'related') => void;
   setIsMinimized: (isMinimized: boolean) => void;
   toggleMinimized: () => void;
   toggleHideExplicit: () => void;

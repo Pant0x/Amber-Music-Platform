@@ -82,7 +82,7 @@ const filterReleasesForArtist = (id: string, items: any[]): any[] => {
 };
 
 const runYoutubeChannelFallback = async (artistId: string | null, name: string | null, originalId?: string) => {
-  console.log(`[Artist API] Falling back to YouTube Music for artistId: ${artistId}, name: "${name}" (originalId: ${originalId})`);
+  console.debug(`[Artist API] Falling back to YouTube Music for artistId: ${artistId}, name: "${name}" (originalId: ${originalId})`);
   try {
     let resolvedId = artistId;
     
@@ -90,7 +90,7 @@ const runYoutubeChannelFallback = async (artistId: string | null, name: string |
     const looksLikeSpotifyId = !resolvedId || (resolvedId.length === 22 && !resolvedId.startsWith('UC') && !resolvedId.startsWith('FEmusic'));
     
     if (looksLikeSpotifyId && name) {
-      console.log(`[Artist API Fallback] Searching YouTube Music for artist name: "${name}"`);
+      console.debug(`[Artist API Fallback] Searching YouTube Music for artist name: "${name}"`);
       const searchRes = await ytMusicSearch(name);
       
       const topResult = searchRes.topResult;
@@ -99,7 +99,7 @@ const runYoutubeChannelFallback = async (artistId: string | null, name: string |
       
       if (ytArtist?.id) {
         resolvedId = ytArtist.id;
-        console.log(`[Artist API Fallback] Resolved YouTube artist browseId: ${resolvedId}`);
+        console.debug(`[Artist API Fallback] Resolved YouTube artist browseId: ${resolvedId}`);
       }
     }
 
@@ -226,7 +226,7 @@ const runYoutubeChannelFallback = async (artistId: string | null, name: string |
 
     // Fetch collaborative search albums/singles and songs to catch features
     try {
-      console.log(`[Artist API Fallback] Searching YouTube Music for collaborative releases and songs for: "${profile.title}"`);
+      console.debug(`[Artist API Fallback] Searching YouTube Music for collaborative releases and songs for: "${profile.title}"`);
       const [searchRes, searchSongsRes] = await Promise.all([
         ytMusicSearch(profile.title),
         ytMusicSearch(`${profile.title} songs`)
@@ -553,7 +553,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const spotifyApi = await getSpotifyApi();
 
     if (!queryArtistId && queryName) {
-      console.log(`[Artist API] Resolving artistId for name: "${queryName}"`);
+      console.debug(`[Artist API] Resolving artistId for name: "${queryName}"`);
       const searchRes = await spotifyApi.searchArtists(queryName, { limit: 1 });
       if (searchRes.body.artists?.items && searchRes.body.artists.items.length > 0) {
         const matchedArtist = searchRes.body.artists.items[0];
@@ -572,7 +572,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       return await runYoutubeChannelFallback(queryArtistId, queryName, decodedId);
     }
 
-    console.log(`[Artist API] Fetching details for artist ID: ${artistId}`);
+    console.debug(`[Artist API] Fetching details for artist ID: ${artistId}`);
 
     const [artistRes, topTracksRes, albumsRes, singlesRes, appearsOnRes, relatedRes] = await Promise.all([
       spotifyApi.getArtist(artistId),
@@ -780,7 +780,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     let videos: any[] = [];
     try {
-      console.log(`[Artist API] Searching YouTube for videos of artist: "${profile.title}"`);
+      console.debug(`[Artist API] Searching YouTube for videos of artist: "${profile.title}"`);
       const ytData = await ytMusicSearch(`${profile.title} music video`);
       if (ytData.videos) {
         videos = ytData.videos.slice(0, 10).map((v: any) => ({

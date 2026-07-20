@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
+import { genToken, genId } from '@/utils/text'
 
 export async function GET() {
   const { userId } = await auth()
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
   }
 
   const shareToken = privacy_tier === 'unlisted'
-    ? Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+    ? genToken() + genToken()
     : null
 
   const { data, error } = await supabaseAdmin
@@ -84,7 +85,7 @@ export async function PUT(request: Request) {
   if (privacy_tier !== undefined) {
     updates.privacy_tier = privacy_tier
     if (privacy_tier === 'unlisted') {
-      updates.share_token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+      updates.share_token = genToken() + genToken()
     } else {
       updates.share_token = null
     }

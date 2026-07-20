@@ -66,7 +66,7 @@ async function fetchLyricsFromGenius(artist: string, title: string): Promise<str
     );
 
     if (!matchedHit) {
-      console.log(`[Genius Lyrics] No verified match for "${artist} - ${title}" in search hits.`);
+      console.debug(`[Genius Lyrics] No verified match for "${artist} - ${title}" in search hits.`);
       return null;
     }
 
@@ -163,10 +163,10 @@ async function fetchOfficialYTMusicLyrics(videoId: string, title: string, artist
   // If we have a videoId, try to get lyrics browseId directly
   if (videoId) {
     try {
-      console.log(`[API Lyrics] Fetching browseId directly for videoId: ${videoId}`);
+      console.debug(`[API Lyrics] Fetching browseId directly for videoId: ${videoId}`);
       const browseId = await getYTMusicLyricsBrowseId(videoId);
       if (browseId) {
-        console.log(`[API Lyrics] Found browseId: ${browseId}`);
+        console.debug(`[API Lyrics] Found browseId: ${browseId}`);
         const lyrics = await getYTMusicLyrics(browseId);
         if (lyrics) return lyrics;
       }
@@ -178,7 +178,7 @@ async function fetchOfficialYTMusicLyrics(videoId: string, title: string, artist
   // If directly using videoId failed or videoId was missing, search for the song on YouTube Music
   try {
     const query = `${artist} ${title}`;
-    console.log(`[API Lyrics] Searching YT Music for: "${query}" to find official song...`);
+    console.debug(`[API Lyrics] Searching YT Music for: "${query}" to find official song...`);
     const searchData = await ytMusicSearch(query);
     const song = searchData.songs?.[0];
     if (song && song.id) {
@@ -190,10 +190,10 @@ async function fetchOfficialYTMusicLyrics(videoId: string, title: string, artist
       const isBadMatch = queryWords.length > 0 && !queryWords.some(w => sTitle.includes(w));
 
       if (!isBadMatch) {
-        console.log(`[API Lyrics] Found official song ID: ${song.id} ("${song.title}" by "${song.channelTitle}")`);
+        console.debug(`[API Lyrics] Found official song ID: ${song.id} ("${song.title}" by "${song.channelTitle}")`);
         const browseId = await getYTMusicLyricsBrowseId(song.id);
         if (browseId) {
-          console.log(`[API Lyrics] Found browseId for searched song: ${browseId}`);
+          console.debug(`[API Lyrics] Found browseId for searched song: ${browseId}`);
           const lyrics = await getYTMusicLyrics(browseId);
           if (lyrics) return lyrics;
         }
@@ -219,7 +219,7 @@ export async function GET(request: Request) {
     const cacheKey = videoId || `spotify_${artist.toLowerCase().trim()}_${title.toLowerCase().trim()}`;
     if (lyricsCache.has(cacheKey)) {
       const cached = lyricsCache.get(cacheKey)!;
-      console.log(`[API Lyrics] Cache HIT for key: "${cacheKey}"`);
+      console.debug(`[API Lyrics] Cache HIT for key: "${cacheKey}"`);
       return NextResponse.json(cached);
     }
 
@@ -284,7 +284,7 @@ export async function GET(request: Request) {
             syncedLines = parsedLines;
             lyricsText = lrcData.syncedLyrics;
             isSynced = true;
-            console.log('[API Lyrics] Successfully fetched synced lyrics from LRCLIB EXACT GET!');
+            console.debug('[API Lyrics] Successfully fetched synced lyrics from LRCLIB EXACT GET!');
           } else {
             lyricsText = lrcData.plainLyrics || lrcData.syncedLyrics;
           }
@@ -324,7 +324,7 @@ export async function GET(request: Request) {
 
         if ((searchData.length === 0 || !initialHasSynced) && hasDashes) {
           const fallbackQuery = `${cleanArtist} ${titleParts[0]}`;
-          console.log(`[API Lyrics] Executing dash-fallback search: "${fallbackQuery}"`);
+          console.debug(`[API Lyrics] Executing dash-fallback search: "${fallbackQuery}"`);
           const fallbackRes = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(fallbackQuery)}`, {
             headers: {
               'User-Agent': 'CloudMusic/1.0.0 (https://github.com/better-lyrics/better-lyrics)'
@@ -376,10 +376,10 @@ export async function GET(request: Request) {
               syncedLines = matchedItem.parsed;
               lyricsText = matchedItem.item.syncedLyrics;
               isSynced = true;
-              console.log('[API Lyrics] Successfully fetched verified synced lyrics from LRCLIB SEARCH QUERY!');
+              console.debug('[API Lyrics] Successfully fetched verified synced lyrics from LRCLIB SEARCH QUERY!');
             } else {
               lyricsText = matchedItem.item.plainLyrics || matchedItem.item.syncedLyrics || '';
-              console.log('[API Lyrics] Successfully fetched verified plain lyrics from LRCLIB SEARCH QUERY!');
+              console.debug('[API Lyrics] Successfully fetched verified plain lyrics from LRCLIB SEARCH QUERY!');
             }
           }
         }
@@ -394,7 +394,7 @@ export async function GET(request: Request) {
         const ytLyrics = await fetchOfficialYTMusicLyrics(videoId, cleanTitle, cleanArtist);
         if (ytLyrics) {
           lyricsText = ytLyrics;
-          console.log('[API Lyrics] Successfully fetched fallback lyrics from YouTube Music API!');
+          console.debug('[API Lyrics] Successfully fetched fallback lyrics from YouTube Music API!');
         }
       } catch (err) {
         console.error('[API Lyrics] Error in YouTube Music lyrics fetch layer:', err);
@@ -406,7 +406,7 @@ export async function GET(request: Request) {
       const geniusText = await fetchLyricsFromGenius(cleanArtist, cleanTitle);
       if (geniusText) {
         lyricsText = geniusText;
-        console.log('[API Lyrics] Successfully fetched fallback lyrics from Genius!');
+        console.debug('[API Lyrics] Successfully fetched fallback lyrics from Genius!');
       }
     }
 

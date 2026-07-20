@@ -29,7 +29,7 @@ export async function GET(request: Request) {
 
     const serpApiKey = process.env.SERPAPI_API_KEY;
     if (serpApiKey) {
-      console.log('[Suggestions API] Querying SerpApi for autocomplete suggestions...');
+      console.debug('[Suggestions API] Querying SerpApi for autocomplete suggestions...');
       try {
         const url = `https://serpapi.com/search.json?engine=google_autocomplete&client=youtube&q=${encodeURIComponent(query.trim())}&api_key=${serpApiKey}`;
         const res = await fetch(url);

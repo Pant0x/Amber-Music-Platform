@@ -81,7 +81,7 @@ export default function AdminDashboardPage() {
       <header className="flex items-center justify-between px-8 py-4 border-b border-zinc-900 bg-zinc-950/40 backdrop-blur">
         <div className="flex items-center gap-3">
           <div className="w-2.5 h-2.5 rounded-full bg-red-600 animate-ping" />
-          <h1 className="text-lg font-bold tracking-tight">Sonora Admin Dashboard</h1>
+          <h1 className="text-lg font-bold tracking-tight">Kiwi Admin Dashboard</h1>
         </div>
         <button onClick={handleLogout} className="text-sm text-zinc-400 hover:text-white transition-colors cursor-pointer font-medium">
           Logout

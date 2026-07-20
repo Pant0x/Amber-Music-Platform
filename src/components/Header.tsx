@@ -149,7 +149,7 @@ export const Header: React.FC = () => {
           title="Go Home"
         >
           <Star className="w-5 h-5 text-[#ff0000] fill-current" />
-          <span className="text-sm font-bold text-white hidden sm:block">Sonora</span>
+          <span className="text-sm font-bold text-white hidden sm:block">Kiwi</span>
         </button>
       </div>
 

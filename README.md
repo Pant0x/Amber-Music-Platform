@@ -1,35 +1,33 @@
-# Pantooty Music Player
+# Kiwi Music Player
 
-> 🔗 **Live Demo**: [pantooty-music-player.vercel.app](https://pantooty-music-player.vercel.app/)
+> 🎵 A premium, high-fidelity hybrid music streaming platform.
 
-Pantooty is a premium, high-fidelity hybrid music player built with Next.js, Zustand, and Tailwind CSS. It merges the Spotify search ecosystem and the YouTube Music database to deliver a beautiful, seamless desktop streaming experience.
+Kiwi merges the Spotify search ecosystem with the YouTube Music database to deliver a beautiful, seamless streaming experience. Built with Next.js 16, Zustand, Clerk auth, and Supabase.
 
 ---
 
 ## 🌟 Key Features
 
 - **High-Res Audio Ingestion**: Targets official release audios using query targeting suffixes (`"- Topic"`) and filters out cinematic video clips.
-- **Dedicated Video Canvas**: Separate horizontal scroll arrays for official videos, loading into a custom video player overlay with a custom "Stealth Black" glassmorphic control HUD (hiding native YouTube controls).
 - **Sideways Scroll Navigation**: Left/Right navigation chevrons for smooth horizontal scrolling across shelves.
-- **Deck Clicks to Pop Now Playing**: Click anywhere on the persistent player deck footer (excluding active buttons and sliders) to maximize the Now Playing view tab.
-- **Relational Artist Mapping**: Groups all discography items strictly by unique YouTube `channelId` to prevent collision issues for different artists sharing identical names (e.g., "Ghost"). Prunes placeholder channels.
-- **Clickable Featured Collaborators**: Decouples featuring collaborator strings from track titles and renders them as clickable links that route directly to their corresponding artist profiles.
-- **Release Categorization & Sorting**: Categorizes releases chronologically (Newest to Oldest) and tags them dynamically:
-  - **Single**: 1-3 tracks or annotated as Single.
-  - **EP**: 4-6 tracks or annotated as EP.
-  - **Album**: 7+ tracks.
-- **Pre-Hydration & Sleek Skeletons**: Replaced blocking page-loaders with dark-themed skeleton loaders.
+- **Deck Clicks to Pop Now Playing**: Click anywhere on the persistent player deck footer to maximize the Now Playing view tab.
+- **Relational Artist Mapping**: Groups all discography items strictly by unique YouTube `channelId` to prevent collision issues for different artists sharing identical names.
+- **Clickable Featured Collaborators**: Decouples featuring collaborator strings from track titles and renders them as clickable links.
+- **Release Categorization & Sorting**: Categorizes releases chronologically (Newest to Oldest) and tags them dynamically: Single (1-3 tracks), EP (4-6), Album (7+).
+- **Synced Lyrics**: Real-time karaoke-style lyrics via Genius API integration.
+- **Multi-Service Import**: Import playlists from Spotify, YouTube, and Deezer.
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Framework**: Next.js 14 (App Router)
-- **State Management**: Zustand (Persisted Store)
-- **Styling**: Tailwind CSS & Lucide Icons
-- **Media Playback**: ReactPlayer Engine
-- **Integrations**: Spotify API, YouTube Data API v3, Genius API
- - **Integrations**: Spotify API, YouTube Music internal endpoints (node-youtube-music / music.youtube.com), Genius API
+- **Framework**: Next.js 16 (App Router)
+- **State**: Zustand v5 (persisted to localStorage)
+- **Auth**: Clerk v7
+- **Database**: Supabase (free tier)
+- **Styling**: Tailwind CSS v4 & Lucide Icons
+- **Media**: ReactPlayer Engine
+- **Integrations**: YouTube Music internal endpoints, Spotify API, Genius API
 
 ---
 
@@ -47,18 +45,31 @@ npm install
 ```
 
 ### 3. Setup environment variables
-Create a `.env.local` file in the root directory and add the following keys:
+Create a `.env.local` file in the root directory with:
 ```env
-# YouTube Data API v3 Key (optional — this project prefers YouTube Music internal endpoints; leave empty if not used)
+# Clerk (required for auth)
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+
+# Supabase (required for persistence)
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# YouTube Data API v3 Key (optional)
 YOUTUBE_API_KEY=
 
-# Spotify API credentials (Used for search lookup & playlists resolver)
-SPOTIFY_CLIENT_ID=your_spotify_client_id_here
-SPOTIFY_CLIENT_SECRET=your_spotify_client_secret_here
+# Spotify API credentials (used for search & playlists)
+SPOTIFY_CLIENT_ID=
+SPOTIFY_CLIENT_SECRET=
 
-# Genius API credentials (Used for synced lyrics search)
-GENIUS_CLIENT_ID=your_genius_client_id_here
-GENIUS_CLIENT_SECRET=your_genius_client_secret_here
+# Genius API credentials (used for synced lyrics)
+GENIUS_CLIENT_ID=
+GENIUS_CLIENT_SECRET=
+
+# Admin dashboard credentials
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=
 ```
 
 ### 4. Run the development server
@@ -70,20 +81,9 @@ npm run dev
 
 ## ⚡ Deployment on Vercel
 
-Pantooty can be deployed to Vercel in a few clicks:
-
-1. **Push your code to GitHub**: Create a new GitHub repository and push your local files. Ensure `.env.local` is ignored by git.
-2. **Import to Vercel**: 
-   - Go to [Vercel Dashboard](https://vercel.com/new).
-   - Click **Import** next to your repository.
-3. **Configure Environment Variables**:
-   Under the **Environment Variables** section, add:
-   - `YOUTUBE_API_KEY`
-   - `SPOTIFY_CLIENT_ID`
-   - `SPOTIFY_CLIENT_SECRET`
-   - `GENIUS_CLIENT_ID`
-   - `GENIUS_CLIENT_SECRET`
-4. **Deploy**: Click **Deploy**. Vercel will build and serve your app.
+1. Push to GitHub and import to [Vercel](https://vercel.com/new)
+2. Add all environment variables from `.env.local` (excluding comments)
+3. Deploy — Vercel builds and serves automatically
 
 ## Supabase: `listen_history` RLS recommendation
 When using Supabase for server-side listen writes, follow least-privilege patterns. The server route uses the Supabase Service Role key to insert rows; front-end clients should NOT have this key. Recommended RLS for `listen_history`:

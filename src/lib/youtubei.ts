@@ -680,7 +680,7 @@ export async function ytMusicArtistDiscography(artistId: string) {
   // If there is a "Show all" / "More" playlist of top songs, load all of them
   if (moreSongsBrowseId) {
     try {
-      console.log(`[Discography] Fetching more popular tracks from playlist: ${moreSongsBrowseId}`);
+      console.debug(`[Discography] Fetching more popular tracks from playlist: ${moreSongsBrowseId}`);
       const moreSongsData = await ytMusicBrowse(moreSongsBrowseId);
       const playlistTracks: any[] = [];
       
@@ -700,7 +700,7 @@ export async function ytMusicArtistDiscography(artistId: string) {
         // Clear topSongs and populate with all the tracks from the playlist
         topSongs.length = 0;
         processItems(playlistTracks, topSongs, 'music');
-        console.log(`[Discography] Successfully loaded ${topSongs.length} popular tracks`);
+        console.debug(`[Discography] Successfully loaded ${topSongs.length} popular tracks`);
       }
     } catch (err) {
       console.error('[Discography] Failed to load popular tracks playlist:', err);
