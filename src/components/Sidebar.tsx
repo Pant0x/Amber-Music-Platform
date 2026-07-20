@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Home, Compass, Library, Plus, Music, Heart, User, Star, FileAudio } from 'lucide-react';
+import { Home, Compass, Library, Plus, Music, Heart, User, Star, FileAudio, RefreshCw } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { usePlayerStore } from '@/store/usePlayerStore';
 
@@ -25,20 +25,14 @@ export const Sidebar: React.FC = () => {
     }
   };
 
-  const navigateToTab = (tab: 'home' | 'explore' | 'library' | 'liked') => {
-    setShowNowPlaying(false);
-    if (tab === 'liked') {
-      router.push('/liked');
-    } else {
-      router.push(tab === 'home' ? '/' : `/${tab}`);
-    }
-  };
-
-  const NavItem = ({ tab, icon: Icon, label, path }: { tab: any, icon: any, label: string, path: string }) => {
+  const NavItem = ({ icon: Icon, label, path }: { icon: any, label: string, path: string }) => {
     const isActive = pathname === path;
     return (
       <button
-        onClick={() => navigateToTab(tab)}
+        onClick={() => {
+          setShowNowPlaying(false);
+          router.push(path);
+        }}
         className={`flex items-center gap-3 px-3 py-1.5 rounded-lg text-[13px] transition-all duration-200 group w-full ${
           isActive ? 'bg-white/10 text-white font-medium' : 'text-zinc-400 hover:text-white hover:bg-white/5 font-normal'
         }`}
@@ -64,17 +58,18 @@ export const Sidebar: React.FC = () => {
       <div className="flex-shrink-0 mb-6">
         <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest px-3 block mb-2">Sonora</span>
         <nav className="flex flex-col gap-0.5">
-          <NavItem tab="home" icon={Home} label="Home" path="/" />
-          <NavItem tab="explore" icon={Compass} label="Browse" path="/explore" />
+          <NavItem icon={Home} label="Home" path="/" />
+          <NavItem icon={Compass} label="Browse" path="/explore" />
         </nav>
       </div>
 
       <div className="flex-shrink-0 mb-6">
         <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest px-3 block mb-2">Library</span>
         <nav className="flex flex-col gap-0.5">
-          <NavItem tab="library" icon={Library} label="Recently Added" path="/library" />
-          <NavItem tab="liked" icon={Heart} label="Liked Songs" path="/liked" />
-          <NavItem tab="library" icon={FileAudio} label="My Files" path="/files" />
+          <NavItem icon={Library} label="Recently Added" path="/library" />
+          <NavItem icon={Heart} label="Liked Songs" path="/liked" />
+          <NavItem icon={FileAudio} label="My Files" path="/files" />
+          <NavItem icon={RefreshCw} label="Transfer Playlist" path="/transfer" />
         </nav>
       </div>
 

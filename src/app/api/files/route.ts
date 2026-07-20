@@ -71,14 +71,17 @@ export async function PUT(request: Request) {
   }
 
   const body = await request.json()
-  const { id, privacy_tier } = body
+  const { id, title, artist, album, privacy_tier } = body
 
   if (!supabaseAdmin) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 })
   }
 
   const updates: Record<string, unknown> = {}
-  if (privacy_tier) {
+  if (title !== undefined) updates.title = title || 'Unknown Track'
+  if (artist !== undefined) updates.artist = artist || null
+  if (album !== undefined) updates.album = album || null
+  if (privacy_tier !== undefined) {
     updates.privacy_tier = privacy_tier
     if (privacy_tier === 'unlisted') {
       updates.share_token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)

@@ -7,7 +7,7 @@ import { usePlayerStore } from '@/store/usePlayerStore'
 import { Track } from '@/types/music-player'
 import {
   Music, Upload, Play, Pause, Trash2, Share2, Clock, User, Globe, Lock, Eye,
-  FileAudio, Loader2, X, Check, LogIn, Copy, FolderPlus, CheckSquare, Square
+  FileAudio, Loader2, X, Check, LogIn, Copy, FolderPlus, CheckSquare, Square, Edit
 } from 'lucide-react'
 
 interface LocalFile {
@@ -54,6 +54,14 @@ export default function FilesPage() {
   
   // Selection states for playlist creation
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  
+  // Editing states
+  const [editingFile, setEditingFile] = useState<LocalFile | null>(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editArtist, setEditArtist] = useState('')
+  const [editAlbum, setEditAlbum] = useState('')
+  const [editPrivacy, setEditPrivacy] = useState('')
+  const [savingEdit, setSavingEdit] = useState(false)
   
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -121,7 +129,7 @@ export default function FilesPage() {
   const handleDelete = async (file: LocalFile) => {
     if (!confirm(`Are you sure you want to delete "${file.title}"?`)) return
     try {
-      await fetch(`/api/files`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: file.id }) })
+      await fetch(`/api/files?id=${file.id}`, { method: 'DELETE' })
       setFiles(files.filter(f => f.id !== file.id))
       // Remove from selection if deleted
       const updated = new Set(selectedIds)
@@ -218,13 +226,60 @@ export default function FilesPage() {
       createdAt: new Date().toISOString()
     }
 
-    // Update Zustang store state directly
+    // Update Zustand store state directly
     usePlayerStore.setState({
       playlists: [...playlists, newPlaylist]
     })
 
     setSelectedIds(new Set())
     alert(`Created folder playlist "${playlistName}" containing ${playlistTracks.length} tracks!`)
+  }
+
+  // Editing file details
+  const handleStartEdit = (file: LocalFile) => {
+    setEditingFile(file)
+    setEditTitle(file.title)
+    setEditArtist(file.artist || '')
+    setEditAlbum(file.album || '')
+    setEditPrivacy(file.privacy_tier)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingFile) return
+    setSavingEdit(true)
+    try {
+      const res = await fetch('/api/files', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingFile.id,
+          title: editTitle.trim(),
+          artist: editArtist.trim() || null,
+          album: editAlbum.trim() || null,
+          privacy_tier: editPrivacy,
+        }),
+      })
+
+      if (!res.ok) throw new Error('Failed to save changes')
+
+      // Update local state
+      setFiles(files.map(f => f.id === editingFile.id ? {
+        ...f,
+        title: editTitle.trim() || 'Unknown Track',
+        artist: editArtist.trim() || null,
+        album: editAlbum.trim() || null,
+        privacy_tier: editPrivacy,
+        // Regenerate or wipe share token dynamically based on state
+        share_token: editPrivacy === 'unlisted' ? (f.share_token || 'temp_' + Math.random().toString(36).substring(2, 10)) : null
+      } : f))
+
+      setEditingFile(null)
+    } catch (err) {
+      console.error(err)
+      alert('Failed to save file details')
+    } finally {
+      setSavingEdit(false)
+    }
   }
 
   if (!isSignedIn) {
@@ -352,8 +407,11 @@ export default function FilesPage() {
                   </div>
 
                   <div className="flex items-center gap-1 justify-end">
-                    {file.share_token && (
-                      <button onClick={() => handleShare(file)} className="p-2 text-zinc-500 hover:text-white transition-colors cursor-pointer" title="Share">
+                    <button onClick={() => handleStartEdit(file)} className="p-2 text-zinc-500 hover:text-white transition-colors cursor-pointer" title="Edit Metadata">
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                    {file.privacy_tier === 'unlisted' && file.share_token && (
+                      <button onClick={() => handleShare(file)} className="p-2 text-zinc-500 hover:text-white transition-colors cursor-pointer" title="Share Link">
                         <Share2 className="w-3.5 h-3.5" />
                       </button>
                     )}
@@ -372,7 +430,7 @@ export default function FilesPage() {
       {/* Share modal */}
       {showShareModal && selectedFile && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setShowShareModal(false)}>
-          <div className="bg-zinc-900 rounded-2xl p-6 max-w-sm w-full space-y-4 border border-white/10" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-zinc-900 rounded-3xl p-6 max-w-sm w-full space-y-4 border border-white/10" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-white uppercase tracking-wider">Share Track</h3>
               <button onClick={() => setShowShareModal(false)} className="text-zinc-400 hover:text-white cursor-pointer"><X className="w-5 h-5" /></button>
@@ -391,6 +449,74 @@ export default function FilesPage() {
           </div>
         </div>
       )}
+
+      {/* Edit Metadata Modal */}
+      {editingFile && (
+        <div className="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={() => setEditingFile(null)}>
+          <div className="bg-zinc-900 border border-white/10 rounded-3xl p-6 max-w-sm w-full space-y-5 shadow-2xl relative" onClick={(e) => e.stopPropagation()}>
+            
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <h3 className="text-sm font-black text-white uppercase tracking-wider">Edit Track Info</h3>
+              <button onClick={() => setEditingFile(null)} className="text-zinc-400 hover:text-white cursor-pointer transition-colors"><X className="w-5 h-5" /></button>
+            </div>
+
+            <div className="space-y-3.5">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Track Title</label>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={e => setEditTitle(e.target.value)}
+                  className="w-full bg-zinc-950 border border-white/5 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-white/10 transition-colors"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Artist</label>
+                <input
+                  type="text"
+                  value={editArtist}
+                  onChange={e => setEditArtist(e.target.value)}
+                  className="w-full bg-zinc-950 border border-white/5 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-white/10 transition-colors"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Album Name</label>
+                <input
+                  type="text"
+                  value={editAlbum}
+                  onChange={e => setEditAlbum(e.target.value)}
+                  className="w-full bg-zinc-950 border border-white/5 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-white/10 transition-colors"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Privacy Mode</label>
+                <select
+                  value={editPrivacy}
+                  onChange={e => setEditPrivacy(e.target.value)}
+                  className="w-full bg-zinc-950 border border-white/5 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-white/10 transition-colors cursor-pointer"
+                >
+                  <option value="private">Private (Only you can access)</option>
+                  <option value="unlisted">Unlisted (Shareable link)</option>
+                  <option value="public">Public (Visible on explore page)</option>
+                </select>
+              </div>
+            </div>
+
+            <button
+              onClick={handleSaveEdit}
+              disabled={savingEdit || !editTitle.trim()}
+              className="w-full py-3.5 bg-white text-black font-extrabold text-xs rounded-xl hover:bg-zinc-200 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+            >
+              {savingEdit ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+              <span>{savingEdit ? 'Updating Track Details...' : 'Save Changes'}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
