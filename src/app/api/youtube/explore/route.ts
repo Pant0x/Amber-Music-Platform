@@ -38,10 +38,24 @@ const runYoutubeExploreFallback = async () => {
       artistId: item.channelId || ''
     }));
 
-    return NextResponse.json(cleanTopicGlobally({ charts, newReleases }));
+    return NextResponse.json(
+      cleanTopicGlobally({ charts, newReleases }),
+      {
+        headers: {
+          'Cache-Control': 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=600'
+        }
+      }
+    );
   } catch (err) {
     console.error('[Explore API] YouTube fallback search failed:', err);
-    return NextResponse.json({ charts: [], newReleases: [] });
+    return NextResponse.json(
+      { charts: [], newReleases: [] },
+      {
+        headers: {
+          'Cache-Control': 'public, max-age=60, s-maxage=60'
+        }
+      }
+    );
   }
 };
 
@@ -93,7 +107,14 @@ export async function GET() {
       artistId: item.artists[0]?.id || ''
     }));
 
-    return NextResponse.json(cleanTopicGlobally({ charts, newReleases }));
+    return NextResponse.json(
+      cleanTopicGlobally({ charts, newReleases }),
+      {
+        headers: {
+          'Cache-Control': 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=600'
+        }
+      }
+    );
   } catch (error) {
     console.error('[Explore API] Spotify explore failed, triggering YouTube fallback:', error);
     return await runYoutubeExploreFallback();

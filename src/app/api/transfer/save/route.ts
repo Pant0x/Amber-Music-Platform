@@ -19,16 +19,43 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 })
   }
 
-  // Save to the user's local playlists via the existing mechanism
-  // For now, we use the Zustand store — but this route is for server-side persistence
-  // Once TanStack Query is set up, this would sync with a `playlists` table
+  // Fetch current user sync data
+  const { data: userData } = await supabaseAdmin
+    .from('user_sync_data')
+    .select('playlists, display_name, avatar_url')
+    .eq('user_id', userId)
+    .single()
+
+  const currentPlaylists = Array.isArray(userData?.playlists) ? userData.playlists : []
+
+  const newPlaylist = {
+    id: `pl_${Math.random().toString(36).substring(2, 9)}`,
+    name: name.trim(),
+    tracks,
+    createdAt: new Date().toISOString(),
+  }
+
+  const updatedPlaylists = [...currentPlaylists, newPlaylist]
+
+  // Upsert user sync data with the new playlist appended
+  const { error: upsertErr } = await supabaseAdmin
+    .from('user_sync_data')
+    .upsert({
+      user_id: userId,
+      playlists: updatedPlaylists,
+      display_name: userData?.display_name || 'Anonymous Listener',
+      avatar_url: userData?.avatar_url || 'bg-gradient-to-tr from-blue-600 to-indigo-900',
+      updated_at: new Date().toISOString(),
+    })
+
+  if (upsertErr) {
+    console.error('[Playlist Save API] Upsert error:', upsertErr)
+    return NextResponse.json({ error: 'Failed to persist playlist' }, { status: 500 })
+  }
 
   return NextResponse.json({
     success: true,
-    playlist: {
-      name,
-      track_count: tracks.length,
-      source,
-    },
+    playlist: newPlaylist,
   })
 }
+

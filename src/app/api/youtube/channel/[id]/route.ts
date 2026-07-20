@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { getSpotifyApi } from '@/lib/spotify';
 import { ytMusicSearch, ytMusicBrowse, ytMusicArtistDiscography, cleanArtistName, upgradeThumbnailUrl, parseSubscriberCount, cleanTopicGlobally } from '@/lib/youtubei';
 import createSupabaseServerClient from '@/lib/supabase-server';
+import { splitArtistNames } from '@/utils/text';
+
 
 const sortReleasesNewestToOldest = (items: any[]) => {
   const getReleaseTime = (dateStr: string) => {
@@ -335,13 +338,21 @@ const runYoutubeChannelFallback = async (artistId: string | null, name: string |
       const supabase = createSupabaseServerClient();
       if (supabase) {
         const artistNameLower = profile.title.toLowerCase();
-        console.log(`[Artist API Fallback] Fetching local database listen history for artist: "${profile.title}"`);
-        const { data: matchedRows, error: dbErr } = await supabase
+        const { userId } = await auth();
+        let query = supabase
           .from('listen_history')
           .select('metadata')
           .not('metadata', 'is', null)
           .ilike('metadata->>channelTitle', `%${artistNameLower.replace(/%/g, '\\%').replace(/_/g, '\\_')}%`)
           .limit(500);
+
+        if (userId) {
+          query = query.eq('user_id', userId);
+        } else {
+          query = query.eq('user_id', 'non-existent-user-id');
+        }
+
+        const { data: matchedRows, error: dbErr } = await query;
 
         if (!dbErr && matchedRows) {
           const artistRegex = new RegExp(`\\b${artistNameLower.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
@@ -351,10 +362,8 @@ const runYoutubeChannelFallback = async (artistId: string | null, name: string |
             if (!track || !track.title) continue;
 
             const songTitleLower = track.title.toLowerCase();
-            const songArtists = (track.channelTitle || '')
-              .split(/,|\s+&\s+|\s+and\s+/i)
-              .map((n: string) => n.trim().toLowerCase())
-              .filter(Boolean);
+            const songArtists = splitArtistNames(track.channelTitle || '')
+              .map((n: string) => n.toLowerCase());
 
             const isActuallyArtist = 
               songArtists.some((a: string) => a === artistNameLower) ||
@@ -649,13 +658,21 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       const supabase = createSupabaseServerClient();
       if (supabase) {
         const artistNameLower = profile.title.toLowerCase();
-        console.log(`[Artist API Spotify] Fetching local database listen history for artist: "${profile.title}"`);
-        const { data: matchedRows, error: dbErr } = await supabase
+        const { userId } = await auth();
+        let query = supabase
           .from('listen_history')
           .select('metadata')
           .not('metadata', 'is', null)
           .ilike('metadata->>channelTitle', `%${artistNameLower.replace(/%/g, '\\%').replace(/_/g, '\\_')}%`)
           .limit(500);
+
+        if (userId) {
+          query = query.eq('user_id', userId);
+        } else {
+          query = query.eq('user_id', 'non-existent-user-id');
+        }
+
+        const { data: matchedRows, error: dbErr } = await query;
 
         if (!dbErr && matchedRows) {
           const artistRegex = new RegExp(`\\b${artistNameLower.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
@@ -665,10 +682,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             if (!track || !track.title) continue;
 
             const songTitleLower = track.title.toLowerCase();
-            const songArtists = (track.channelTitle || '')
-              .split(/,|\s+&\s+|\s+and\s+/i)
-              .map((n: string) => n.trim().toLowerCase())
-              .filter(Boolean);
+            const songArtists = splitArtistNames(track.channelTitle || '')
+              .map((n: string) => n.toLowerCase());
 
             const isActuallyArtist = 
               songArtists.some((a: string) => a === artistNameLower) ||

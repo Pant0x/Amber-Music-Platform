@@ -111,3 +111,21 @@ CREATE POLICY "user_files_select_unlisted" ON public.user_files
     privacy_tier = 'unlisted' AND share_token IS NOT NULL
     OR auth.uid() = user_id
   );
+
+-- User sync data table (replaces user_ip_data)
+CREATE TABLE IF NOT EXISTS public.user_sync_data (
+  user_id TEXT PRIMARY KEY,
+  display_name TEXT,
+  avatar_url TEXT,
+  liked_tracks JSONB DEFAULT '[]'::jsonb,
+  subscribed_channels JSONB DEFAULT '[]'::jsonb,
+  playlists JSONB DEFAULT '[]'::jsonb,
+  history JSONB DEFAULT '[]'::jsonb,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.user_sync_data ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "user_sync_data_manage_own" ON public.user_sync_data
+  FOR ALL USING (auth.uid()::text = user_id);
+

@@ -2,10 +2,12 @@ import type { TransferAdapter, TransferPlaylist } from './base'
 import { detectService } from './base'
 import { spotifyAdapter } from './spotify'
 import { deezerAdapter } from './deezer'
+import { youtubeAdapter } from './youtube'
 
 const adapters: Record<string, TransferAdapter> = {
   spotify: spotifyAdapter,
   deezer: deezerAdapter,
+  youtube: youtubeAdapter,
 }
 
 export async function importPlaylist(url: string): Promise<{

@@ -55,7 +55,8 @@ const runYoutubePlaylistFallback = async (playlistId: string) => {
       return upgradeThumbnailUrl(thumbs[thumbs.length - 1]?.url || thumbs[0]?.url || '');
     };
 
-    const traverse = (obj: any) => {
+    const traverse = (obj: any, depth = 0) => {
+      if (depth > 20) return;
       if (!obj || typeof obj !== 'object') return;
       
       if (obj.musicResponsiveListItemRenderer) {
@@ -112,7 +113,7 @@ const runYoutubePlaylistFallback = async (playlistId: string) => {
       }
       
       for (const key of Object.keys(obj)) {
-        traverse(obj[key]);
+        traverse(obj[key], depth + 1);
       }
     };
 

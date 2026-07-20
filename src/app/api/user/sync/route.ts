@@ -1,39 +1,20 @@
 import { NextResponse } from 'next/server';
-import createSupabaseServerClient from '@/lib/supabase-server';
+import { auth } from '@clerk/nextjs/server';
+import { supabaseAdmin } from '@/lib/supabase-server';
 
 export const dynamic = 'force-dynamic';
 
-// Helper to extract client IP address
-function getClientIp(req: Request): string {
-  const forwardHeader = req.headers.get('x-forwarded-for');
-  const realIpHeader = req.headers.get('x-real-ip');
-  
-  if (forwardHeader) {
-    // x-forwarded-for can be a comma-separated list, first element is the real client IP
-    const ip = forwardHeader.split(',')[0].trim();
-    if (ip) return ip;
-  }
-  
-  if (realIpHeader) {
-    return realIpHeader.trim();
-  }
-  
-  return '127.0.0.1'; // local fallback
-}
-
-// GET: fetch database status/data for client IP
-export async function GET(request: Request) {
+// GET: fetch database status/data for the logged-in user
+export async function GET() {
   try {
-    const ip = getClientIp(request);
-    console.log(`[User Sync API] GET requested by IP: ${ip}`);
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    let supabase;
-    try {
-      supabase = createSupabaseServerClient();
-    } catch (e) {
-      console.warn('[User Sync API] Supabase client initialization failed:', e);
+    if (!supabaseAdmin) {
       return NextResponse.json({
-        ip_address: ip,
+        user_id: userId,
         display_name: 'Anonymous Listener',
         liked_tracks: [],
         subscribed_channels: [],
@@ -42,16 +23,16 @@ export async function GET(request: Request) {
       });
     }
 
-    const { data, error } = await supabase
-      .from('user_ip_data')
+    const { data, error } = await supabaseAdmin
+      .from('user_sync_data')
       .select('*')
-      .eq('ip_address', ip)
+      .eq('user_id', userId)
       .single();
 
     if (error || !data) {
       // If row does not exist, insert default values
       const defaultRow = {
-        ip_address: ip,
+        user_id: userId,
         display_name: 'Anonymous Listener',
         avatar_url: 'bg-gradient-to-tr from-blue-600 to-indigo-900',
         liked_tracks: [],
@@ -60,12 +41,12 @@ export async function GET(request: Request) {
         history: []
       };
 
-      const { error: insertErr } = await supabase
-        .from('user_ip_data')
+      const { error: insertErr } = await supabaseAdmin
+        .from('user_sync_data')
         .insert([defaultRow]);
 
       if (insertErr) {
-        console.error('[User Sync API] Failed to create default IP row:', insertErr);
+        console.error('[User Sync API] Failed to create default user row:', insertErr);
       }
 
       return NextResponse.json(defaultRow);
@@ -78,9 +59,14 @@ export async function GET(request: Request) {
   }
 }
 
-// POST: sync/save client IP data
+// POST: sync/save user data
 export async function POST(request: Request) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const rawBody = await request.text();
     
     // Size validation: Prevent payloads larger than ~2MB
@@ -89,7 +75,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
     }
 
-    const ip = getClientIp(request);
     const body = JSON.parse(rawBody);
     const { display_name, avatar_url, liked_tracks, subscribed_channels, playlists, history } = body;
 
@@ -101,18 +86,14 @@ export async function POST(request: Request) {
       ? avatar_url.replace(/<[^>]*>/g, '').trim().slice(0, 500)
       : 'bg-gradient-to-tr from-blue-600 to-indigo-900';
 
-    let supabase;
-    try {
-      supabase = createSupabaseServerClient();
-    } catch (e) {
-      console.warn('[User Sync API] Supabase client initialization failed on POST:', e);
+    if (!supabaseAdmin) {
       return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 });
     }
 
-    const { error } = await supabase
-      .from('user_ip_data')
+    const { error } = await supabaseAdmin
+      .from('user_sync_data')
       .upsert({
-        ip_address: ip,
+        user_id: userId,
         display_name: safeName || 'Anonymous Listener',
         avatar_url: safeAvatar || 'bg-gradient-to-tr from-blue-600 to-indigo-900',
         liked_tracks: Array.isArray(liked_tracks) ? liked_tracks : [],
@@ -133,3 +114,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
