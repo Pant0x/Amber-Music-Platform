@@ -50,8 +50,8 @@ export const Sidebar: React.FC = () => {
       
       {/* Brand Header */}
       <div className="flex items-center gap-2 px-3 py-4 mb-4 flex-shrink-0">
-        <Star className="w-6 h-6 text-[#9DD2E6] fill-current" />
-        <h1 className="text-lg font-bold tracking-tight text-white leading-none mt-1">Kiwi</h1>
+        <Star className="w-6 h-6 text-[#E88EAC] fill-current" />
+        <h1 className="text-lg font-bold tracking-tight text-white leading-none mt-1">Sonora</h1>
       </div>
 
       {/* 1. Main Navigation Items */}

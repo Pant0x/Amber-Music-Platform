@@ -12,7 +12,7 @@ const MOODS = [
   { label: 'Pop', emoji: '✨', color: 'from-pink-500/20 to-purple-600/20 border-pink-500/20' },
   { label: 'Electronic', emoji: '⚡', color: 'from-cyan-500/20 to-blue-600/20 border-cyan-500/20' },
   { label: 'Lo-Fi', emoji: '🌙', color: 'from-indigo-500/20 to-violet-600/20 border-indigo-500/20' },
-  { label: 'Rock', emoji: '🎸', color: 'from-red-500/20 to-rose-700/20 border-red-500/20' },
+  { label: 'Rock', emoji: '🎸', color: 'from-rose-500/20 to-pink-700/20 border-rose-500/20' },
   { label: 'R&B', emoji: '💜', color: 'from-purple-500/20 to-fuchsia-700/20 border-purple-500/20' },
 ]
 
@@ -138,11 +138,11 @@ export default function OnboardingPage() {
 
       {/* ── Animated ambient background ── */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Red orb top-left */}
+        {/* Pink theme orb top-left */}
         <div
           className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full"
           style={{
-            background: 'radial-gradient(circle, rgba(255,0,0,0.12) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(232,142,172,0.12) 0%, transparent 70%)',
             animation: 'breathe 7s ease-in-out infinite',
           }}
         />
@@ -166,10 +166,10 @@ export default function OnboardingPage() {
 
       {/* ── Top logo ── */}
       <div className="relative z-10 mb-12 flex items-center gap-2.5 select-none">
-        <div className="w-8 h-8 rounded-xl bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/30">
+        <div className="w-8 h-8 rounded-xl bg-[#E88EAC] flex items-center justify-center shadow-lg shadow-[#E88EAC]/30">
           <Music2 className="w-4 h-4 text-white" />
         </div>
-        <span className="text-white font-extrabold text-xl tracking-tight">Kiwi</span>
+        <span className="text-white font-extrabold text-xl tracking-tight">Sonora</span>
       </div>
 
       {/* ── Card ── */}
@@ -188,11 +188,11 @@ export default function OnboardingPage() {
             {/* User avatar upload */}
             <div className="flex flex-col items-center gap-4">
               <label htmlFor="onboarding-avatar-input" className="relative inline-block cursor-pointer group">
-                <div className="w-24 h-24 rounded-full border-2 border-white/10 overflow-hidden bg-zinc-800 shadow-2xl shadow-black/60 ring-4 ring-red-600/20 group-hover:border-red-500/50 transition-all flex items-center justify-center">
+                <div className="w-24 h-24 rounded-full border-2 border-white/10 overflow-hidden bg-zinc-800 shadow-2xl shadow-black/60 ring-4 ring-[#E88EAC]/20 group-hover:border-[#E88EAC]/50 transition-all flex items-center justify-center">
                   {avatarPreview ? (
                     <img src={avatarPreview} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-red-600 to-purple-700 flex items-center justify-center text-white text-3xl font-bold">
+                    <div className="w-full h-full bg-gradient-to-br from-[#E88EAC] to-purple-700 flex items-center justify-center text-white text-3xl font-bold">
                       {initials}
                     </div>
                   )}
@@ -201,7 +201,7 @@ export default function OnboardingPage() {
                 <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
                   <Camera className="w-6 h-6 text-white" />
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-red-600 border-2 border-black flex items-center justify-center group-hover:bg-red-500 transition-colors">
+                <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[#E88EAC] border-2 border-black flex items-center justify-center group-hover:bg-[#E88EAC]/90 transition-colors">
                   <Camera className="w-3.5 h-3.5 text-white" />
                 </div>
                 <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" id="onboarding-avatar-input" />
@@ -226,7 +226,7 @@ export default function OnboardingPage() {
                 onKeyDown={e => e.key === 'Enter' && name.trim() && goToStep(1)}
                 maxLength={30}
                 placeholder="Your name..."
-                className="w-full bg-zinc-900/80 border border-white/10 rounded-2xl px-4 py-3.5 text-white text-base font-semibold placeholder-zinc-600 focus:outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-600/10 transition-all"
+                className="w-full bg-zinc-900/80 border border-white/10 rounded-2xl px-4 py-3.5 text-white text-base font-semibold placeholder-zinc-600 focus:outline-none focus:border-[#E88EAC]/50 focus:ring-2 focus:ring-[#E88EAC]/10 transition-all"
               />
             </div>
 
@@ -308,7 +308,7 @@ export default function OnboardingPage() {
                 </div>
               </div>
               <h2 className="text-3xl font-extrabold text-white tracking-tight">You're in, {name.split(' ')[0]}!</h2>
-              <p className="text-zinc-400 text-sm">Kiwi is ready. Here's what you've got:</p>
+              <p className="text-zinc-400 text-sm">Sonora is ready. Here's what you've got:</p>
             </div>
 
             {/* Feature list */}
@@ -321,8 +321,8 @@ export default function OnboardingPage() {
                     animation: `fade-in-up 0.4s ${i * 80}ms cubic-bezier(0.16, 1, 0.3, 1) both`,
                   }}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-red-600/10 border border-red-600/20 flex items-center justify-center flex-shrink-0">
-                    <Icon className="w-5 h-5 text-red-400" />
+                  <div className="w-10 h-10 rounded-xl bg-[#E88EAC]/10 border border-[#E88EAC]/20 flex items-center justify-center flex-shrink-0">
+                    <Icon className="w-5 h-5 text-[#E88EAC]" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-white">{title}</p>
@@ -335,7 +335,7 @@ export default function OnboardingPage() {
             <button
               onClick={handleFinish}
               disabled={loading}
-              className="w-full py-4 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-extrabold text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-600/25 cursor-pointer disabled:opacity-60"
+              className="w-full py-4 rounded-2xl bg-[#E88EAC] hover:bg-[#E88EAC]/90 text-white font-extrabold text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#E88EAC]/25 cursor-pointer disabled:opacity-60"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
               {loading ? 'Getting everything ready...' : 'Start Listening →'}

@@ -372,7 +372,7 @@ export const NowPlayingView: React.FC = () => {
   if (!currentTrack) return null;
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden select-none h-full">
+    <div className="fixed inset-0 z-40 bg-[#050505] flex flex-col overflow-hidden select-none pb-[100px] animate-fade-in">
       {/* Header bar */}
       <header className="h-12 px-6 flex items-center justify-between flex-shrink-0 border-b border-white/5">
         <div className="flex items-center gap-3">
@@ -478,7 +478,7 @@ export const NowPlayingView: React.FC = () => {
                   <button
                     onClick={handleDislikeClick}
                     className={`p-2 rounded-full hover:bg-white/5 transition-colors ${
-                      isDisliked ? 'text-red-500' : 'text-zinc-400 hover:text-white'
+                      isDisliked ? 'text-[#E88EAC]' : 'text-zinc-400 hover:text-white'
                     }`}
                     title="Dislike"
                   >
@@ -487,11 +487,11 @@ export const NowPlayingView: React.FC = () => {
                   <button
                     onClick={handleLikeClick}
                     className={`p-2 rounded-full hover:bg-white/5 transition-colors ${
-                      isLiked ? 'text-red-500' : 'text-zinc-400 hover:text-white'
+                      isLiked ? 'text-[#E88EAC]' : 'text-zinc-400 hover:text-white'
                     }`}
                     title="Like"
                   >
-                    <ThumbsUp className={`w-5 h-5 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+                    <ThumbsUp className={`w-5 h-5 ${isLiked ? 'fill-[#E88EAC] text-[#E88EAC]' : ''}`} />
                   </button>
                   <button
                     onClick={() => setShareTrack(currentTrack)}
@@ -521,7 +521,7 @@ export const NowPlayingView: React.FC = () => {
                   key={tab}
                   onClick={() => setNowPlayingTab(tab)}
                   className={`flex-1 py-4 text-center border-b-2 hover:text-white transition-all duration-200 cursor-pointer ${
-                    active ? 'border-[#9DD2E6] text-white' : 'border-transparent text-zinc-400'
+                    active ? 'border-[#E88EAC] text-white' : 'border-transparent text-zinc-400'
                   }`}
                 >
                   {label}
@@ -942,15 +942,15 @@ export const NowPlayingView: React.FC = () => {
                               setSeekTrigger(line.time);
                             }
                           }}
-                          className={`px-8 transition-all duration-500 leading-relaxed font-semibold text-center ${
+                          className={`px-8 transition-all duration-300 leading-relaxed text-center ${
                             isClickable 
-                              ? 'cursor-pointer hover:text-white active:scale-[1.01]' 
+                              ? 'cursor-pointer' 
                               : 'cursor-default'
                           } ${
                             isActive
-                              ? 'text-white text-xl lg:text-2xl font-extrabold opacity-100 scale-100 drop-shadow-[0_0_12px_rgba(157,210,230,0.15)]'
-                              : 'text-zinc-400 text-base lg:text-lg opacity-60 hover:opacity-90 hover:text-zinc-300'
-                          } ${line.text.startsWith('[') ? 'text-zinc-500/60 italic font-medium tracking-wide text-sm !opacity-50' : ''}`}
+                              ? 'text-white text-2xl lg:text-3xl font-black scale-[1.03] drop-shadow-[0_4px_20px_rgba(232,142,172,0.4)]'
+                              : 'text-zinc-500 text-lg lg:text-xl font-bold opacity-50 hover:opacity-90 hover:text-zinc-300 font-sans'
+                          } ${line.text.startsWith('[') ? 'text-[11px] font-black tracking-wider text-[#E88EAC]/60 uppercase py-2 block !opacity-85' : ''}`}
                         >
                           {line.text}
                         </p>

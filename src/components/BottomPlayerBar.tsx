@@ -21,7 +21,8 @@ import {
   Maximize2,
   PlusCircle,
   Check,
-  X
+  X,
+  Radio
 } from 'lucide-react';
 import { ArtistLinks } from './pages/shared';
 
@@ -193,7 +194,7 @@ export const BottomPlayerBar: React.FC = () => {
   return (
     <div className="w-screen px-4 pb-4 pt-1 flex justify-center flex-shrink-0 relative z-50 bg-transparent">
       <div 
-        className="h-[84px] w-full max-w-[1600px] rounded-3xl text-white border border-white/10 px-6 flex items-center justify-between select-none transition-all duration-1000 backdrop-blur-3xl bg-black/40 shadow-2xl shadow-black/50"
+        className="h-[84px] w-full max-w-[1600px] rounded-3xl text-white border border-white/[0.08] px-6 flex items-center justify-between select-none transition-all duration-1000 backdrop-blur-2xl bg-zinc-950/75 shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
       >
       {/* 1. LEFT SECTION: Track Info */}
       <div className="flex items-center gap-3 w-[30%] min-w-[200px]">
@@ -364,11 +365,15 @@ export const BottomPlayerBar: React.FC = () => {
         {/* Lyrics Button */}
         <button 
           onClick={() => {
-            setShowNowPlaying(true);
-            setNowPlayingTab('lyrics');
+            if (showNowPlaying && nowPlayingTab === 'lyrics') {
+              setShowNowPlaying(false);
+            } else {
+              setShowNowPlaying(true);
+              setNowPlayingTab('lyrics');
+            }
           }}
           className={`p-1.5 rounded-md hover:bg-white/5 transition-all ${
-            showNowPlaying && nowPlayingTab === 'lyrics' ? 'text-[var(--theme-accent)]' : 'text-zinc-400 hover:text-white'
+            showNowPlaying && nowPlayingTab === 'lyrics' ? 'text-[#E88EAC]' : 'text-zinc-400 hover:text-white'
           }`}
           title="Lyrics"
         >
@@ -378,25 +383,51 @@ export const BottomPlayerBar: React.FC = () => {
         {/* Queue Button */}
         <button 
           onClick={() => {
-            setShowNowPlaying(true);
-            setNowPlayingTab('upnext');
+            if (showNowPlaying && nowPlayingTab === 'upnext') {
+              setShowNowPlaying(false);
+            } else {
+              setShowNowPlaying(true);
+              setNowPlayingTab('upnext');
+            }
           }}
           className={`p-1.5 rounded-md hover:bg-white/5 transition-all ${
-            showNowPlaying && nowPlayingTab === 'upnext' ? 'text-[var(--theme-accent)]' : 'text-zinc-400 hover:text-white'
+            showNowPlaying && nowPlayingTab === 'upnext' ? 'text-[#E88EAC]' : 'text-zinc-400 hover:text-white'
           }`}
           title="Queue"
         >
           <ListMusic className="w-5 h-5" />
         </button>
 
+        {/* Related Songs Button */}
+        <button 
+          onClick={() => {
+            if (showNowPlaying && nowPlayingTab === 'related') {
+              setShowNowPlaying(false);
+            } else {
+              setShowNowPlaying(true);
+              setNowPlayingTab('related');
+            }
+          }}
+          className={`p-1.5 rounded-md hover:bg-white/5 transition-all ${
+            showNowPlaying && nowPlayingTab === 'related' ? 'text-[#E88EAC]' : 'text-zinc-400 hover:text-white'
+          }`}
+          title="Related Songs"
+        >
+          <Radio className="w-5 h-5" />
+        </button>
+
         {/* Connection Button */}
         <button 
           onClick={() => {
-            setShowNowPlaying(true);
-            setNowPlayingTab('connect');
+            if (showNowPlaying && nowPlayingTab === 'connect') {
+              setShowNowPlaying(false);
+            } else {
+              setShowNowPlaying(true);
+              setNowPlayingTab('connect');
+            }
           }}
           className={`p-1.5 rounded-md hover:bg-white/5 transition-all ${
-            showNowPlaying && nowPlayingTab === 'connect' ? 'text-[var(--theme-accent)]' : 'text-zinc-400 hover:text-white'
+            showNowPlaying && nowPlayingTab === 'connect' ? 'text-[#E88EAC]' : 'text-zinc-400 hover:text-white'
           }`}
           title="Connect to a device"
         >
@@ -438,14 +469,20 @@ export const BottomPlayerBar: React.FC = () => {
           <ExternalLink className="w-5 h-5" />
         </button>
 
-        {/* Fullscreen */}
+        {/* Fullscreen Toggle */}
         <button 
           onClick={() => {
-            setShowNowPlaying(true);
-            setNowPlayingTab('lyrics');
+            if (showNowPlaying) {
+              setShowNowPlaying(false);
+            } else {
+              setShowNowPlaying(true);
+              setNowPlayingTab('lyrics');
+            }
           }}
-          className="p-1.5 text-zinc-400 hover:text-white transition-all hidden sm:block"
-          title="Fullscreen"
+          className={`p-1.5 transition-all hidden sm:block ${
+            showNowPlaying ? 'text-[#E88EAC]' : 'text-zinc-400 hover:text-white'
+          }`}
+          title={showNowPlaying ? "Exit Fullscreen" : "Fullscreen"}
         >
           <Maximize2 className="w-5 h-5" />
         </button>

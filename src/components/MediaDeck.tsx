@@ -145,10 +145,16 @@ export const MediaDeck: React.FC = () => {
   useEffect(() => setMounted(true), []);
 
   const isReadyRef = useRef(false);
+  const isTransitioningRef = useRef(false);
+  const lastProgressSyncTimeRef = useRef(Date.now());
+  const playedSecondsRef = useRef(0);
 
   // Reset ready state when track changes
   useEffect(() => {
     isReadyRef.current = false;
+    isTransitioningRef.current = false;
+    playedSecondsRef.current = 0;
+    lastProgressSyncTimeRef.current = Date.now();
   }, [currentTrack?.id]);
 
   const seekTrigger = usePlayerStore((s) => s.seekTrigger);
@@ -501,6 +507,8 @@ export const MediaDeck: React.FC = () => {
   const handlePlayerProgress = (state: { played: number; playedSeconds: number; loaded: number }) => {
     setProgress(state);
     setStorePlayedSeconds(state.playedSeconds);
+    playedSecondsRef.current = state.playedSeconds;
+    lastProgressSyncTimeRef.current = Date.now();
   };
 
   const handlePlayerEnded = () => {
@@ -525,6 +533,31 @@ export const MediaDeck: React.FC = () => {
       nextTrack();
     }
   };
+
+  useEffect(() => {
+    lastProgressSyncTimeRef.current = Date.now();
+  }, [isPlaying]);
+
+  useEffect(() => {
+    if (!isPlaying || !currentTrack || duration <= 0) return;
+
+    const interval = setInterval(() => {
+      if (isTransitioningRef.current) return;
+
+      const elapsedMs = Date.now() - lastProgressSyncTimeRef.current;
+      const estimatedPlayedSeconds = playedSecondsRef.current + (elapsedMs / 1000);
+
+      // If we've played past the duration (with a 2s tolerance buffer to let natural events fire),
+      // and we are still marked as playing, force transition to the next track.
+      if (estimatedPlayedSeconds >= duration + 2) {
+        console.log(`[MediaDeck Watchdog] Track finished in background. Forcing next track.`);
+        isTransitioningRef.current = true;
+        handlePlayerEnded();
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isPlaying, currentTrack?.id, duration]);
 
   const toggleMute = () => setIsMuted(!isMuted);
 
@@ -558,14 +591,17 @@ export const MediaDeck: React.FC = () => {
 
   return (
     <div 
-      className="fixed z-50 rounded-2xl overflow-hidden pointer-events-none"
+      className="fixed pointer-events-none"
       style={{
-        left: '-9999px',
-        top: '-9999px',
-        width: '200px',
-        height: '200px',
-        opacity: 0.01,
-        pointerEvents: 'none'
+        position: 'fixed',
+        bottom: '0',
+        right: '0',
+        width: '1px',
+        height: '1px',
+        opacity: 0.001,
+        pointerEvents: 'none',
+        zIndex: 99999,
+        overflow: 'hidden'
       }}
     >
       <ReactPlayer
