@@ -345,13 +345,13 @@ export async function GET(request: Request) {
         if (searchData && searchData.length > 0) {
           let matchedItem = null;
           
-          // First pass: look for a verified match with synced lyrics
+          // First pass: look for a verified match with synced lyrics (strict duration: 15s)
           for (const item of searchData) {
             const trackName = item.trackName || item.name || '';
             const artistName = item.artistName || '';
             const titleMatch = isCorrectMatch(cleanTitle, trackName);
             const artistMatch = isArtistMatch(cleanArtist, artistName);
-            const durationMatch = !item.duration || !totalSeconds || Math.abs(item.duration - totalSeconds) <= 10;
+            const durationMatch = !item.duration || !totalSeconds || Math.abs(item.duration - totalSeconds) <= 15;
             
             if (titleMatch && artistMatch && durationMatch && item.syncedLyrics) {
               const parsed = parseAndVerifyLrc(item.syncedLyrics);
@@ -362,14 +362,51 @@ export async function GET(request: Request) {
             }
           }
 
-          // Second pass: look for a verified match with plain lyrics if no synced match found
+          // Second pass: look for a verified match with synced lyrics (generous duration: 120s for loops/edits)
           if (!matchedItem) {
             for (const item of searchData) {
               const trackName = item.trackName || item.name || '';
               const artistName = item.artistName || '';
               const titleMatch = isCorrectMatch(cleanTitle, trackName);
               const artistMatch = isArtistMatch(cleanArtist, artistName);
-              const durationMatch = !item.duration || !totalSeconds || Math.abs(item.duration - totalSeconds) <= 10;
+              const durationMatch = !item.duration || !totalSeconds || Math.abs(item.duration - totalSeconds) <= 120;
+              
+              if (titleMatch && artistMatch && durationMatch && item.syncedLyrics) {
+                const parsed = parseAndVerifyLrc(item.syncedLyrics);
+                if (parsed) {
+                  matchedItem = { item, parsed };
+                  break;
+                }
+              }
+            }
+          }
+
+          // Third pass: look for a verified match with synced lyrics (ignore duration entirely for exact name match)
+          if (!matchedItem) {
+            for (const item of searchData) {
+              const trackName = item.trackName || item.name || '';
+              const artistName = item.artistName || '';
+              const titleMatch = isCorrectMatch(cleanTitle, trackName);
+              const artistMatch = isArtistMatch(cleanArtist, artistName);
+              
+              if (titleMatch && artistMatch && item.syncedLyrics) {
+                const parsed = parseAndVerifyLrc(item.syncedLyrics);
+                if (parsed) {
+                  matchedItem = { item, parsed };
+                  break;
+                }
+              }
+            }
+          }
+
+          // Fourth pass: look for a verified match with plain lyrics
+          if (!matchedItem) {
+            for (const item of searchData) {
+              const trackName = item.trackName || item.name || '';
+              const artistName = item.artistName || '';
+              const titleMatch = isCorrectMatch(cleanTitle, trackName);
+              const artistMatch = isArtistMatch(cleanArtist, artistName);
+              const durationMatch = !item.duration || !totalSeconds || Math.abs(item.duration - totalSeconds) <= 15;
               
               if (titleMatch && artistMatch && durationMatch && (item.plainLyrics || item.syncedLyrics)) {
                 matchedItem = { item, parsed: null };
