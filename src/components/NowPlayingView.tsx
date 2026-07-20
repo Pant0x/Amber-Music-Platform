@@ -154,8 +154,24 @@ export const NowPlayingView: React.FC = () => {
       .then(data => {
         if (controller.signal.aborted) return;
         if (data?.lyrics) {
-          const hasTimestamps = data.lines?.some((l: any) => l.time !== undefined && l.time !== -999);
-          const enriched = { ...data, isSynced: data.isSynced || hasTimestamps };
+          const cleanLines = (data.lines || []).filter((line: any) => {
+            const txt = (line.text || '').trim().toLowerCase();
+            return !(
+              txt.startsWith('source:') || 
+              txt.includes('source: musixmatch') || 
+              txt.includes('writer(s):') || 
+              txt.includes('lyrics licensed') || 
+              txt.includes('lyrics powered') || 
+              txt.includes('contributors') || 
+              txt.includes('lyricist:')
+            );
+          });
+          const hasTimestamps = cleanLines.some((l: any) => l.time !== undefined && l.time !== -999);
+          const enriched = { 
+            ...data, 
+            lines: cleanLines,
+            isSynced: data.isSynced || hasTimestamps 
+          };
           lyricsCache.current.set(cacheKey, enriched);
           setLyricsData(enriched);
         } else {
@@ -369,7 +385,7 @@ export const NowPlayingView: React.FC = () => {
     if (nowPlayingTab !== 'lyrics' || !lyricsData?.lines) return;
     const interval = setInterval(() => {
       if (!userScrollingRef.current) return;
-      if (Date.now() - lastScrollTimeRef.current >= 15000) {
+      if (Date.now() - lastScrollTimeRef.current >= 4500) {
         userScrollingRef.current = false;
         scrollToActiveLyric('smooth');
       }

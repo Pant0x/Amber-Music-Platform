@@ -635,6 +635,7 @@ export const MediaDeck: React.FC = () => {
         volume={volume}
         muted={isMuted}
         onProgress={handlePlayerProgress}
+        progressInterval={200}
         onDuration={(d: number) => {
           setDuration(d);
           setStoreDuration(d);
