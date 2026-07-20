@@ -112,26 +112,6 @@ export const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      {/* User Profile Card Pinned at Bottom */}
-      <div className="mt-auto pt-4 flex-shrink-0">
-        <div 
-          onClick={() => { setShowNowPlaying(false); router.push('/profile'); }}
-          className="flex items-center gap-3 p-2.5 rounded-xl cursor-pointer bg-white/5 hover:bg-white/10 transition-all border border-white/5"
-        >
-          <img 
-            src={avatarUrl || "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"} 
-            className="w-8 h-8 rounded-full object-cover border border-white/10" 
-            alt="Avatar" 
-            onError={(e) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.src = "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y";
-            }}
-          />
-          <div className="min-w-0 flex-1">
-            <p className="text-[13px] font-medium text-white truncate leading-tight">{displayName || 'Anonymous Listener'}</p>
-          </div>
-        </div>
-      </div>
     </aside>
   );
 };
