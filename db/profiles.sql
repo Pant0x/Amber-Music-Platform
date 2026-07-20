@@ -1,3 +1,11 @@
+-- Drop existing tables to clear old UUID column constraints
+DROP TABLE IF EXISTS public.artist_follows CASCADE;
+DROP TABLE IF EXISTS public.artist_tracks CASCADE;
+DROP TABLE IF EXISTS public.devices CASCADE;
+DROP TABLE IF EXISTS public.user_files CASCADE;
+DROP TABLE IF EXISTS public.user_sync_data CASCADE;
+DROP TABLE IF EXISTS public.profiles CASCADE;
+
 -- Profiles table for user data synced from Clerk
 CREATE TABLE IF NOT EXISTS public.profiles (
   user_id TEXT PRIMARY KEY,
