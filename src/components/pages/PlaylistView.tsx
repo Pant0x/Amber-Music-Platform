@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { Track } from '@/types/music-player';
-import { Play, Pause, Music, Trash2, X, Disc, Heart } from 'lucide-react';
+import { Play, Pause, Music, Trash2, X, Disc, Heart, GripVertical } from 'lucide-react';
 import { TrackCover } from '../TrackCover';
 import { ExplicitBadge, ArtistLinks, PlayingEqualizer, isActiveTrack } from './shared';
 import { AnimatedPage } from '../AnimatedPage';
@@ -17,6 +17,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
     currentPlaylistId,
     deletePlaylist,
     removeTrackFromPlaylist,
+    reorderPlaylistTracks,
     setActiveTab,
     setCurrentPlaylistId,
     playTrack,
@@ -25,6 +26,8 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
 
   const [ytPlaylistDetails, setYtPlaylistDetails] = useState<any>(null);
   const [ytPlaylistLoading, setYtPlaylistLoading] = useState(false);
+  const dragIndexRef = useRef<number | null>(null);
+  const dragOverIndexRef = useRef<number | null>(null);
 
   const activePlaylist = mode === 'custom' && currentPlaylistId ? playlists.find(p => p.id === currentPlaylistId) : null;
 
@@ -82,7 +85,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
               Liked Music
             </h1>
             <div className="text-sm text-zinc-400 font-medium flex items-center gap-2">
-              <span className="text-white">Cloud Music</span>
+              <span className="text-white">Pantooty</span>
               <span>•</span>
               <span>{likedTracks.length} songs</span>
             </div>
@@ -270,11 +273,29 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                 return (
                   <div
                     key={track.id}
+                    draggable
+                    onDragStart={() => { dragIndexRef.current = i; }}
+                    onDragEnter={() => { dragOverIndexRef.current = i; }}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDragEnd={() => {
+                      const from = dragIndexRef.current;
+                      const to = dragOverIndexRef.current;
+                      if (from !== null && to !== null && from !== to) {
+                        reorderPlaylistTracks(activePlaylist.id, from, to);
+                      }
+                      dragIndexRef.current = null;
+                      dragOverIndexRef.current = null;
+                    }}
                     onDoubleClick={() => handlePlayAction(track, activePlaylist.tracks)}
                     className={`group/row flex items-center gap-4 p-2.5 rounded-lg hover:bg-white/5 cursor-pointer transition-colors duration-150 ${
                       isActive ? 'bg-white/5' : ''
                     }`}
                   >
+                    {/* Drag handle */}
+                    <div className="opacity-0 group-hover/row:opacity-100 transition-opacity cursor-grab active:cursor-grabbing flex-shrink-0 text-zinc-600 hover:text-zinc-400 px-0.5">
+                      <GripVertical className="w-3.5 h-3.5" />
+                    </div>
+
                     <div className="w-8 flex items-center justify-center text-xs text-zinc-500 relative flex-shrink-0">
                       {isActive ? (
                         <>

@@ -85,6 +85,7 @@ export interface CollectionSlice {
   deletePlaylist: (id: string) => void;
   addTrackToPlaylist: (playlistId: string, track: Track) => void;
   removeTrackFromPlaylist: (playlistId: string, trackId: string) => void;
+  reorderPlaylistTracks: (playlistId: string, fromIndex: number, toIndex: number) => void;
   toggleLikeTrack: (track: Track) => void;
   toggleSubscribeChannel: (channelId: string) => void;
   addSearchQueryToHistory: (query: string) => void;

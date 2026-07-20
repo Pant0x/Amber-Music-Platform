@@ -76,6 +76,16 @@ export const createCollectionSlice: StateCreator<StoreState, [], [], CollectionS
     })
   })),
 
+  reorderPlaylistTracks: (playlistId, fromIndex, toIndex) => set((state) => ({
+    playlists: state.playlists.map((p) => {
+      if (p.id !== playlistId) return p;
+      const tracks = [...p.tracks];
+      const [moved] = tracks.splice(fromIndex, 1);
+      tracks.splice(toIndex, 0, moved);
+      return { ...p, tracks };
+    })
+  })),
+
   toggleLikeTrack: (track) => set((state) => {
     const isLiked = state.likedTracks.some(t => t.id === track.id);
     const newLiked = isLiked
