@@ -363,7 +363,9 @@ export const PlayerDock: React.FC = () => {
               e.currentTarget.src = currentTrack.thumbnailUrl || '';
             }}
             alt={currentTrack.title}
-            className="w-full h-full object-cover select-none"
+            className={`w-full h-full object-cover select-none transition-transform duration-300 ${
+              currentTrack.origin !== 'spotify' ? 'scale-[1.22]' : 'scale-100'
+            }`}
           />
         </div>
 

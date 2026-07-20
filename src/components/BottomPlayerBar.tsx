@@ -227,7 +227,9 @@ export const BottomPlayerBar: React.FC = () => {
           <img 
             src={upgradeThumbnailUrl(currentTrack.thumbnailUrl, currentTrack.youtubeId || currentTrack.id) || undefined} 
             alt="" 
-            className="w-full h-full object-cover"
+            className={`w-full h-full object-cover transition-transform duration-300 ${
+              currentTrack.origin !== 'spotify' ? 'scale-[1.22]' : 'scale-100'
+            }`}
             onError={(e) => {
               e.currentTarget.onerror = null;
               e.currentTarget.src = currentTrack.thumbnailUrl || '';

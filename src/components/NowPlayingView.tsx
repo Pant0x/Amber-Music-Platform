@@ -374,6 +374,7 @@ export const NowPlayingView: React.FC = () => {
   // Auto-follow: scroll active lyric into center when it changes, unless user is scrolling
   useEffect(() => {
     if (nowPlayingTab !== 'lyrics') return;
+    if (!lyricsData?.isSynced) return;
     if (activeLineIndex < 0 || !lyricsData?.lines) return;
     if (userScrollingRef.current) return;
     
@@ -385,9 +386,9 @@ export const NowPlayingView: React.FC = () => {
     return () => clearTimeout(timer);
   }, [activeLineIndex, lyricsData, scrollToActiveLyric, nowPlayingTab]);
 
-  // Re-enable auto-follow after 15s of no scroll activity
+  // Re-enable auto-follow after inactivity of no scroll activity
   useEffect(() => {
-    if (nowPlayingTab !== 'lyrics' || !lyricsData?.lines) return;
+    if (nowPlayingTab !== 'lyrics' || !lyricsData?.lines || !lyricsData?.isSynced) return;
     const interval = setInterval(() => {
       if (!userScrollingRef.current) return;
       if (Date.now() - lastScrollTimeRef.current >= 4500) {
@@ -436,7 +437,11 @@ export const NowPlayingView: React.FC = () => {
                     e.currentTarget.src = currentTrack.thumbnailUrl || '';
                   }}
                   alt={currentTrack.title}
-                  className="w-full h-full object-cover select-none transition-transform duration-500 scale-100 group-hover:scale-[1.02]"
+                  className={`w-full h-full object-cover select-none transition-transform duration-500 ${
+                    currentTrack.origin !== 'spotify' 
+                      ? 'scale-[1.22] group-hover:scale-[1.26]' 
+                      : 'scale-100 group-hover:scale-[1.02]'
+                  }`}
                 />
               </div>
 
@@ -957,8 +962,9 @@ export const NowPlayingView: React.FC = () => {
                     className="flex-1 overflow-y-auto overflow-x-hidden space-y-5 custom-scrollbar pr-2 text-center select-text py-[20vh]"
                   >
                     {lyricsData.lines.map((line, idx) => {
-                      const isActive = idx === activeLineIndex;
-                      const isClickable = line.time !== -999;
+                      const isSynced = lyricsData.isSynced;
+                      const isActive = isSynced && idx === activeLineIndex;
+                      const isClickable = isSynced && line.time !== -999;
                       return (
                         <p
                           key={`lyric-line-${idx}`}
@@ -976,7 +982,9 @@ export const NowPlayingView: React.FC = () => {
                           } ${
                             isActive
                               ? 'text-white text-xl lg:text-2xl font-extrabold scale-[1.01] drop-shadow-[0_0_12px_rgba(232,142,172,0.25)]'
-                              : 'text-zinc-500 text-base lg:text-lg font-bold opacity-60 transition-all duration-300 hover:text-zinc-300 hover:opacity-90'
+                              : isSynced
+                                ? 'text-zinc-500 text-base lg:text-lg font-bold opacity-60 transition-all duration-300 hover:text-zinc-300 hover:opacity-90'
+                                : 'text-zinc-300 text-base lg:text-lg font-semibold opacity-85 hover:opacity-100 hover:text-white transition-opacity duration-300'
                           } ${line.text.startsWith('[') ? 'text-xs font-black tracking-widest text-[#E88EAC]/60 uppercase py-1.5 block !opacity-80' : ''}`}
                         >
                           {line.text}

@@ -5,7 +5,7 @@ import { Star } from 'lucide-react'
 
 const clerkAppearance = {
   elements: {
-    card: 'bg-black/90 shadow-2xl border border-white/8 rounded-3xl backdrop-blur-xl',
+    card: 'bg-zinc-900/90 shadow-2xl border border-white/8 rounded-3xl backdrop-blur-xl',
     headerTitle: 'text-white font-extrabold text-xl tracking-tight',
     headerSubtitle: 'text-zinc-400 text-sm',
     socialButtonsBlockButton:
