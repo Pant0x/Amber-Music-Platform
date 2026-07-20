@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
 import { usePlayerStore } from '@/store/usePlayerStore'
-import { Loader2, ArrowRight, Check, Headphones, ListMusic, Zap, Music2 } from 'lucide-react'
+import { Loader2, ArrowRight, Check, Headphones, ListMusic, Zap, Music2, Camera } from 'lucide-react'
 
 // Genre/mood tiles for step 2
 const MOODS = [
@@ -30,12 +30,14 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(0)
   const [name, setName] = useState('')
   const [selectedMoods, setSelectedMoods] = useState<string[]>([])
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [animatingOut, setAnimatingOut] = useState(false)
   const nameRef = useRef<HTMLInputElement>(null)
 
-  // Pre-fill name from Clerk once loaded
+  // Pre-fill name and avatar from Clerk once loaded
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
       router.push('/sign-in')
@@ -44,9 +46,19 @@ export default function OnboardingPage() {
     if (user) {
       const clerkName = user.fullName || user.username || user.primaryEmailAddress?.emailAddress?.split('@')[0] || ''
       setName(clerkName)
-      if (user.imageUrl) setAvatarUrl(user.imageUrl)
+      if (user.imageUrl) {
+        setAvatarPreview(user.imageUrl)
+      }
     }
-  }, [isLoaded, isSignedIn, user, router, setAvatarUrl])
+  }, [isLoaded, isSignedIn, user, router])
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setAvatarFile(file)
+      setAvatarPreview(URL.createObjectURL(file))
+    }
+  }
 
   const goToStep = (next: number) => {
     setAnimatingOut(true)
@@ -66,11 +78,23 @@ export default function OnboardingPage() {
     setLoading(true)
     setError('')
     try {
+      let finalAvatarUrl = user?.imageUrl || ''
+      if (avatarFile) {
+        const formData = new FormData()
+        formData.append('file', avatarFile)
+        formData.append('bucket', 'avatars')
+        formData.append('folder', user?.id || 'onboarding')
+        const uploadRes = await fetch('/api/storage/upload', { method: 'POST', body: formData })
+        if (uploadRes.ok) {
+          const { url } = await uploadRes.json()
+          finalAvatarUrl = url
+        }
+      }
+
       const finalName = name.trim() || user?.username || 'Listener'
-      const avatarUrl = user?.imageUrl || ''
 
       setDisplayName(finalName)
-      if (avatarUrl) setAvatarUrl(avatarUrl)
+      if (finalAvatarUrl) setAvatarUrl(finalAvatarUrl)
       setOnboardingCompleted(true)
 
       await fetch('/api/user/sync', {
@@ -78,10 +102,19 @@ export default function OnboardingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           display_name: finalName,
-          avatar_url: avatarUrl,
+          avatar_url: finalAvatarUrl,
           onboarding_completed: true,
         }),
       })
+
+      // Update Clerk avatar too
+      if (finalAvatarUrl && finalAvatarUrl !== user?.imageUrl) {
+        await fetch('/api/user/avatar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ avatarUrl: finalAvatarUrl }),
+        })
+      }
 
       router.push('/')
     } catch (err: any) {
@@ -98,7 +131,6 @@ export default function OnboardingPage() {
     )
   }
 
-  const avatarSrc = user?.imageUrl || ''
   const initials = (name || user?.username || '?').charAt(0).toUpperCase()
 
   return (
@@ -153,28 +185,33 @@ export default function OnboardingPage() {
         {/* ───────────── STEP 0: Welcome / Name ───────────── */}
         {step === 0 && (
           <div className="space-y-8 text-center">
-            {/* User avatar */}
+            {/* User avatar upload */}
             <div className="flex flex-col items-center gap-4">
-              <div className="relative">
-                <div className="w-24 h-24 rounded-full border-2 border-white/10 overflow-hidden bg-zinc-800 shadow-2xl shadow-black/60 ring-4 ring-red-600/20">
-                  {avatarSrc ? (
-                    <img src={avatarSrc} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              <label htmlFor="onboarding-avatar-input" className="relative inline-block cursor-pointer group">
+                <div className="w-24 h-24 rounded-full border-2 border-white/10 overflow-hidden bg-zinc-800 shadow-2xl shadow-black/60 ring-4 ring-red-600/20 group-hover:border-red-500/50 transition-all flex items-center justify-center">
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-red-600 to-purple-700 flex items-center justify-center text-white text-3xl font-bold">
                       {initials}
                     </div>
                   )}
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-green-500 border-2 border-black flex items-center justify-center">
-                  <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                {/* Upload camera overlay on hover */}
+                <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                  <Camera className="w-6 h-6 text-white" />
                 </div>
-              </div>
+                <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-red-600 border-2 border-black flex items-center justify-center group-hover:bg-red-500 transition-colors">
+                  <Camera className="w-3.5 h-3.5 text-white" />
+                </div>
+                <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" id="onboarding-avatar-input" />
+              </label>
 
               <div>
                 <h1 className="text-3xl font-extrabold text-white tracking-tight">
                   Hey {user?.firstName || 'there'} 👋
                 </h1>
-                <p className="text-zinc-400 text-sm mt-1.5">Your music journey starts here. What should we call you?</p>
+                <p className="text-zinc-400 text-sm mt-1.5">Your music journey starts here. Click avatar to change photo.</p>
               </div>
             </div>
 

@@ -35,6 +35,7 @@ export default function ProfilePage() {
     history,
     displayName,
     avatarUrl,
+    isAdmin,
     setDisplayName,
     setAvatarUrl,
     playTrack,
@@ -142,14 +143,18 @@ export default function ProfilePage() {
     }
   }, [subscribedChannels]);
 
-  // Sync Clerk data to store
+  // Sync Clerk data to store if local fields are not set
   useEffect(() => {
     if (isSignedIn && user) {
-      const name = user.fullName || user.username || user.primaryEmailAddress?.emailAddress || '';
-      if (name) setDisplayName(name);
-      if (user.imageUrl) setAvatarUrl(user.imageUrl);
+      if (!displayName) {
+        const name = user.fullName || user.username || user.primaryEmailAddress?.emailAddress || '';
+        if (name) setDisplayName(name);
+      }
+      if (!avatarUrl) {
+        if (user.imageUrl) setAvatarUrl(user.imageUrl);
+      }
     }
-  }, [isSignedIn, user, setDisplayName, setAvatarUrl]);
+  }, [isSignedIn, user, displayName, avatarUrl, setDisplayName, setAvatarUrl]);
 
   // Playback handlers
   const handlePlaySong = (track: Track, contextList: Track[]) => {
@@ -256,20 +261,16 @@ export default function ProfilePage() {
           
           <p className="text-xs text-zinc-500 font-medium">Synced instantly across the database via secure Clerk authentication.</p>
 
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 pt-2">
-            <button
-              onClick={() => router.push('/artist/dashboard')}
-              className="px-4 py-1.5 rounded-full bg-purple-600 hover:bg-purple-500 text-white text-[11px] font-bold tracking-wide transition-all shadow-md active:scale-95 cursor-pointer"
-            >
-              Artist Studio
-            </button>
-            <button
-              onClick={() => router.push('/admin/login')}
-              className="px-4 py-1.5 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-bold tracking-wide transition-all shadow-md active:scale-95 cursor-pointer border border-white/5"
-            >
-              Admin Panel
-            </button>
-          </div>
+          {isAdmin && (
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 pt-2">
+              <button
+                onClick={() => router.push('/admin/login')}
+                className="px-4 py-1.5 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-bold tracking-wide transition-all shadow-md active:scale-95 cursor-pointer border border-white/5"
+              >
+                Admin Panel
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

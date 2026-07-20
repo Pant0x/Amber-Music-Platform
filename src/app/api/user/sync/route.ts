@@ -89,10 +89,28 @@ export async function GET() {
         console.error('[User Sync API] Failed to create default user row:', insertErr);
       }
 
-      return NextResponse.json(defaultRow);
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('is_admin')
+        .eq('user_id', userId)
+        .single();
+
+      return NextResponse.json({
+        ...defaultRow,
+        is_admin: profile?.is_admin || false
+      });
     }
 
-    return NextResponse.json(data);
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('is_admin')
+      .eq('user_id', userId)
+      .single();
+
+    return NextResponse.json({
+      ...data,
+      is_admin: profile?.is_admin || false
+    });
   } catch (err) {
     console.error('[User Sync API] GET error:', err);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

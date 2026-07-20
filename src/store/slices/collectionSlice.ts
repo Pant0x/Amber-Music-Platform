@@ -12,6 +12,7 @@ export const createCollectionSlice: StateCreator<StoreState, [], [], CollectionS
   displayName: '',
   avatarUrl: '',
   onboardingCompleted: false,
+  isAdmin: false,
   shareTrack: null,
 
   setDisplayName: (name) => set({ displayName: name }),
@@ -28,6 +29,7 @@ export const createCollectionSlice: StateCreator<StoreState, [], [], CollectionS
           displayName: data.display_name || 'Anonymous Listener',
           avatarUrl: data.avatar_url || 'bg-gradient-to-tr from-blue-600 to-indigo-900',
           onboardingCompleted: data.onboarding_completed || false,
+          isAdmin: data.is_admin || false,
           likedTracks: data.liked_tracks || [],
           subscribedChannels: data.subscribed_channels || [],
           playlists: data.playlists || [],

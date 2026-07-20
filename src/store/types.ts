@@ -74,6 +74,7 @@ export interface CollectionSlice {
   displayName: string;
   avatarUrl: string;
   onboardingCompleted: boolean;
+  isAdmin: boolean;
   shareTrack: Track | null;
 
   setDisplayName: (name: string) => void;
