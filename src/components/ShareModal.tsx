@@ -98,7 +98,7 @@ export const ShareModal: React.FC = () => {
 
         // Fallback placeholder if image load fails
         img.onerror = () => {
-          ctx.fillStyle = '#ff0000';
+          ctx.fillStyle = '#9DD2E6';
           ctx.beginPath();
           ctx.arc(size / 2, size / 2, 8, 0, 2 * Math.PI);
           ctx.fill();
@@ -246,7 +246,7 @@ export const ShareModal: React.FC = () => {
                 onClick={() => setShowQrCode(true)}
                 className="flex flex-col items-center gap-1.5 flex-shrink-0 cursor-pointer group"
               >
-                <div className="w-11 h-11 rounded-full bg-[#ff0000] flex items-center justify-center shadow-lg group-hover:scale-105 active:scale-95 transition-transform duration-200">
+                <div className="w-11 h-11 rounded-full bg-[#9DD2E6] flex items-center justify-center shadow-lg group-hover:scale-105 active:scale-95 transition-transform duration-200">
                   <QrCode className="w-6 h-6 text-white" />
                 </div>
                 <span className="text-[10px] text-zinc-400 group-hover:text-zinc-200 transition-colors font-medium">
@@ -306,7 +306,7 @@ export const ShareModal: React.FC = () => {
                 type="checkbox"
                 checked={startAtChecked}
                 onChange={(e) => setStartAtChecked(e.target.checked)}
-                className="w-4 h-4 bg-zinc-950 border border-white/15 rounded cursor-pointer accent-[#ff0000] focus:ring-0 focus:ring-offset-0"
+                className="w-4 h-4 bg-zinc-950 border border-white/15 rounded cursor-pointer accent-[#9DD2E6] focus:ring-0 focus:ring-offset-0"
               />
               <span className="text-xs text-zinc-400 group-hover:text-zinc-200 transition-colors font-medium">
                 Start at <span className="text-white font-bold">{formatTime(playedSeconds)}</span>

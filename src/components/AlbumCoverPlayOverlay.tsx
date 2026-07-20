@@ -94,7 +94,7 @@ export const AlbumCoverPlayOverlay: React.FC<AlbumCoverPlayOverlayProps> = ({ it
       <button
         onClick={handlePlayClick}
         disabled={loading}
-        className="w-12 h-12 rounded-full bg-[#ff0000] hover:bg-[#cc0000] flex items-center justify-center text-white shadow-2xl scale-75 group-hover:scale-100 transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
+        className="w-12 h-12 rounded-full bg-[#9DD2E6] hover:bg-[#7FB8D0] flex items-center justify-center text-white shadow-2xl scale-75 group-hover:scale-100 transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
         aria-label={`Play ${item.title}`}
       >
         {loading ? (

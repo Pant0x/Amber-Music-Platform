@@ -69,9 +69,9 @@ export const QueuePanel: React.FC = () => {
                 {isPlaying && (
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                     <div className="flex items-end gap-0.5 h-3">
-                      <span className="w-0.5 bg-[#ff0000] rounded animate-wave-1 h-3"></span>
-                      <span className="w-0.5 bg-[#ff0000]/80 rounded animate-wave-2 h-2"></span>
-                      <span className="w-0.5 bg-[#ff0000]/55 rounded animate-wave-3 h-1"></span>
+                      <span className="w-0.5 bg-[#9DD2E6] rounded animate-wave-1 h-3"></span>
+                      <span className="w-0.5 bg-[#9DD2E6]/80 rounded animate-wave-2 h-2"></span>
+                      <span className="w-0.5 bg-[#9DD2E6]/55 rounded animate-wave-3 h-1"></span>
                     </div>
                   </div>
                 )}

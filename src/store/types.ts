@@ -98,7 +98,7 @@ export interface UISlice {
   showQueuePanel: boolean;
   rightSidebarView: 'now-playing' | 'queue' | 'connect';
   showNowPlaying: boolean;
-  nowPlayingTab: 'upnext' | 'lyrics' | 'related';
+  nowPlayingTab: 'upnext' | 'lyrics' | 'related' | 'connect';
   isMinimized: boolean;
   hideExplicit: boolean;
 
@@ -106,7 +106,7 @@ export interface UISlice {
   setRightSidebarView: (view: 'now-playing' | 'queue' | 'connect') => void;
   setShowNowPlaying: (show: boolean) => void;
   toggleNowPlaying: () => void;
-  setNowPlayingTab: (tab: 'upnext' | 'lyrics' | 'related') => void;
+  setNowPlayingTab: (tab: 'upnext' | 'lyrics' | 'related' | 'connect') => void;
   setIsMinimized: (isMinimized: boolean) => void;
   toggleMinimized: () => void;
   toggleHideExplicit: () => void;

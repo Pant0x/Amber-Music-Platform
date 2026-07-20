@@ -66,14 +66,9 @@ export const BottomPlayerBar: React.FC = () => {
     createPlaylist,
     setGlobalLyricsData,
     setGlobalLyricsLoading,
-    activeTab,
-    setActiveTab,
-    navigateBack,
-    pushNavState,
-    currentPlaylistId,
-    currentChannelId,
-    artistSubTab,
     queue,
+    showNowPlaying,
+    nowPlayingTab,
     setShowNowPlaying,
     setNowPlayingTab
   } = usePlayerStore();
@@ -357,7 +352,7 @@ export const BottomPlayerBar: React.FC = () => {
             />
             <div 
               className="absolute left-0 top-1/2 -translate-y-1/2 h-[4px] rounded-full pointer-events-none transition-all duration-300"
-              style={{ width: `${(duration > 0 ? playedSeconds / duration : 0) * 100}%`, backgroundColor: 'var(--theme-accent, #1db954)' }}
+              style={{ width: `${(duration > 0 ? playedSeconds / duration : 0) * 100}%`, backgroundColor: 'var(--theme-accent)' }}
             />
           </div>
           <span className="text-[11px] text-zinc-400 font-semibold w-8 font-mono">{formatTime(duration)}</span>
@@ -369,15 +364,11 @@ export const BottomPlayerBar: React.FC = () => {
         {/* Lyrics Button */}
         <button 
           onClick={() => {
-            if (activeTab === 'lyrics') {
-              navigateBack();
-            } else {
-              pushNavState(activeTab, currentPlaylistId, currentChannelId, artistSubTab);
-              setActiveTab('lyrics');
-            }
+            setShowNowPlaying(true);
+            setNowPlayingTab('lyrics');
           }}
           className={`p-1.5 rounded-md hover:bg-white/5 transition-all ${
-            activeTab === 'lyrics' ? 'text-[var(--theme-accent)]' : 'text-zinc-400 hover:text-white'
+            showNowPlaying && nowPlayingTab === 'lyrics' ? 'text-[var(--theme-accent)]' : 'text-zinc-400 hover:text-white'
           }`}
           title="Lyrics"
         >
@@ -385,54 +376,27 @@ export const BottomPlayerBar: React.FC = () => {
         </button>
 
         {/* Queue Button */}
-        <div className="relative">
-          <button 
-            onClick={() => {
-              if (window.innerWidth < 1024) {
-                setShowQueueMobile(!showQueueMobile);
-              } else {
-                toggleSidebarView('queue');
-              }
-            }}
-            className={`p-1.5 rounded-md hover:bg-white/5 transition-all ${
-              rightSidebarView === 'queue' ? 'text-[var(--theme-accent)]' : 'text-zinc-400 hover:text-white'
-            }`}
-            title="Queue"
-          >
-            <ListMusic className="w-5 h-5" />
-          </button>
-          {showQueueMobile && (
-            <div className="fixed inset-0 z-50 bg-black/80 flex items-end">
-              <div className="w-full bg-zinc-900 rounded-t-2xl max-h-[70vh] overflow-y-auto p-4 animate-slide-in">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-bold text-white">Queue ({queue.length})</h3>
-                  <button onClick={() => setShowQueueMobile(false)} className="p-1 text-zinc-400 hover:text-white">
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-                {queue.map((track, idx) => {
-                  const qParsed = parseFeaturedArtists(track.title);
-                  return (
-                    <div key={`mq-${track.id}-${idx}`} className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5">
-                      <img src={upgradeThumbnailUrl(track.thumbnailUrl) || ''} className="w-10 h-10 rounded-md object-cover" alt="" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold text-white truncate">{qParsed.title}</p>
-                        <p className="text-xs text-zinc-400 truncate">{track.channelTitle}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-                {queue.length === 0 && <p className="text-zinc-500 text-sm text-center py-8">Queue is empty</p>}
-              </div>
-            </div>
-          )}
-        </div>
+        <button 
+          onClick={() => {
+            setShowNowPlaying(true);
+            setNowPlayingTab('upnext');
+          }}
+          className={`p-1.5 rounded-md hover:bg-white/5 transition-all ${
+            showNowPlaying && nowPlayingTab === 'upnext' ? 'text-[var(--theme-accent)]' : 'text-zinc-400 hover:text-white'
+          }`}
+          title="Queue"
+        >
+          <ListMusic className="w-5 h-5" />
+        </button>
 
         {/* Connection Button */}
         <button 
-          onClick={() => toggleSidebarView('connect')}
+          onClick={() => {
+            setShowNowPlaying(true);
+            setNowPlayingTab('connect');
+          }}
           className={`p-1.5 rounded-md hover:bg-white/5 transition-all ${
-            rightSidebarView === 'connect' ? 'text-[var(--theme-accent)]' : 'text-zinc-400 hover:text-white'
+            showNowPlaying && nowPlayingTab === 'connect' ? 'text-[var(--theme-accent)]' : 'text-zinc-400 hover:text-white'
           }`}
           title="Connect to a device"
         >
@@ -460,7 +424,7 @@ export const BottomPlayerBar: React.FC = () => {
             />
             <div 
               className="absolute left-0 top-1/2 -translate-y-1/2 h-[3.5px] rounded-full pointer-events-none transition-all duration-300"
-              style={{ width: `${(isMuted ? 0 : volume) * 100}%`, backgroundColor: 'var(--theme-accent, #1db954)' }}
+              style={{ width: `${(isMuted ? 0 : volume) * 100}%`, backgroundColor: 'var(--theme-accent)' }}
             />
           </div>
         </div>
@@ -476,7 +440,10 @@ export const BottomPlayerBar: React.FC = () => {
 
         {/* Fullscreen */}
         <button 
-          onClick={handleFullscreen}
+          onClick={() => {
+            setShowNowPlaying(true);
+            setNowPlayingTab('lyrics');
+          }}
           className="p-1.5 text-zinc-400 hover:text-white transition-all hidden sm:block"
           title="Fullscreen"
         >

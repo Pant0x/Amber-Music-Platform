@@ -61,7 +61,6 @@ export const NowPlayingView: React.FC = () => {
     clearQueue,
     playTrack,
     viewChannel,
-    showNowPlaying,
     setShowNowPlaying,
     nowPlayingTab,
     setNowPlayingTab,
@@ -150,8 +149,10 @@ export const NowPlayingView: React.FC = () => {
       .then(data => {
         if (controller.signal.aborted) return;
         if (data?.lyrics) {
-          lyricsCache.current.set(cacheKey, data);
-          setLyricsData(data);
+          const hasTimestamps = data.lines?.some((l: any) => l.time !== undefined && l.time !== -999);
+          const enriched = { ...data, isSynced: data.isSynced || hasTimestamps };
+          lyricsCache.current.set(cacheKey, enriched);
+          setLyricsData(enriched);
         } else {
           lyricsCache.current.set(cacheKey, null);
           setLyricsData(null);
@@ -184,7 +185,8 @@ export const NowPlayingView: React.FC = () => {
           .then(r => r.ok ? r.json() : null)
           .then(data => {
             if (data?.lyrics) {
-              lyricsCache.current.set(cacheKey, data);
+              const hasTimestamps = data.lines?.some((l: any) => l.time !== undefined && l.time !== -999);
+              lyricsCache.current.set(cacheKey, { ...data, isSynced: data.isSynced || hasTimestamps });
             }
           })
           .catch(() => {});
@@ -370,49 +372,31 @@ export const NowPlayingView: React.FC = () => {
   if (!currentTrack) return null;
 
   return (
-    <div
-      className={`absolute inset-0 bg-transparent z-40 transition-all duration-500 ease-out flex flex-col overflow-hidden select-none ${
-        showNowPlaying ? 'translate-y-0 opacity-100' : 'translate-y-[20px] opacity-0 pointer-events-none'
-      }`}
-    >
-      {/* Dynamic Blurred Ambient Background Art */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        <img
-          src={upgradeThumbnailUrl(currentTrack.thumbnailUrl)   || undefined}
-          referrerPolicy="no-referrer"
-          onError={(e) => {
-            e.currentTarget.onerror = null;
-            e.currentTarget.src = currentTrack.thumbnailUrl || '';
-          }}
-          className="absolute inset-0 w-full h-full object-cover blur-[100px] saturate-[1.5] opacity-90 scale-[1.2] transition-all duration-1000"
-          alt=""
-        />
-        <div className="absolute inset-0 bg-black/30" />
-      </div>
-
+    <div className="flex-1 flex flex-col overflow-hidden select-none h-full">
       {/* Header bar */}
-      <header className="h-16 px-6 flex items-center justify-between z-10 flex-shrink-0 bg-transparent">
-        <button 
-          onClick={() => setShowNowPlaying(false)} 
-          className="p-2 hover:bg-white/10 rounded-full transition-colors flex-shrink-0 text-white/70 hover:text-white"
-          title="Minimize player"
-        >
-          <ChevronDown className="w-8 h-8 drop-shadow-md" />
-        </button>
-
-        <div className="w-10"></div> {/* Spacer */}
+      <header className="h-12 px-6 flex items-center justify-between flex-shrink-0 border-b border-white/5">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setShowNowPlaying(false)} 
+            className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-zinc-400 hover:text-white"
+            title="Back"
+          >
+            <ChevronDown className="w-5 h-5" />
+          </button>
+          <h2 className="text-sm font-bold text-white">Now Playing</h2>
+        </div>
+        <div className="w-10"></div>
       </header>
 
-      {/* Main content grid */}
-      <div className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-8 p-4 lg:p-8 overflow-hidden z-10">
+      <div className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-8 p-4 lg:p-8 overflow-hidden">
         
         {/* Left Side: Interactive Canvas */}
         <div className="flex-[7] flex flex-col items-center justify-center min-w-0 h-full relative">
           
           <div className="w-full flex flex-col items-center justify-center animate-fade-in relative">
               {/* Backglow Ambient Neon Effect */}
-              <div className="absolute w-[280px] h-[280px] rounded-full bg-[#ff0000]/20 blur-[80px] pointer-events-none -translate-x-8 -translate-y-8 animate-pulse z-0" />
-              <div className="absolute w-[280px] h-[280px] rounded-full bg-[#0055ff]/15 blur-[80px] pointer-events-none translate-x-8 translate-y-8 animate-pulse z-0" />
+              <div className="absolute w-[280px] h-[280px] rounded-full bg-[#9DD2E6]/15 blur-[80px] pointer-events-none -translate-x-8 -translate-y-8 animate-pulse z-0" />
+              <div className="absolute w-[280px] h-[280px] rounded-full bg-[#E88EAC]/10 blur-[80px] pointer-events-none translate-x-8 translate-y-8 animate-pulse z-0" />
 
               <div className="relative w-[70vw] h-[70vw] sm:w-[50vw] sm:h-[50vw] lg:w-[380px] lg:h-[380px] aspect-square rounded-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] neon-border-glow overflow-hidden bg-zinc-900 border border-white/10 group z-10">
                 <img
@@ -529,15 +513,15 @@ export const NowPlayingView: React.FC = () => {
           
           {/* Tab Header Selector */}
           <div className="flex border-b border-white/5 bg-black/20 text-xs font-bold tracking-wider select-none flex-shrink-0">
-            {(['upnext', 'lyrics', 'related'] as const).map((tab) => {
-              const label = tab === 'upnext' ? 'UP NEXT' : tab === 'lyrics' ? 'LYRICS' : 'RELATED';
+            {(['upnext', 'lyrics', 'related', 'connect'] as const).map((tab) => {
+              const label = tab === 'upnext' ? 'UP NEXT' : tab === 'lyrics' ? 'LYRICS' : tab === 'related' ? 'RELATED' : 'CONNECT';
               const active = nowPlayingTab === tab;
               return (
                 <button
                   key={tab}
                   onClick={() => setNowPlayingTab(tab)}
                   className={`flex-1 py-4 text-center border-b-2 hover:text-white transition-all duration-200 cursor-pointer ${
-                    active ? 'border-[#ff0000] text-white' : 'border-transparent text-zinc-400'
+                    active ? 'border-[#9DD2E6] text-white' : 'border-transparent text-zinc-400'
                   }`}
                 >
                   {label}
@@ -564,7 +548,7 @@ export const NowPlayingView: React.FC = () => {
                         onChange={toggleAutoplay} 
                         className="sr-only peer" 
                       />
-                      <div className="w-7 h-4 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-zinc-400 after:border-zinc-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-red-600 peer-checked:after:bg-white relative"></div>
+                      <div className="w-7 h-4 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-zinc-400 after:border-zinc-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[#E88EAC] peer-checked:after:bg-white relative"></div>
                       <span className="text-[10px] font-extrabold text-zinc-500 group-hover/toggle:text-zinc-300 transition-colors uppercase tracking-wider">Autoplay</span>
                     </label>
                   </div>
@@ -582,15 +566,15 @@ export const NowPlayingView: React.FC = () => {
                   
                   {/* Current playing highlight */}
                   <div className="p-2.5 bg-white/5 border border-white/10 rounded-lg flex items-center gap-3 relative overflow-hidden group shadow-md">
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#ff0000]" />
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#9DD2E6]" />
                     <div className="relative w-10 h-10 flex-shrink-0 rounded overflow-hidden">
                       <img src={currentTrack.thumbnailUrl   || undefined} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover" />
                       {isPlaying && (
                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                           <div className="flex items-end gap-0.5 h-3">
-                            <span className="w-0.5 bg-[#ff0000] rounded animate-wave-1 h-3"></span>
-                            <span className="w-0.5 bg-[#ff0000]/80 rounded animate-wave-2 h-2"></span>
-                            <span className="w-0.5 bg-[#ff0000]/50 rounded animate-wave-3 h-1.5"></span>
+                            <span className="w-0.5 bg-[#9DD2E6] rounded animate-wave-1 h-3"></span>
+                            <span className="w-0.5 bg-[#9DD2E6]/80 rounded animate-wave-2 h-2"></span>
+                            <span className="w-0.5 bg-[#9DD2E6]/50 rounded animate-wave-3 h-1.5"></span>
                           </div>
                         </div>
                       )}
@@ -958,15 +942,15 @@ export const NowPlayingView: React.FC = () => {
                               setSeekTrigger(line.time);
                             }
                           }}
-                          className={`px-4 transition-all duration-300 leading-relaxed font-semibold ${
+                          className={`px-8 transition-all duration-500 leading-relaxed font-semibold text-center ${
                             isClickable 
-                              ? 'cursor-pointer hover:text-white hover:scale-[1.02] active:scale-95' 
+                              ? 'cursor-pointer hover:text-white active:scale-[1.01]' 
                               : 'cursor-default'
                           } ${
                             isActive
-                              ? 'text-white text-lg lg:text-xl font-extrabold opacity-100 scale-[1.04] blur-none'
-                              : 'text-zinc-500 text-sm lg:text-base opacity-40 blur-[0.4px] hover:opacity-75 hover:blur-none'
-                          } ${line.text.startsWith('[') ? 'text-zinc-400/80 italic font-medium tracking-wide border-t border-white/5 pt-2 mt-4' : ''}`}
+                              ? 'text-white text-xl lg:text-2xl font-extrabold opacity-100 scale-100 drop-shadow-[0_0_12px_rgba(157,210,230,0.15)]'
+                              : 'text-zinc-400 text-base lg:text-lg opacity-60 hover:opacity-90 hover:text-zinc-300'
+                          } ${line.text.startsWith('[') ? 'text-zinc-500/60 italic font-medium tracking-wide text-sm !opacity-50' : ''}`}
                         >
                           {line.text}
                         </p>
@@ -981,6 +965,19 @@ export const NowPlayingView: React.FC = () => {
               </div>
             )}
 
+            {/* TAB: CONNECT */}
+            {nowPlayingTab === 'connect' && (
+              <div className="absolute inset-0 overflow-y-auto custom-scrollbar p-6 animate-fade-in space-y-4">
+                <div className="text-center py-8">
+                  <h3 className="text-base font-bold text-white mb-4">Connect to a device</h3>
+                  <p className="text-sm text-zinc-400">Open Kiwi on another device to play music here.</p>
+                </div>
+                <button className="w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-semibold text-zinc-300 hover:text-white transition-all">
+                  Scan for devices
+                </button>
+              </div>
+            )}
+
             {/* TAB: RELATED */}
             {nowPlayingTab === 'related' && (
               <div className="absolute inset-0 overflow-y-auto custom-scrollbar p-6 animate-fade-in space-y-8">
@@ -988,7 +985,7 @@ export const NowPlayingView: React.FC = () => {
                 {/* 1. Artist Details Profile Card */}
                 {artistLoading ? (
                   <div className="flex items-center justify-center py-6">
-                    <Disc className="w-6 h-6 animate-spin text-[#ff0000]" />
+                    <Disc className="w-6 h-6 animate-spin text-[#9DD2E6]" />
                   </div>
                 ) : artistDetails?.profile ? (
                   <div className="bg-white/5 border border-white/10 p-4 rounded-xl space-y-4 shadow-lg">
@@ -1071,7 +1068,7 @@ export const NowPlayingView: React.FC = () => {
                               className="w-10 h-10 object-cover rounded bg-zinc-900 border border-white/5 flex-shrink-0"
                             />
                             <div className="min-w-0 flex-1">
-                              <p className={`text-sm font-bold truncate ${isPlayingThis ? 'text-[#ff0000]' : 'text-white'}`}>
+                              <p className={`text-sm font-bold truncate ${isPlayingThis ? 'text-[#9DD2E6]' : 'text-white'}`}>
                                 {track.title}
                               </p>
                               <p className="text-xs text-zinc-400 mt-0.5 truncate">{track.views ? track.views.replace(' views', ' plays') : 'Track'}</p>
@@ -1091,7 +1088,7 @@ export const NowPlayingView: React.FC = () => {
                   </h4>
                   {relatedLoading ? (
                     <div className="flex justify-center py-4">
-                      <Disc className="w-5 h-5 animate-spin text-[#ff0000]" />
+                      <Disc className="w-5 h-5 animate-spin text-[#9DD2E6]" />
                     </div>
                   ) : relatedTracks.length > 0 ? (
                     <div className="space-y-2">
@@ -1110,7 +1107,7 @@ export const NowPlayingView: React.FC = () => {
                               className="w-10 h-10 object-cover rounded bg-zinc-900 border border-white/5 flex-shrink-0"
                             />
                             <div className="min-w-0 flex-1">
-                              <p className={`text-sm font-bold truncate ${isPlayingThis ? 'text-[#ff0000]' : 'text-white'}`}>
+                              <p className={`text-sm font-bold truncate ${isPlayingThis ? 'text-[#9DD2E6]' : 'text-white'}`}>
                                 {track.title}
                                 {track.isExplicit && <ExplicitBadge />}
                               </p>

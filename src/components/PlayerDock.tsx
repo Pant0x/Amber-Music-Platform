@@ -295,16 +295,16 @@ export const PlayerDock: React.FC = () => {
             devices.map((device: any) => (
               <div key={device.id} onClick={() => handleTransfer(device.id)}
                 className={`flex items-center gap-4 p-3 rounded-2xl cursor-pointer transition-all ${
-                  device.is_active ? 'bg-white/5 border border-[#1db954]/25' : 'hover:bg-white/5 border border-transparent'
+                  device.is_active ? 'bg-white/5 border border-[#E88EAC]/25' : 'hover:bg-white/5 border border-transparent'
                 }`}
               >
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  device.is_active ? 'bg-[#1db954]/10 text-[#1db954]' : 'bg-white/5 text-zinc-400'
+                  device.is_active ? 'bg-[#E88EAC]/10 text-[#E88EAC]' : 'bg-white/5 text-zinc-400'
                 }`}>
                   {device.device_type === 'tv' ? <Tv className="w-5 h-5" /> : <Laptop className="w-5 h-5" />}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className={`text-xs font-bold ${device.is_active ? 'text-[#1db954]' : 'text-white'} truncate`}>
+                  <p className={`text-xs font-bold ${device.is_active ? 'text-[#E88EAC]' : 'text-white'} truncate`}>
                     {device.name}
                   </p>
                   <p className="text-[10px] text-zinc-400 mt-0.5 font-medium">
@@ -377,7 +377,7 @@ export const PlayerDock: React.FC = () => {
             <button
               onClick={() => toggleLikeTrack(currentTrack)}
               className={`p-2 rounded-full hover:bg-white/5 transition-all flex-shrink-0 ${
-                isLiked ? 'text-[#1db954]' : 'text-zinc-500 hover:text-white'
+                isLiked ? 'text-[#E88EAC]' : 'text-zinc-500 hover:text-white'
               }`}
             >
               <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />

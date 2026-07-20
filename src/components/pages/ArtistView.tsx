@@ -188,7 +188,7 @@ export const ArtistView: React.FC = () => {
             e.stopPropagation();
             playArtistRadio(currentChannelDetails.profile?.id || currentChannelDetails.profile?.title);
           }}
-          className="absolute bottom-6 right-6 sm:bottom-10 sm:right-10 z-20 w-14 h-14 rounded-full bg-[#ff0000] hover:bg-[#cc0000] flex items-center justify-center text-white shadow-2xl transition-all duration-300 hover:scale-110 hover:rotate-6 active:scale-95 cursor-pointer"
+          className="absolute bottom-6 right-6 sm:bottom-10 sm:right-10 z-20 w-14 h-14 rounded-full bg-[#9DD2E6] hover:bg-[#7FB8D0] flex items-center justify-center text-white shadow-2xl transition-all duration-300 hover:scale-110 hover:rotate-6 active:scale-95 cursor-pointer"
           title="Shuffle Play Artist"
         >
           <Shuffle className="w-7 h-7 fill-none text-white" />
@@ -280,7 +280,7 @@ export const ArtistView: React.FC = () => {
                     >
                       <TrackCover track={track} contextTracks={currentChannelDetails.topSongs} sizeClass="w-12 h-12 rounded" noOverlay />
                       <div className="min-w-0 flex-1">
-                        <p className={`text-sm truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
+                        <p className={`text-sm truncate ${isActive ? 'text-[#9DD2E6]' : 'text-white'}`}>
                           {track.title}
                           {track.isExplicit && <ExplicitBadge />}
                         </p>
@@ -299,7 +299,7 @@ export const ArtistView: React.FC = () => {
                       )}
                       <div className="flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity">
                         <button onClick={(e) => { e.stopPropagation(); toggleLikeTrack(track); }}
-                          className={`p-1.5 ${likedTracks.some(t => t.id === track.id) ? 'opacity-100 text-[#ff0000]' : 'text-zinc-400 hover:text-white'}`}>
+                          className={`p-1.5 ${likedTracks.some(t => t.id === track.id) ? 'opacity-100 text-[#9DD2E6]' : 'text-zinc-400 hover:text-white'}`}>
                           <Heart className="w-4 h-4 fill-current" />
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); addToQueue(track); }}
@@ -494,7 +494,7 @@ export const ArtistView: React.FC = () => {
                         </div>
                         <button onClick={(e) => { e.stopPropagation(); handlePlayAction(track, currentChannelDetails.topSongs); }}
                           className="hidden group-hover/row:flex items-center justify-center text-white">
-                          {isCurrentPlaying ? <Pause className="w-4 h-4 fill-current text-[#ff0000]" /> : <Play className="w-4 h-4 fill-current ml-0.5 text-white" />}
+                          {isCurrentPlaying ? <Pause className="w-4 h-4 fill-current text-[#9DD2E6]" /> : <Play className="w-4 h-4 fill-current ml-0.5 text-white" />}
                         </button>
                       </>
                     ) : (
@@ -509,7 +509,7 @@ export const ArtistView: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <TrackCover track={track} contextTracks={currentChannelDetails.topSongs} sizeClass="w-10 h-10 rounded" noOverlay />
-                    <p className={`text-sm truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>{track.title}</p>
+                    <p className={`text-sm truncate ${isActive ? 'text-[#9DD2E6]' : 'text-white'}`}>{track.title}</p>
                   </div>
                   <div className="hidden sm:flex items-center gap-2 text-sm text-zinc-400 w-48 truncate flex-shrink-0">
                     <Music className="w-3.5 h-3.5 flex-shrink-0" />
@@ -521,7 +521,7 @@ export const ArtistView: React.FC = () => {
                   <div className="text-sm text-zinc-400 w-12 text-right flex-shrink-0 font-mono">{track.duration || '—'}</div>
                   <div className="flex items-center gap-1 w-16 justify-end opacity-0 group-hover/row:opacity-100 transition-opacity flex-shrink-0">
                     <button onClick={(e) => { e.stopPropagation(); toggleLikeTrack(track); }}
-                      className={`p-1 ${likedTracks.some(t => t.id === track.id) ? 'opacity-100 text-[#ff0000]' : 'text-zinc-400 hover:text-white'}`}>
+                      className={`p-1 ${likedTracks.some(t => t.id === track.id) ? 'opacity-100 text-[#9DD2E6]' : 'text-zinc-400 hover:text-white'}`}>
                       <Heart className="w-4 h-4 fill-current" />
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); addToQueue(track); }}

@@ -120,7 +120,7 @@ export const ArtistLinks: React.FC<ArtistLinksProps> = ({
   );
 };
 
-export const PlayingEqualizer: React.FC<{ isPlaying: boolean; color?: string }> = ({ isPlaying, color = 'var(--theme-accent, #ff0000)' }) => {
+export const PlayingEqualizer: React.FC<{ isPlaying: boolean; color?: string }> = ({ isPlaying, color = 'var(--theme-accent)' }) => {
   return (
     <div className="flex items-end gap-[2px] h-[14px] w-[12px] justify-center flex-shrink-0">
       <div 

@@ -76,7 +76,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
         <div 
           className="flex flex-col md:flex-row items-end gap-6 -mx-6 p-6 pt-12 transition-all duration-1000 bg-transparent"
         >
-          <div className="w-56 h-56 bg-gradient-to-br from-[var(--theme-accent)] to-[#b30000] rounded-2xl flex items-center justify-center shadow-2xl border border-white/10 flex-shrink-0">
+          <div className="w-56 h-56 bg-gradient-to-br from-[var(--theme-accent)] to-[#D47A98] rounded-2xl flex items-center justify-center shadow-2xl border border-white/10 flex-shrink-0">
             <Heart className="w-24 h-24 text-white fill-current" />
           </div>
           <div className="space-y-2 min-w-0 pb-2">
@@ -110,7 +110,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
               <p className="text-xs font-semibold">No liked videos yet.</p>
               <button
                 onClick={() => setActiveTab('search')}
-                className="text-xs font-bold bg-[#ff0000] text-white px-4 py-2 rounded-full hover:bg-[#cc0000] transition-colors"
+                className="text-xs font-bold bg-[#9DD2E6] text-white px-4 py-2 rounded-full hover:bg-[#7FB8D0] transition-colors"
               >
                 Find videos
               </button>
@@ -138,7 +138,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                           className="hidden group-hover/row:flex text-white items-center justify-center"
                         >
                           {isCurrentPlaying ? (
-                            <Pause className="w-4 h-4 fill-current text-[#ff0000]" />
+                            <Pause className="w-4 h-4 fill-current text-[#9DD2E6]" />
                           ) : (
                             <Play className="w-4 h-4 fill-current ml-0.5 text-white" />
                           )}
@@ -160,7 +160,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                   <TrackCover track={track} contextTracks={likedTracks} sizeClass="w-10 h-10 rounded" noOverlay />
 
                   <div className="min-w-0 flex-1">
-                    <p className={`text-sm font-semibold truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
+                    <p className={`text-sm font-semibold truncate ${isActive ? 'text-[#9DD2E6]' : 'text-white'}`}>
                       {track.title}
                       {track.isExplicit && <ExplicitBadge />}
                     </p>
@@ -173,7 +173,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                         e.stopPropagation();
                         toggleLikeTrack(track);
                       }}
-                      className="text-[#ff0000] hover:text-white p-1 transition-colors flex-shrink-0"
+                      className="text-[#9DD2E6] hover:text-white p-1 transition-colors flex-shrink-0"
                       title="Unlike"
                     >
                       <Heart className="w-4.5 h-4.5 fill-current" />
@@ -219,7 +219,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
               <Music className="w-20 h-20 text-zinc-600" />
             </div>
             <div className="space-y-2 min-w-0">
-              <span className="text-xs font-bold text-[#ff0000] uppercase tracking-widest font-mono">Playlist</span>
+              <span className="text-xs font-bold text-[#9DD2E6] uppercase tracking-widest font-mono">Playlist</span>
               <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight truncate">
                 {activePlaylist.name}
               </h1>
@@ -236,7 +236,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
             {activePlaylist.tracks.length > 0 && (
               <button
                 onClick={() => handlePlayAction(activePlaylist.tracks[0], activePlaylist.tracks)}
-                className="flex items-center gap-2 bg-[#ff0000] hover:bg-[#cc0000] text-white px-5 py-2.5 rounded-full font-bold text-xs shadow-lg uppercase tracking-wider"
+                className="flex items-center gap-2 bg-[#9DD2E6] hover:bg-[#7FB8D0] text-white px-5 py-2.5 rounded-full font-bold text-xs shadow-lg uppercase tracking-wider"
               >
                 <Play className="w-4 h-4 fill-current text-white" /> Play
               </button>
@@ -261,7 +261,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                 <p className="text-xs font-semibold">This playlist is empty.</p>
                 <button
                   onClick={() => setActiveTab('search')}
-                  className="text-xs font-bold bg-[#ff0000] text-white px-4 py-2 rounded-full hover:bg-[#cc0000] transition-colors"
+                  className="text-xs font-bold bg-[#9DD2E6] text-white px-4 py-2 rounded-full hover:bg-[#7FB8D0] transition-colors"
                 >
                   Find videos
                 </button>
@@ -307,7 +307,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                             className="hidden group-hover/row:flex text-white items-center justify-center"
                           >
                             {isCurrentPlaying ? (
-                              <Pause className="w-4 h-4 fill-current text-[#ff0000]" />
+                              <Pause className="w-4 h-4 fill-current text-[#9DD2E6]" />
                             ) : (
                               <Play className="w-4 h-4 fill-current ml-0.5 text-white" />
                             )}
@@ -329,7 +329,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                     <TrackCover track={track} contextTracks={activePlaylist.tracks} sizeClass="w-10 h-10 rounded" noOverlay />
 
                     <div className="min-w-0 flex-1">
-                      <p className={`text-sm font-semibold truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
+                      <p className={`text-sm font-semibold truncate ${isActive ? 'text-[#9DD2E6]' : 'text-white'}`}>
                         {track.title}
                         {track.isExplicit && <ExplicitBadge />}
                       </p>
@@ -418,7 +418,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
               </div>
             )}
             <div className="space-y-2 min-w-0">
-              <span className="text-xs font-bold text-[#ff0000] uppercase tracking-widest font-mono">
+              <span className="text-xs font-bold text-[#9DD2E6] uppercase tracking-widest font-mono">
                 {(() => {
                   const id = currentPlaylistId || '';
                   const count = ytPlaylistDetails.tracks?.length || 0;
@@ -457,7 +457,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
             {ytPlaylistDetails.tracks?.length > 0 && (
               <button
                 onClick={() => handlePlayAction(ytPlaylistDetails.tracks[0], ytPlaylistDetails.tracks)}
-                className="flex items-center gap-2 bg-[#ff0000] hover:bg-[#cc0000] text-white px-5 py-2.5 rounded-full font-bold text-xs shadow-lg uppercase tracking-wider transition-all duration-200"
+                className="flex items-center gap-2 bg-[#9DD2E6] hover:bg-[#7FB8D0] text-white px-5 py-2.5 rounded-full font-bold text-xs shadow-lg uppercase tracking-wider transition-all duration-200"
               >
                 <Play className="w-4 h-4 fill-current text-white" /> Play
               </button>
@@ -494,7 +494,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                             className="hidden group-hover/row:flex text-white items-center justify-center"
                           >
                             {isCurrentPlaying ? (
-                              <Pause className="w-4 h-4 fill-current text-[#ff0000]" />
+                              <Pause className="w-4 h-4 fill-current text-[#9DD2E6]" />
                             ) : (
                               <Play className="w-4 h-4 fill-current ml-0.5 text-white" />
                             )}
@@ -519,7 +519,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                     <TrackCover track={track} contextTracks={ytPlaylistDetails.tracks} sizeClass="w-10 h-10 rounded" noOverlay />
 
                     <div className="min-w-0 flex-1">
-                      <p className={`text-sm font-semibold truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
+                      <p className={`text-sm font-semibold truncate ${isActive ? 'text-[#9DD2E6]' : 'text-white'}`}>
                         {track.title}
                         {track.isExplicit && <ExplicitBadge />}
                       </p>
@@ -533,7 +533,7 @@ export const PlaylistView: React.FC<{ mode: 'custom' | 'liked' }> = ({ mode }) =
                           toggleLikeTrack(track);
                         }}
                         className={`p-1.5 transition-opacity ${
-                          likedTracks.some(t => t.id === track.id) ? 'text-[#ff0000]' : 'opacity-0 group-hover/row:opacity-100 text-zinc-400 hover:text-white'
+                          likedTracks.some(t => t.id === track.id) ? 'text-[#9DD2E6]' : 'opacity-0 group-hover/row:opacity-100 text-zinc-400 hover:text-white'
                         }`}
                       >
                         <Heart className="w-4 h-4 fill-current" />

@@ -31,7 +31,7 @@ export const LibraryView: React.FC = () => {
                 router.push('/liked');
               }}
             >
-              <div className="aspect-square w-full rounded-xl bg-gradient-to-br from-[#ff0000] to-[#b30000] flex items-center justify-center mb-4 relative overflow-hidden shadow-md">
+              <div className="aspect-square w-full rounded-xl bg-gradient-to-br from-[#9DD2E6] to-[#D47A98] flex items-center justify-center mb-4 relative overflow-hidden shadow-md">
                 <Heart className="w-12 h-12 text-white fill-current" />
                 <AlbumCoverPlayOverlay item={{ id: 'liked', title: 'Liked Music', type: 'playlist' }} contextTracks={likedTracks} />
               </div>

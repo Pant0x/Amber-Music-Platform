@@ -139,7 +139,7 @@ export const HomeView: React.FC = () => {
                         <TrackCover track={track} contextTracks={recommendations} sizeClass="w-12 h-12 rounded" />
                         
                         <div className="min-w-0 flex-1">
-                          <p className={`text-xs font-bold truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
+                          <p className={`text-xs font-bold truncate ${isActive ? 'text-[#9DD2E6]' : 'text-white'}`}>
                             {track.title}{track.isExplicit && <ExplicitBadge />}
                           </p>
                           <p className="text-[11px] text-zinc-400 truncate mt-0.5"><ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} /></p>

@@ -262,7 +262,7 @@ export const SearchView: React.FC = () => {
                     >
                       <TrackCover track={track} contextTracks={landingRecs} sizeClass="w-12 h-12 rounded-lg" />
                       <div className="min-w-0 flex-1">
-                        <p className={`text-xs font-bold truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
+                        <p className={`text-xs font-bold truncate ${isActive ? 'text-[#9DD2E6]' : 'text-white'}`}>
                           {track.title}
                           {track.isExplicit && <ExplicitBadge />}
                         </p>
@@ -342,7 +342,7 @@ export const SearchView: React.FC = () => {
                       </div>
                       {/* Play button on hover */}
                       <div className="absolute bottom-5 right-5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-                        <div className="w-12 h-12 rounded-full bg-[#ff0000] flex items-center justify-center shadow-xl shadow-red-900/30">
+                        <div className="w-12 h-12 rounded-full bg-[#9DD2E6] flex items-center justify-center shadow-xl shadow-red-900/30">
                           {isPlaying && currentTrack?.id === searchTopResult.id ? (
                             <Pause className="w-5 h-5 fill-white text-white" />
                           ) : (
@@ -369,7 +369,7 @@ export const SearchView: React.FC = () => {
                             >
                               <TrackCover track={track} contextTracks={searchSongs} sizeClass="w-10 h-10 rounded" noOverlay />
                               <div className="min-w-0 flex-1">
-                                <p className={`text-sm font-medium truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
+                                <p className={`text-sm font-medium truncate ${isActive ? 'text-[#9DD2E6]' : 'text-white'}`}>
                                   {track.title}
                                   {track.isExplicit && <ExplicitBadge />}
                                 </p>
@@ -377,7 +377,7 @@ export const SearchView: React.FC = () => {
                               </div>
                               <div className="flex items-center gap-1.5 opacity-0 group-hover/row:opacity-100 transition-opacity flex-shrink-0">
                                 <button onClick={() => handlePlayAction(track, searchSongs)} className="text-white p-1">
-                                  {isCurrentPlaying ? <Pause className="w-4 h-4 fill-current text-[#ff0000]" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
+                                  {isCurrentPlaying ? <Pause className="w-4 h-4 fill-current text-[#9DD2E6]" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
                                 </button>
                                 <button onClick={() => usePlayerStore.getState().playNext(track)} className="text-zinc-400 hover:text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10">+ Next</button>
                                 <button onClick={() => addToQueue(track)} className="text-zinc-400 hover:text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10">+ Queue</button>
@@ -500,7 +500,7 @@ export const SearchView: React.FC = () => {
                             <PlayingEqualizer isPlaying={isPlaying} />
                           </div>
                           <button onClick={() => handlePlayAction(track, searchSongs)} className="hidden group-hover/row:flex text-white items-center justify-center">
-                            {isCurrentPlaying ? <Pause className="w-4 h-4 fill-current text-[#ff0000]" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
+                            {isCurrentPlaying ? <Pause className="w-4 h-4 fill-current text-[#9DD2E6]" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
                           </button>
                         </>
                       ) : (
@@ -514,13 +514,13 @@ export const SearchView: React.FC = () => {
                     </div>
                     <TrackCover track={track} contextTracks={searchSongs} sizeClass="w-10 h-10 rounded" noOverlay />
                     <div className="min-w-0 flex-1">
-                      <p className={`text-sm font-semibold truncate ${isActive ? 'text-[#ff0000]' : 'text-white'}`}>
+                      <p className={`text-sm font-semibold truncate ${isActive ? 'text-[#9DD2E6]' : 'text-white'}`}>
                         {track.title}{track.isExplicit && <ExplicitBadge />}
                       </p>
                       <p className="text-xs text-zinc-400 truncate mt-0.5"><ArtistLinks channelTitle={track.channelTitle} channelId={track.channelId} /></p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => toggleLikeTrack(track)} className={`p-1 transition-colors opacity-0 group-hover/row:opacity-100 ${likedTracks.some(t => t.id === track.id) ? 'opacity-100 text-[#ff0000]' : 'text-zinc-400 hover:text-white'}`}><Heart className="w-4 h-4 fill-current" /></button>
+                      <button onClick={() => toggleLikeTrack(track)} className={`p-1 transition-colors opacity-0 group-hover/row:opacity-100 ${likedTracks.some(t => t.id === track.id) ? 'opacity-100 text-[#9DD2E6]' : 'text-zinc-400 hover:text-white'}`}><Heart className="w-4 h-4 fill-current" /></button>
                       <button onClick={() => usePlayerStore.getState().playNext(track)} className="text-[10px] font-bold text-zinc-400 hover:text-white uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10">+ Next</button>
                       <button onClick={() => addToQueue(track)} className="text-[10px] font-bold text-zinc-400 hover:text-white uppercase tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10">+ Queue</button>
                     </div>
@@ -546,7 +546,7 @@ export const SearchView: React.FC = () => {
                       }}
                       className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full"
                     >
-                      <div className="w-10 h-10 rounded-full bg-[#ff0000] flex items-center justify-center text-white shadow-lg hover:scale-110 active:scale-95 transition-transform">
+                      <div className="w-10 h-10 rounded-full bg-[#9DD2E6] flex items-center justify-center text-white shadow-lg hover:scale-110 active:scale-95 transition-transform">
                         <Shuffle className="w-5 h-5 fill-none text-white" />
                       </div>
                     </button>
