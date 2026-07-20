@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   avatar_url TEXT,
   bio TEXT DEFAULT '',
   is_artist BOOLEAN DEFAULT false,
+  is_admin BOOLEAN DEFAULT false, -- check if user is an admin
   artist_status TEXT DEFAULT 'none', -- 'none', 'pending', 'approved'
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -126,6 +127,7 @@ CREATE TABLE IF NOT EXISTS public.user_sync_data (
   user_id TEXT PRIMARY KEY,
   display_name TEXT,
   avatar_url TEXT,
+  onboarding_completed BOOLEAN DEFAULT false,
   liked_tracks JSONB DEFAULT '[]'::jsonb,
   subscribed_channels JSONB DEFAULT '[]'::jsonb,
   playlists JSONB DEFAULT '[]'::jsonb,

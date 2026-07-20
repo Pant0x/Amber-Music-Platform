@@ -9,11 +9,10 @@ import { Music, Loader2, Check, Camera, Upload } from 'lucide-react'
 export default function OnboardingPage() {
   const router = useRouter()
   const { isSignedIn, user, isLoaded } = useUser()
-  const { setDisplayName, setAvatarUrl } = usePlayerStore()
+  const { setDisplayName, setAvatarUrl, setOnboardingCompleted } = usePlayerStore()
   const [step, setStep] = useState(0)
   const [name, setName] = useState(user?.fullName || user?.username || '')
   const [bio, setBio] = useState('')
-  const [wantArtist, setWantArtist] = useState(false)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState(user?.imageUrl || '')
   const [loading, setLoading] = useState(false)
@@ -49,9 +48,19 @@ export default function OnboardingPage() {
       setDisplayName(name || user?.username || 'User')
       if (avatarUrl) setAvatarUrl(avatarUrl)
 
-      if (wantArtist) {
-        await fetch('/api/artist/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ displayName: name, bio, avatarUrl }) })
-      }
+      // Mark onboarding completed in client store
+      setOnboardingCompleted(true)
+
+      // Post status sync to db immediately
+      await fetch('/api/user/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          display_name: name || user?.username || 'User',
+          avatar_url: avatarUrl,
+          onboarding_completed: true
+        })
+      })
 
       router.push('/')
     } catch (err: any) {
@@ -94,8 +103,8 @@ export default function OnboardingPage() {
               <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
             </label>
             <div className="flex gap-2">
-              <button onClick={() => setStep(1)} className="flex-1 py-3 rounded-xl bg-white/10 text-white font-bold text-sm hover:bg-white/20 transition-all">Skip</button>
-              <button onClick={() => setStep(1)} className="flex-1 py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-zinc-200 transition-all">Next</button>
+              <button onClick={() => setStep(1)} className="flex-1 py-3 rounded-xl bg-white/10 text-white font-bold text-sm hover:bg-white/20 transition-all cursor-pointer">Skip</button>
+              <button onClick={() => setStep(1)} className="flex-1 py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-zinc-200 transition-all cursor-pointer">Next</button>
             </div>
           </div>
         )}
@@ -112,38 +121,23 @@ export default function OnboardingPage() {
               <textarea value={bio} onChange={(e) => setBio(e.target.value)} maxLength={200} rows={3} placeholder="Tell the world about yourself..." className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-white/30 text-sm resize-none" />
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setStep(0)} className="flex-1 py-3 rounded-xl bg-white/10 text-white font-bold text-sm hover:bg-white/20 transition-all">Back</button>
-              <button onClick={() => setStep(2)} className="flex-1 py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-zinc-200 transition-all">Next</button>
+              <button onClick={() => setStep(0)} className="flex-1 py-3 rounded-xl bg-white/10 text-white font-bold text-sm hover:bg-white/20 transition-all cursor-pointer">Back</button>
+              <button onClick={() => setStep(2)} className="flex-1 py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-zinc-200 transition-all cursor-pointer">Next</button>
             </div>
           </div>
         )}
 
-        {/* Step 3: Artist? */}
+        {/* Step 3: Done */}
         {step === 2 && (
-          <div className="space-y-6">
-            <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center space-y-4">
-              <Music className="w-10 h-10 text-zinc-400 mx-auto" />
-              <h2 className="text-lg font-bold text-white">Are you an artist?</h2>
-              <p className="text-sm text-zinc-400">Upload your own music, get a verified profile, and share with the world.</p>
-              <div className="flex gap-3">
-                <button onClick={() => { setWantArtist(false); setStep(3) }} className="flex-1 py-3 rounded-xl bg-white/10 text-white font-bold text-sm hover:bg-white/20 transition-all">Listener</button>
-                <button onClick={() => { setWantArtist(true); setStep(3) }} className="flex-1 py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-zinc-200 transition-all">I'm an Artist</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 4: Done */}
-        {step === 3 && (
           <div className="space-y-6 text-center">
             <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto">
               <Check className="w-8 h-8 text-green-400" />
             </div>
-            <h2 className="text-xl font-bold text-white">You're all set!</h2>
+            <h2 className="text-xl font-bold text-white text-center">You're all set!</h2>
             <p className="text-sm text-zinc-400">
-              {wantArtist ? 'Your artist profile is ready. Start uploading your music!' : 'Start exploring and listening to music.'}
+              Start exploring and listening to music.
             </p>
-            <button onClick={handleFinish} disabled={loading} className="w-full py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-zinc-200 disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+            <button onClick={handleFinish} disabled={loading} className="w-full py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-zinc-200 disabled:opacity-50 transition-all flex items-center justify-center gap-2 cursor-pointer">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
               {loading ? 'Setting up...' : 'Get Started'}
             </button>
@@ -152,7 +146,7 @@ export default function OnboardingPage() {
 
         {/* Step indicators */}
         <div className="flex justify-center gap-2">
-          {[0, 1, 2, 3].map((i) => (
+          {[0, 1, 2].map((i) => (
             <div key={i} className={`w-2 h-2 rounded-full transition-all ${step === i ? 'bg-white w-6' : step > i ? 'bg-green-400' : 'bg-zinc-700'}`} />
           ))}
         </div>

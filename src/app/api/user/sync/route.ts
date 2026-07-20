@@ -18,6 +18,11 @@ async function ensureUserProfile(userId: string) {
       const clerkUser = await client.users.getUser(userId);
       const displayName = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || clerkUser.username || 'Listener';
       
+      const email = clerkUser.primaryEmailAddress?.emailAddress || '';
+      const username = clerkUser.username || '';
+      const adminUser = process.env.ADMIN_USERNAME || 'admin';
+      const isAdmin = username === adminUser || email === adminUser || email.startsWith('admin@') || username.toLowerCase() === 'admin';
+
       await supabaseAdmin
         .from('profiles')
         .upsert({
@@ -25,6 +30,7 @@ async function ensureUserProfile(userId: string) {
           display_name: displayName,
           avatar_url: clerkUser.imageUrl || null,
           is_artist: false,
+          is_admin: isAdmin,
           artist_status: 'none',
           updated_at: new Date().toISOString()
         }, { onConflict: 'user_id' });
@@ -48,6 +54,7 @@ export async function GET() {
       return NextResponse.json({
         user_id: userId,
         display_name: 'Anonymous Listener',
+        onboarding_completed: false,
         liked_tracks: [],
         subscribed_channels: [],
         playlists: [],
@@ -67,6 +74,7 @@ export async function GET() {
         user_id: userId,
         display_name: 'Anonymous Listener',
         avatar_url: 'bg-gradient-to-tr from-blue-600 to-indigo-900',
+        onboarding_completed: false,
         liked_tracks: [],
         subscribed_channels: [],
         playlists: [],
@@ -110,7 +118,7 @@ export async function POST(request: Request) {
     }
 
     const body = JSON.parse(rawBody);
-    const { display_name, avatar_url, liked_tracks, subscribed_channels, playlists, history } = body;
+    const { display_name, avatar_url, onboarding_completed, liked_tracks, subscribed_channels, playlists, history } = body;
 
     // Input validation: sanitize string fields to prevent stored XSS
     const safeName = typeof display_name === 'string'
@@ -130,6 +138,7 @@ export async function POST(request: Request) {
         user_id: userId,
         display_name: safeName || 'Anonymous Listener',
         avatar_url: safeAvatar || 'bg-gradient-to-tr from-blue-600 to-indigo-900',
+        onboarding_completed: onboarding_completed === true,
         liked_tracks: Array.isArray(liked_tracks) ? liked_tracks : [],
         subscribed_channels: Array.isArray(subscribed_channels) ? subscribed_channels : [],
         playlists: Array.isArray(playlists) ? playlists : [],

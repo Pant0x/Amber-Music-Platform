@@ -11,10 +11,12 @@ export const createCollectionSlice: StateCreator<StoreState, [], [], CollectionS
   subscribedChannels: [],
   displayName: '',
   avatarUrl: '',
+  onboardingCompleted: false,
   shareTrack: null,
 
   setDisplayName: (name) => set({ displayName: name }),
   setAvatarUrl: (url) => set({ avatarUrl: url }),
+  setOnboardingCompleted: (completed) => set({ onboardingCompleted: completed }),
   setShareTrack: (track) => set({ shareTrack: track }),
 
   fetchDatabaseData: async () => {
@@ -25,6 +27,7 @@ export const createCollectionSlice: StateCreator<StoreState, [], [], CollectionS
         set({
           displayName: data.display_name || 'Anonymous Listener',
           avatarUrl: data.avatar_url || 'bg-gradient-to-tr from-blue-600 to-indigo-900',
+          onboardingCompleted: data.onboarding_completed || false,
           likedTracks: data.liked_tracks || [],
           subscribedChannels: data.subscribed_channels || [],
           playlists: data.playlists || [],

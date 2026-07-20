@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
-import { Music, Upload, CheckCircle2, AlertCircle, Trash2, Edit2, Loader2, Sparkles, FileAudio, Disc, Clock } from 'lucide-react'
+import { Music, Upload, Trash2, Loader2, Disc, FileAudio } from 'lucide-react'
 
 interface Track {
   id: string
@@ -20,25 +20,15 @@ interface Track {
 export default function ArtistDashboard() {
   const router = useRouter()
   const { isSignedIn, isLoaded, user } = useUser()
-  
-  // Status states
-  const [artistStatus, setArtistStatus] = useState<'none' | 'pending' | 'approved'>('none')
-  const [isArtist, setIsArtist] = useState(false)
-  const [loadingStatus, setLoadingStatus] = useState(true)
 
   // Catalog state
   const [tracks, setTracks] = useState<Track[]>([])
   const [loadingTracks, setLoadingTracks] = useState(false)
 
-  // Registration Form states
-  const [regName, setRegName] = useState('')
-  const [regBio, setRegBio] = useState('')
-  const [registering, setRegistering] = useState(false)
-  const [regError, setRegError] = useState('')
-
   // Upload Form states
   const [title, setTitle] = useState('')
   const [genre, setGenre] = useState('Pop')
+  const [artistName, setArtistName] = useState('')
   const [audioFile, setAudioFile] = useState<File | null>(null)
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
@@ -51,25 +41,6 @@ export default function ArtistDashboard() {
       router.push('/sign-in')
     }
   }, [isLoaded, isSignedIn, router])
-
-  // Fetch Artist Status
-  const fetchStatus = async () => {
-    try {
-      const res = await fetch('/api/artist/status')
-      if (res.ok) {
-        const data = await res.json()
-        setIsArtist(data.isArtist)
-        setArtistStatus(data.artistStatus)
-        if (data.isArtist) {
-          fetchCatalog()
-        }
-      }
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setLoadingStatus(false)
-    }
-  }
 
   // Fetch Tracks Catalog
   const fetchCatalog = async () => {
@@ -89,41 +60,12 @@ export default function ArtistDashboard() {
 
   useEffect(() => {
     if (isSignedIn) {
-      fetchStatus()
+      fetchCatalog()
       if (user) {
-        setRegName(user.fullName || user.username || '')
+        setArtistName(user.fullName || user.username || 'Artist')
       }
     }
   }, [isSignedIn, user])
-
-  // Handle Application Submit
-  const handleApply = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!regName.trim()) {
-      setRegError('Please provide a display name.')
-      return
-    }
-
-    setRegistering(true)
-    setRegError('')
-    try {
-      const res = await fetch('/api/artist/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ displayName: regName, bio: regBio }),
-      })
-      if (res.ok) {
-        setArtistStatus('pending')
-      } else {
-        const errData = await res.json()
-        setRegError(errData.error || 'Failed to submit application.')
-      }
-    } catch {
-      setRegError('Network error, please try again.')
-    } finally {
-      setRegistering(false)
-    }
-  }
 
   // Handle Track Upload Submit
   const handleUpload = async (e: React.FormEvent) => {
@@ -172,7 +114,7 @@ export default function ArtistDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title,
-          artist_name: regName || user?.fullName || 'Artist',
+          artist_name: artistName || user?.fullName || 'Artist',
           genre,
           audio_url: audioUrl,
           cover_url: coverUrl,
@@ -218,110 +160,15 @@ export default function ArtistDashboard() {
     }
   }
 
-  if (loadingStatus) {
+  if (!isLoaded || !isSignedIn) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-4 text-white">
         <Loader2 className="w-8 h-8 animate-spin text-zinc-500" />
-        <p className="text-sm font-semibold tracking-wider text-zinc-500 uppercase">Loading Portal...</p>
+        <p className="text-sm font-semibold tracking-wider text-zinc-500 uppercase">Loading Studio...</p>
       </div>
     )
   }
 
-  // View: Onboarding / Application
-  if (artistStatus === 'none') {
-    return (
-      <div className="min-h-[80vh] flex items-center justify-center p-4">
-        <div className="w-full max-w-lg p-8 rounded-3xl bg-zinc-950/40 border border-white/5 shadow-2xl relative overflow-hidden backdrop-blur-md">
-          <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/5 to-blue-500/5 pointer-events-none" />
-          
-          <div className="text-center space-y-4 mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto shadow-lg">
-              <Sparkles className="w-8 h-8 text-yellow-400" />
-            </div>
-            <h1 className="text-2xl font-extrabold text-white tracking-tight">Become a Verified Artist</h1>
-            <p className="text-sm text-zinc-400 max-w-sm mx-auto">
-              Register to join the Pantooty Artist Program, upload your audio files, and share your music catalog with friends.
-            </p>
-          </div>
-
-          {regError && (
-            <div className="p-4 rounded-xl bg-red-950/20 border border-red-900/30 text-red-400 text-xs font-semibold mb-6 flex items-start gap-2.5">
-              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-              <span>{regError}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleApply} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block">Artist / Display Name</label>
-              <input
-                type="text"
-                value={regName}
-                onChange={e => setRegName(e.target.value)}
-                maxLength={40}
-                required
-                placeholder="Enter your public artist name"
-                className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-white/20 text-sm transition-all"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block">Biography (Optional)</label>
-              <textarea
-                value={regBio}
-                onChange={e => setRegBio(e.target.value)}
-                maxLength={300}
-                rows={4}
-                placeholder="Tell listeners about yourself..."
-                className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-white/20 text-sm resize-none transition-all"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={registering}
-              className="w-full py-3.5 bg-white text-black font-extrabold text-sm rounded-xl hover:bg-zinc-200 active:scale-98 transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg"
-            >
-              {registering ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              {registering ? 'Submitting request...' : 'Request Verification'}
-            </button>
-          </form>
-        </div>
-      </div>
-    )
-  }
-
-  // View: Pending Verification
-  if (artistStatus === 'pending') {
-    return (
-      <div className="min-h-[85vh] flex items-center justify-center p-4">
-        <div className="w-full max-w-md p-8 rounded-3xl bg-zinc-950/40 border border-white/5 text-center space-y-6 relative overflow-hidden backdrop-blur-md shadow-2xl">
-          <div className="absolute inset-0 bg-gradient-to-tr from-yellow-500/5 to-orange-500/5 pointer-events-none" />
-          
-          <div className="w-16 h-16 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center mx-auto shadow-lg">
-            <Clock className="w-8 h-8 text-yellow-400 animate-pulse" />
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-xl font-bold text-white tracking-tight">Application Under Review</h2>
-            <p className="text-xs text-zinc-400 max-w-xs mx-auto leading-relaxed">
-              Your application has been received and is currently under review by our administration.
-            </p>
-          </div>
-          <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xl text-left text-xs text-zinc-400 leading-relaxed">
-            💡 **Tip:** While waiting, you can upload tracks to the **My Files** section privately, which lets you generate custom share links for your friends.
-          </div>
-          <button 
-            onClick={() => router.push('/')}
-            className="px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full text-xs font-bold transition-all active:scale-95 cursor-pointer border border-white/5"
-          >
-            Back to Home
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  // View: Approved Artist Dashboard
   return (
     <div className="space-y-10 pb-20 max-w-6xl mx-auto selection:bg-white/20">
       
@@ -335,7 +182,6 @@ export default function ArtistDashboard() {
           <div>
             <h1 className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
               Artist Creator Studio
-              <span className="text-[9px] font-bold text-green-400 border border-green-500/20 bg-green-500/10 px-2 py-0.5 rounded-full uppercase tracking-wider">Approved</span>
             </h1>
             <p className="text-xs text-zinc-400 mt-1">Manage and publish your music tracks in the public catalog.</p>
           </div>
@@ -374,6 +220,19 @@ export default function ArtistDashboard() {
                 maxLength={60}
                 required
                 placeholder="Name of your song"
+                className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-white/20 transition-all"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">Artist Name</label>
+              <input
+                type="text"
+                value={artistName}
+                onChange={e => setArtistName(e.target.value)}
+                maxLength={40}
+                required
+                placeholder="Artist name"
                 className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-white/20 transition-all"
               />
             </div>

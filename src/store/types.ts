@@ -73,10 +73,12 @@ export interface CollectionSlice {
   subscribedChannels: string[];
   displayName: string;
   avatarUrl: string;
+  onboardingCompleted: boolean;
   shareTrack: Track | null;
 
   setDisplayName: (name: string) => void;
   setAvatarUrl: (url: string) => void;
+  setOnboardingCompleted: (completed: boolean) => void;
   setShareTrack: (track: Track | null) => void;
   fetchDatabaseData: () => Promise<void>;
   createPlaylist: (name: string) => void;

@@ -1,16 +1,20 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+import { auth } from '@clerk/nextjs/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
 
 async function checkAdmin() {
-  const cookieStore = await cookies()
-  const token = cookieStore.get('admin_token')
-  if (!token) return false
+  const { userId } = await auth()
+  if (!userId) return false
 
-  const adminUser = process.env.ADMIN_USERNAME
-  const adminPass = process.env.ADMIN_PASSWORD
-  const decoded = Buffer.from(token.value, 'base64').toString()
-  return decoded === `${adminUser}:${adminPass}`
+  if (!supabaseAdmin) return false
+
+  const { data } = await supabaseAdmin
+    .from('profiles')
+    .select('is_admin')
+    .eq('user_id', userId)
+    .single()
+
+  return data?.is_admin === true
 }
 
 export async function GET() {
