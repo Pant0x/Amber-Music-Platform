@@ -5,7 +5,7 @@ import { Star } from 'lucide-react'
 
 const clerkAppearance = {
   elements: {
-    card: 'bg-zinc-900/90 shadow-2xl border border-white/8 rounded-3xl backdrop-blur-xl',
+    card: 'bg-black/90 shadow-2xl border border-white/8 rounded-3xl backdrop-blur-xl',
     headerTitle: 'text-white font-extrabold text-xl tracking-tight',
     headerSubtitle: 'text-zinc-400 text-sm',
     socialButtonsBlockButton:
@@ -38,11 +38,11 @@ export default function SignUpPage() {
       {/* Ambient background */}
       <div className="absolute inset-0 pointer-events-none">
         <div
-          className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full"
+          className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full"
           style={{ background: 'radial-gradient(circle, rgba(232,142,172,0.08) 0%, transparent 70%)', animation: 'breathe 7s ease-in-out infinite' }}
         />
         <div
-          className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full"
+          className="absolute -bottom-40 -right-40 w-[500px] h-[500px] rounded-full"
           style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)', animation: 'breathe 9s ease-in-out infinite reverse' }}
         />
         <div
@@ -74,8 +74,8 @@ export default function SignUpPage() {
       </div>
 
       {/* Footer */}
-      <p className="relative z-10 mt-8 text-[11px] text-zinc-700 text-center max-w-xs">
-        By creating an account, you agree to our Terms of Service. Free forever.
+      <p className="relative z-10 mt-8 text-[11px] text-zinc-700 text-center">
+        Free forever · No credit card required
       </p>
     </div>
   )
