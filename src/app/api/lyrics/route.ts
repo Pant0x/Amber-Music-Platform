@@ -225,13 +225,20 @@ export async function GET(request: Request) {
 
     // Parse duration to seconds
     let totalSeconds = 180;
-    if (durationStr && durationStr.includes(':')) {
-      const parts = durationStr.split(':');
-      if (parts.length === 2) {
-        const mins = parseInt(parts[0], 10);
-        const secs = parseInt(parts[1], 10);
-        if (!isNaN(mins) && !isNaN(secs)) {
-          totalSeconds = mins * 60 + secs;
+    if (durationStr) {
+      if (durationStr.includes(':')) {
+        const parts = durationStr.split(':');
+        if (parts.length === 2) {
+          const mins = parseInt(parts[0], 10);
+          const secs = parseInt(parts[1], 10);
+          if (!isNaN(mins) && !isNaN(secs)) {
+            totalSeconds = mins * 60 + secs;
+          }
+        }
+      } else {
+        const parsedSecs = parseInt(durationStr, 10);
+        if (!isNaN(parsedSecs)) {
+          totalSeconds = parsedSecs;
         }
       }
     }

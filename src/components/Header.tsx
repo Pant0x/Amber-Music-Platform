@@ -148,8 +148,8 @@ export const Header: React.FC = () => {
           className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 transition-colors ml-2"
           title="Go Home"
         >
-          <Star className="w-5 h-5 text-[#9DD2E6] fill-current" />
-          <span className="text-sm font-bold text-white hidden sm:block">Kiwi</span>
+          <Star className="w-5 h-5 text-[#E88EAC] fill-current" />
+          <span className="text-sm font-bold text-white hidden sm:block">Sonora</span>
         </button>
       </div>
 

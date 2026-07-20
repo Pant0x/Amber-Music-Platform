@@ -65,6 +65,7 @@ export const NowPlayingView: React.FC = () => {
     nowPlayingTab,
     setNowPlayingTab,
     playedSeconds,
+    duration,
     setSeekTrigger,
     subscribedChannels,
     toggleSubscribeChannel,
@@ -142,7 +143,11 @@ export const NowPlayingView: React.FC = () => {
     lyricsAbortRef.current = controller;
 
     const queryVideoId = currentTrack.youtubeId || currentTrack.id;
-    fetch(`/api/lyrics?title=${encodeURIComponent(currentTrack.title)}&artist=${encodeURIComponent(currentTrack.channelTitle)}&duration=${encodeURIComponent(currentTrack.duration || '3:00')}&videoId=${encodeURIComponent(queryVideoId)}`, {
+    const durationParam = duration > 0 
+      ? `${Math.floor(duration / 60)}:${Math.floor(duration % 60).toString().padStart(2, '0')}`
+      : currentTrack.duration || '3:00';
+
+    fetch(`/api/lyrics?title=${encodeURIComponent(currentTrack.title)}&artist=${encodeURIComponent(currentTrack.channelTitle)}&duration=${encodeURIComponent(durationParam)}&videoId=${encodeURIComponent(queryVideoId)}`, {
       signal: controller.signal
     })
       .then(r => r.ok ? r.json() : null)
@@ -243,12 +248,15 @@ export const NowPlayingView: React.FC = () => {
     }
   }, [currentTrack?.id, nowPlayingTab]);
 
-  // 3. Active Lyric Line — synced uses timestamp, unsynced uses scroll position
   const [unsyncedActiveIndex, setUnsyncedActiveIndex] = useState(-1);
+
+  const hasTimestamps = React.useMemo(() => {
+    return lyricsData?.lines?.some(l => l.time !== -999) ?? false;
+  }, [lyricsData]);
 
   const handleLyricScroll = useCallback(() => {
     const container = lyricsContainerRef.current;
-    if (!container || !lyricsData?.lines || lyricsData.isSynced) return;
+    if (!container || !lyricsData?.lines || lyricsData.isSynced || hasTimestamps) return;
     const containerCenter = container.scrollTop + container.clientHeight / 2;
     const lines = container.querySelectorAll('[data-lyric-line]');
     let closestIdx = -1;
@@ -263,11 +271,11 @@ export const NowPlayingView: React.FC = () => {
       }
     });
     setUnsyncedActiveIndex(closestIdx);
-  }, [lyricsData, lyricsContainerRef]);
+  }, [lyricsData, lyricsContainerRef, hasTimestamps]);
 
   const activeLineIndex = React.useMemo(() => {
     if (!lyricsData?.lines) return -1;
-    if (lyricsData.isSynced) {
+    if (lyricsData.isSynced || hasTimestamps) {
       const lines = lyricsData.lines;
       let low = 0;
       let high = lines.length - 1;
@@ -294,13 +302,13 @@ export const NowPlayingView: React.FC = () => {
       return bestMatch;
     }
     return unsyncedActiveIndex;
-  }, [lyricsData, playedSeconds, unsyncedActiveIndex]);
+  }, [lyricsData, playedSeconds, unsyncedActiveIndex, hasTimestamps]);
 
   useEffect(() => {
-    if (lyricsData?.lines && !lyricsData.isSynced) {
+    if (lyricsData?.lines && !lyricsData.isSynced && !hasTimestamps) {
       handleLyricScroll();
     }
-  }, [lyricsData, handleLyricScroll]);
+  }, [lyricsData, handleLyricScroll, hasTimestamps]);
 
   // Scroll state: auto-follow vs user-scrolling
   const userScrollingRef = useRef(false);
@@ -372,7 +380,7 @@ export const NowPlayingView: React.FC = () => {
   if (!currentTrack) return null;
 
   return (
-    <div className="fixed inset-0 z-40 bg-[#050505] flex flex-col overflow-hidden select-none pb-[100px] animate-fade-in">
+    <div className="flex-1 flex flex-col overflow-hidden select-none h-full bg-transparent pb-6 animate-fade-in">
       {/* Header bar */}
       <header className="h-12 px-6 flex items-center justify-between flex-shrink-0 border-b border-white/5">
         <div className="flex items-center gap-3">
@@ -398,7 +406,7 @@ export const NowPlayingView: React.FC = () => {
               <div className="absolute w-[280px] h-[280px] rounded-full bg-[#9DD2E6]/15 blur-[80px] pointer-events-none -translate-x-8 -translate-y-8 animate-pulse z-0" />
               <div className="absolute w-[280px] h-[280px] rounded-full bg-[#E88EAC]/10 blur-[80px] pointer-events-none translate-x-8 translate-y-8 animate-pulse z-0" />
 
-              <div className="relative w-[70vw] h-[70vw] sm:w-[50vw] sm:h-[50vw] lg:w-[380px] lg:h-[380px] aspect-square rounded-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] neon-border-glow overflow-hidden bg-zinc-900 border border-white/10 group z-10">
+              <div className="relative w-[70vw] h-[70vw] sm:w-[50vw] sm:h-[50vw] lg:w-[380px] lg:h-[380px] aspect-square rounded-2xl shadow-[0_30px_80px_-10px_rgba(0,0,0,0.9)] overflow-hidden bg-zinc-900 group z-10">
                 <img
                   src={upgradeThumbnailUrl(currentTrack.thumbnailUrl)   || undefined}
                   referrerPolicy="no-referrer"
@@ -412,7 +420,7 @@ export const NowPlayingView: React.FC = () => {
               </div>
 
               {/* Title, artist & likes info container */}
-              <div className="w-[70vw] sm:w-[50vw] lg:w-[380px] mt-6 flex justify-between items-center bg-black/20 backdrop-blur-md p-4 rounded-xl border border-white/5">
+              <div className="w-[70vw] sm:w-[50vw] lg:w-[380px] mt-6 flex justify-between items-center bg-transparent py-2">
                 <div className="min-w-0 flex-1 mr-4">
                   {(() => {
                     const parsed = parseFeaturedArtists(currentTrack.title);
@@ -507,9 +515,7 @@ export const NowPlayingView: React.FC = () => {
         </div>
 
         {/* Right Side: Glassmorphic Tabs Details Panel */}
-        <div className={`flex-[5] flex flex-col bg-zinc-950/45 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-xl shadow-2xl relative transition-all duration-300 ${
-          'flex-1 h-full lg:flex-[5] flex'
-        }`}>
+        <div className="flex-[5] flex flex-col bg-transparent relative transition-all duration-300 flex-1 h-full lg:flex-[5] flex">
           
           {/* Tab Header Selector */}
           <div className="flex border-b border-white/5 bg-black/20 text-xs font-bold tracking-wider select-none flex-shrink-0">
@@ -931,7 +937,7 @@ export const NowPlayingView: React.FC = () => {
                   >
                     {lyricsData.lines.map((line, idx) => {
                       const isActive = idx === activeLineIndex;
-                      const isClickable = lyricsData.isSynced && line.time !== -999;
+                      const isClickable = line.time !== -999;
                       return (
                         <p
                           key={`lyric-line-${idx}`}
@@ -948,9 +954,9 @@ export const NowPlayingView: React.FC = () => {
                               : 'cursor-default'
                           } ${
                             isActive
-                              ? 'text-white text-2xl lg:text-3xl font-black scale-[1.03] drop-shadow-[0_4px_20px_rgba(232,142,172,0.4)]'
-                              : 'text-zinc-500 text-lg lg:text-xl font-bold opacity-50 hover:opacity-90 hover:text-zinc-300 font-sans'
-                          } ${line.text.startsWith('[') ? 'text-[11px] font-black tracking-wider text-[#E88EAC]/60 uppercase py-2 block !opacity-85' : ''}`}
+                              ? 'text-white text-xl lg:text-2xl font-extrabold scale-[1.01] drop-shadow-[0_0_12px_rgba(232,142,172,0.25)]'
+                              : 'text-zinc-500 text-base lg:text-lg font-bold opacity-60 transition-all duration-300 hover:text-zinc-300 hover:opacity-90'
+                          } ${line.text.startsWith('[') ? 'text-xs font-black tracking-widest text-[#E88EAC]/60 uppercase py-1.5 block !opacity-80' : ''}`}
                         >
                           {line.text}
                         </p>
@@ -970,7 +976,7 @@ export const NowPlayingView: React.FC = () => {
               <div className="absolute inset-0 overflow-y-auto custom-scrollbar p-6 animate-fade-in space-y-4">
                 <div className="text-center py-8">
                   <h3 className="text-base font-bold text-white mb-4">Connect to a device</h3>
-                  <p className="text-sm text-zinc-400">Open Kiwi on another device to play music here.</p>
+                  <p className="text-sm text-zinc-400">Open Sonora on another device to play music here.</p>
                 </div>
                 <button className="w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-semibold text-zinc-300 hover:text-white transition-all">
                   Scan for devices

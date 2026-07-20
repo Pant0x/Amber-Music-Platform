@@ -191,10 +191,29 @@ export const BottomPlayerBar: React.FC = () => {
     }
   };
 
+  const handleDeckClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (
+      target.closest('button') || 
+      target.closest('input') || 
+      target.closest('a') || 
+      (target.tagName.toLowerCase() === 'span' && target.classList.contains('cursor-pointer'))
+    ) {
+      return;
+    }
+    if (showNowPlaying) {
+      setShowNowPlaying(false);
+    } else {
+      setShowNowPlaying(true);
+      setNowPlayingTab('related');
+    }
+  };
+
   return (
     <div className="w-screen px-4 pb-4 pt-1 flex justify-center flex-shrink-0 relative z-50 bg-transparent">
       <div 
-        className="h-[84px] w-full max-w-[1600px] rounded-3xl text-white border border-white/[0.08] px-6 flex items-center justify-between select-none transition-all duration-1000 backdrop-blur-2xl bg-zinc-950/75 shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
+        onClick={handleDeckClick}
+        className="h-[84px] w-full max-w-[1600px] rounded-3xl text-white border border-white/[0.08] px-6 flex items-center justify-between select-none transition-all duration-1000 backdrop-blur-2xl bg-zinc-950/75 shadow-[0_20px_50px_rgba(0,0,0,0.8)] cursor-pointer"
       >
       {/* 1. LEFT SECTION: Track Info */}
       <div className="flex items-center gap-3 w-[30%] min-w-[200px]">

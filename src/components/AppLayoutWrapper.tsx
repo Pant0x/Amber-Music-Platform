@@ -44,36 +44,37 @@ export const AppLayoutWrapper: React.FC<{ children: React.ReactNode }> = ({ chil
         }}
       />
 
-      {/* Fullscreen Immersive Player */}
-      {showNowPlaying && <NowPlayingView />}
-
       {/* Main 2-Panel horizontal layout container */}
       <div className="flex-1 flex min-w-0 overflow-hidden relative z-10">
         
         {/* 1. Left Navigation Sidebar (Full Height) */}
-        {!showNowPlaying && <Sidebar />}
+        <Sidebar />
 
         {/* 2. Right Workspace Container */}
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
           {/* Top Search bar & Navigation Header */}
-          {!showNowPlaying && <Header />}
+          <Header />
 
           {/* Bottom 2-Panel split layout (Main Content + Right Player Dock) */}
           <div className="flex-1 flex min-w-0 overflow-hidden relative">
             {/* Main Content Area */}
             <main className="flex-1 overflow-hidden relative flex flex-col transition-all duration-1000 bg-transparent">
-              <div className="flex-1 overflow-y-auto px-6 py-6 pb-24 select-none custom-scrollbar relative">
-                <div className="relative z-10 animate-page-enter">
-                  {children}
+              {showNowPlaying ? (
+                <NowPlayingView />
+              ) : (
+                <div className="flex-1 overflow-y-auto px-6 py-6 pb-24 select-none custom-scrollbar relative">
+                  <div className="relative z-10 animate-page-enter">
+                    {children}
+                  </div>
                 </div>
-              </div>
+              )}
               <LyricsOverlay />
             </main>
 
           </div>
 
           {/* Mobile Bottom Navigation Bar */}
-          {!showNowPlaying && <MobileBottomNav />}
+          <MobileBottomNav />
         </div>
       </div>
 

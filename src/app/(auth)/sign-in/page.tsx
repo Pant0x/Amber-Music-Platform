@@ -1,7 +1,7 @@
 'use client'
 
 import { SignIn } from '@clerk/nextjs'
-import { Music2 } from 'lucide-react'
+import { Star } from 'lucide-react'
 
 const clerkAppearance = {
   elements: {
@@ -16,15 +16,15 @@ const clerkAppearance = {
     dividerText: 'text-zinc-600 text-xs',
     formFieldLabel: 'text-zinc-400 text-[11px] font-bold uppercase tracking-wider',
     formFieldInput:
-      'bg-zinc-800/80 border-white/10 text-white rounded-xl focus:border-red-500/50 focus:ring-2 focus:ring-red-600/10 placeholder-zinc-600 transition-all',
+      'bg-zinc-800/80 border-white/10 text-white rounded-xl focus:border-[#E88EAC]/50 focus:ring-2 focus:ring-[#E88EAC]/10 placeholder-zinc-600 transition-all',
     formButtonPrimary:
       'bg-white text-black hover:bg-zinc-100 rounded-xl font-extrabold shadow-lg transition-all active:scale-[0.98]',
-    footerActionLink: 'text-red-400 font-semibold hover:text-red-300',
+    footerActionLink: 'text-[#E88EAC] font-semibold hover:text-[#e27396]',
     footerActionText: 'text-zinc-500',
     identityPreviewText: 'text-white',
-    identityPreviewEditButton: 'text-red-400 hover:text-red-300',
-    formResendCodeLink: 'text-red-400 hover:text-red-300',
-    otpCodeFieldInput: 'bg-zinc-800 border-white/10 text-white rounded-xl focus:border-red-500/50',
+    identityPreviewEditButton: 'text-[#E88EAC] hover:text-[#e27396]',
+    formResendCodeLink: 'text-[#E88EAC] hover:text-[#e27396]',
+    otpCodeFieldInput: 'bg-zinc-800 border-white/10 text-white rounded-xl focus:border-[#E88EAC]/50',
     alternativeMethodsBlockButton: 'text-zinc-400 hover:text-white border-white/10',
   },
   layout: {
@@ -39,7 +39,7 @@ export default function SignInPage() {
       <div className="absolute inset-0 pointer-events-none">
         <div
           className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(255,0,0,0.1) 0%, transparent 70%)', animation: 'breathe 7s ease-in-out infinite' }}
+          style={{ background: 'radial-gradient(circle, rgba(232,142,172,0.08) 0%, transparent 70%)', animation: 'breathe 7s ease-in-out infinite' }}
         />
         <div
           className="absolute -bottom-40 -right-40 w-[500px] h-[500px] rounded-full"
@@ -56,10 +56,10 @@ export default function SignInPage() {
 
       {/* Logo */}
       <div className="relative z-10 mb-8 flex items-center gap-2.5 select-none">
-        <div className="w-9 h-9 rounded-xl bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/30">
-          <Music2 className="w-5 h-5 text-white" />
+        <div className="w-9 h-9 rounded-xl bg-[#E88EAC] flex items-center justify-center shadow-lg shadow-[#E88EAC]/30">
+          <Star className="w-5 h-5 text-white fill-current" />
         </div>
-        <span className="text-white font-extrabold text-2xl tracking-tight">Kiwi</span>
+        <span className="text-white font-extrabold text-2xl tracking-tight">Sonora</span>
       </div>
 
       {/* Heading */}

@@ -56,7 +56,7 @@ export const Sidebar: React.FC = () => {
 
       {/* 1. Main Navigation Items */}
       <div className="flex-shrink-0 mb-6">
-        <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest px-3 block mb-2">Kiwi</span>
+        <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest px-3 block mb-2">Discover</span>
         <nav className="flex flex-col gap-0.5">
           <NavItem icon={Home} label="Home" path="/" />
           <NavItem icon={Compass} label="Browse" path="/explore" />
