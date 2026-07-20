@@ -484,33 +484,6 @@ export const MediaDeck: React.FC = () => {
     }
   }, [currentTrack?.id, currentTrack?.isEnriched, enrichCurrentTrack]);
 
-  if (!mounted || !_hasHydrated) return null;
-
-  if (!currentTrack) return null;
-
-  const isLiked = likedTracks.some((t) => t.id === currentTrack.id);
-
-  const formatTime = (seconds: number) => {
-    if (isNaN(seconds) || seconds === null) return '0:00';
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-  };
-
-  const handleScrub = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const fraction = parseFloat(e.target.value);
-    playerRef.current?.seekTo(fraction);
-    setProgress((prev) => ({ ...prev, played: fraction, playedSeconds: fraction * duration }));
-    setStorePlayedSeconds(fraction * duration);
-  };
-
-  const handlePlayerProgress = (state: { played: number; playedSeconds: number; loaded: number }) => {
-    setProgress(state);
-    setStorePlayedSeconds(state.playedSeconds);
-    playedSecondsRef.current = state.playedSeconds;
-    lastProgressSyncTimeRef.current = Date.now();
-  };
-
   const handlePlayerEnded = () => {
     if (repeatMode === 'one') {
       playerRef.current?.seekTo(0);
@@ -558,6 +531,34 @@ export const MediaDeck: React.FC = () => {
 
     return () => clearInterval(interval);
   }, [isPlaying, currentTrack?.id, duration]);
+
+  if (!mounted || !_hasHydrated) return null;
+
+  if (!currentTrack) return null;
+
+  const isLiked = likedTracks.some((t) => t.id === currentTrack.id);
+
+  const formatTime = (seconds: number) => {
+    if (isNaN(seconds) || seconds === null) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
+  const handleScrub = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fraction = parseFloat(e.target.value);
+    playerRef.current?.seekTo(fraction);
+    setProgress((prev) => ({ ...prev, played: fraction, playedSeconds: fraction * duration }));
+    setStorePlayedSeconds(fraction * duration);
+  };
+
+  const handlePlayerProgress = (state: { played: number; playedSeconds: number; loaded: number }) => {
+    setProgress(state);
+    setStorePlayedSeconds(state.playedSeconds);
+    playedSecondsRef.current = state.playedSeconds;
+    lastProgressSyncTimeRef.current = Date.now();
+  };
+
 
   const toggleMute = () => setIsMuted(!isMuted);
 
