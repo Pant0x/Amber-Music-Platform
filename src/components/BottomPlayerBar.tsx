@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { parseFeaturedArtists } from '@/utils/text';
 import {
@@ -29,28 +29,23 @@ const upgradeThumbnailUrl = (url: string | undefined, youtubeId?: string): strin
     return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
   }
   if (url.includes('googleusercontent.com')) {
-    return url
-      .replace(/=w\d+-h\d+.*$/, '=w544-h544-l90-rj')
-      .replace(/=s\d+.*$/, '=w544-h544-l90-rj');
+    return url.replace(/=w\d+-h\d+.*$/, '=w544-h544-l90-rj').replace(/=s\d+.*$/, '=w544-h544-l90-rj');
   }
   if (url.includes('i.ytimg.com/vi/') || url.includes('img.youtube.com/vi/')) {
     const cleanUrl = url.split('?')[0];
-    return cleanUrl.replace(
-      /\/(default|mqdefault|sddefault|hqdefault|maxresdefault)\.jpg/,
-      '/hqdefault.jpg'
-    );
+    return cleanUrl.replace(/\/(default|mqdefault|sddefault|hqdefault|maxresdefault)\.jpg/, '/hqdefault.jpg');
   }
   return url;
 };
 
-const formatTime = (secs: number) => {
-  if (isNaN(secs) || secs === null || secs === undefined) return '0:00';
+const formatTime = (secs: number): string => {
+  if (isNaN(secs) || secs === null || secs === undefined || secs <= 0) return '0:00';
   const minutes = Math.floor(secs / 60);
   const seconds = Math.floor(secs % 60);
   return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 };
 
-export const BottomPlayerBar: React.FC = () => {
+export const BottomPlayerBar = () => {
   const {
     currentTrack,
     isPlaying,
@@ -60,7 +55,7 @@ export const BottomPlayerBar: React.FC = () => {
     prevTrack,
     togglePlay,
     playedSeconds,
-    duration,
+    duration: trackDuration,
     setSeekTrigger,
     repeatMode,
     setRepeatMode,
@@ -88,11 +83,21 @@ export const BottomPlayerBar: React.FC = () => {
   const timelineRef = useRef<HTMLDivElement>(null);
   const volumeRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef<'timeline' | 'volume' | null>(null);
-  const lyricsCacheRef = useRef(new Map<string, any>());
+  const lyricsCacheRef = useRef(new Map());
   const lyricsAbortRef = useRef<AbortController | null>(null);
 
-  if (!currentTrack) return null;
+  // Early return if no currentTrack
+  if (!currentTrack) {
+    return null;
+  }
 
+  const isLiked = likedTracks.some((t) => t.id === currentTrack.id);
+  const parsed = parseFeaturedArtists(currentTrack.title);
+
+  // Calculate safe duration (avoid division by zero)
+  const duration = trackDuration && trackDuration > 0 ? trackDuration : 0;
+
+  // Handle lyrics loading
   useEffect(() => {
     const cacheKey = `${currentTrack.id}_${currentTrack.title}_${currentTrack.channelTitle}_${currentTrack.youtubeId || ''}`;
 
@@ -127,8 +132,9 @@ export const BottomPlayerBar: React.FC = () => {
         }
       })
       .catch(err => {
-        if (err?.name === 'AbortError') return;
-        console.error('Failed to load lyrics:', err);
+        if (err?.name !== 'AbortError') {
+          console.error('Failed to load lyrics:', err);
+        }
       })
       .finally(() => {
         if (!controller.signal.aborted) {
@@ -138,9 +144,6 @@ export const BottomPlayerBar: React.FC = () => {
 
     return () => controller.abort();
   }, [currentTrack?.id, currentTrack?.title, currentTrack?.channelTitle, currentTrack?.youtubeId]);
-
-  const isLiked = likedTracks.some((t) => t.id === currentTrack.id);
-  const parsed = parseFeaturedArtists(currentTrack.title);
 
   const handleScrub = useCallback((value: number) => {
     if (duration > 0) {
@@ -168,7 +171,7 @@ export const BottomPlayerBar: React.FC = () => {
   };
 
   const navigateToTrackPage = () => {
-    if (currentTrack.channelId) {
+    if (currentTrack?.channelId) {
       router.push(`/artist/${encodeURIComponent(currentTrack.channelId)}`);
     }
   };
@@ -176,20 +179,22 @@ export const BottomPlayerBar: React.FC = () => {
   const handleDockClick = useCallback((e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     
+    // Don't interfere with interactive elements
     if (
       target.closest('button') ||
       target.closest('input') ||
-      target.closest('.yt-deck-slider') ||
-      target.closest('.yt-volume-slider')
+      target.closest('.cursor-pointer')
     ) {
       return;
     }
     
+    // Navigate to artist page when clicking track info
     if (target.closest('.track-info-section')) {
       navigateToTrackPage();
       return;
     }
     
+    // Toggle now playing view
     if (!showNowPlaying) {
       setShowNowPlaying(true);
       setNowPlayingTab('upnext');
@@ -241,6 +246,7 @@ export const BottomPlayerBar: React.FC = () => {
     }
   }, [isDraggingRef.current]);
 
+  // Calculate seek progress safely
   const seekProgress = duration > 0 ? (hoverTime !== null ? hoverTime : playedSeconds) / duration : 0;
 
   return (
@@ -249,18 +255,18 @@ export const BottomPlayerBar: React.FC = () => {
       className="w-screen px-4 pb-4 pt-1 flex justify-center flex-shrink-0 relative z-50 bg-transparent cursor-pointer"
     >
       <div className="h-[84px] w-full max-w-[1600px] rounded-3xl text-white border border-white/[0.08] px-6 flex items-center justify-between select-none transition-all duration-1000 backdrop-blur-2xl bg-zinc-950/75 shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
-        {/* LEFT SECTION: Track Info - Clickable to navigate */}
+        {/* LEFT SECTION - Track Info */}
         <div className="flex items-center gap-3 w-[30%] min-w-[200px] track-info-section">
           <div className="w-14 h-14 rounded-lg overflow-hidden bg-zinc-900 border border-white/5 flex-shrink-0 shadow-md shadow-black/40">
             <img 
-              src={upgradeThumbnailUrl(currentTrack.thumbnailUrl, currentTrack.youtubeId || currentTrack.id)}
+              src={upgradeThumbnailUrl(currentTrack?.thumbnailUrl, currentTrack?.youtubeId || currentTrack?.id)}
               alt={parsed.title}
               className={`w-full h-full object-cover transition-transform duration-300 ${
-                currentTrack.origin !== 'spotify' ? 'scale-[1.22]' : 'scale-100'
+                currentTrack?.origin !== 'spotify' ? 'scale-[1.22]' : 'scale-100'
               }`}
               onError={(e) => {
                 (e.currentTarget as HTMLImageElement).onerror = null;
-                (e.currentTarget as HTMLImageElement).src = currentTrack.thumbnailUrl || '';
+                (e.currentTarget as HTMLImageElement).src = currentTrack?.thumbnailUrl || '/placeholder.png';
               }}
             />
           </div>
@@ -268,11 +274,12 @@ export const BottomPlayerBar: React.FC = () => {
             <h4 className="text-sm font-bold text-white truncate leading-tight hover:underline cursor-pointer" title={parsed.title}>
               {parsed.title || 'Unknown Track'}
             </h4>
-            <div className="text-[11px] text-zinc-400 truncate mt-1 leading-none font-semibold" title={currentTrack.channelTitle}>
-              {currentTrack.channelTitle || 'Unknown Artist'}
+            <div className="text-[11px] text-zinc-400 truncate mt-1 leading-none font-semibold" title={currentTrack?.channelTitle}>
+              {currentTrack?.channelTitle || 'Unknown Artist'}
             </div>
           </div>
-          {/* Like and Add Buttons */}
+          
+          {/* Like and Add buttons */}
           <div className="flex items-center gap-1 flex-shrink-0">
             <button 
               onClick={(e) => { e.stopPropagation(); toggleLikeTrack(currentTrack); }}
@@ -300,24 +307,25 @@ export const BottomPlayerBar: React.FC = () => {
                 <div className="absolute bottom-12 left-0 w-48 bg-zinc-950/95 border border-white/10 rounded-xl p-2 shadow-2xl z-50 text-xs">
                   <p className="text-zinc-500 font-bold px-2 py-1 uppercase tracking-wider text-[9px] mb-1">Add to Playlist</p>
                   <div className="max-h-36 overflow-y-auto space-y-0.5 custom-scrollbar">
-                    {playlists.map(pl => {
-                      const hasTrack = pl.tracks.some(t => t.id === currentTrack.id);
-                      return (
-                        <button
-                          key={pl.id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            usePlayerStore.getState().addTrackToPlaylist(pl.id, currentTrack);
-                            setShowPlaylistMenu(false);
-                          }}
-                          className="w-full text-left p-2 rounded-lg hover:bg-white/5 text-white truncate flex items-center justify-between"
-                        >
-                          <span>{pl.name}</span>
-                          {hasTrack && <Check className="w-3.5 h-3.5 text-[var(--theme-accent)]" />}
-                        </button>
-                      );
-                    })}
-                    {playlists.length === 0 && (
+                    {playlists.length > 0 ? (
+                      playlists.map(pl => {
+                        const hasTrack = pl.tracks.some(t => t.id === currentTrack.id);
+                        return (
+                          <button
+                            key={pl.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              usePlayerStore.getState().addTrackToPlaylist(pl.id, currentTrack);
+                              setShowPlaylistMenu(false);
+                            }}
+                            className="w-full text-left p-2 rounded-lg hover:bg-white/5 text-white truncate flex items-center justify-between"
+                          >
+                            <span>{pl.name}</span>
+                            {hasTrack && <Check className="w-3.5 h-3.5 text-[var(--theme-accent)]" />}
+                          </button>
+                        );
+                      })
+                    ) : (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -336,9 +344,8 @@ export const BottomPlayerBar: React.FC = () => {
           </div>
         </div>
 
-        {/* MIDDLE SECTION: Playback Controls & Progress */}
+        {/* MIDDLE SECTION - Playback Controls & Timeline */}
         <div className="flex flex-col items-center gap-1.5 w-[40%] max-w-[600px]">
-          {/* Controls Button Row */}
           <div className="flex items-center gap-5">
             <button 
               onClick={(e) => { e.stopPropagation(); setIsShuffle(!isShuffle); }}
@@ -399,7 +406,7 @@ export const BottomPlayerBar: React.FC = () => {
             </button>
           </div>
 
-          {/* Timeline Seekbar - with hover circle */}
+          {/* Timeline with white hover circle */}
           <div ref={timelineRef} className="flex items-center gap-2.5 w-full">
             <span className="text-[11px] text-zinc-400 font-semibold w-8 text-right font-mono">
               {formatTime(hoverTime !== null ? hoverTime : playedSeconds)}
@@ -415,18 +422,17 @@ export const BottomPlayerBar: React.FC = () => {
                 className="yt-deck-slider absolute w-full opacity-0 cursor-pointer"
                 onMouseDown={(e) => handleMouseDown(e, 'timeline')}
               />
-              {/* Progress bar container - no line above timeline */}
+              {/* Progress bar - no line above */}
               <div className="flex-1 h-1 bg-zinc-700 rounded-full overflow-hidden">
-                {/* Filled portion */}
                 <div 
                   className="h-full transition-all duration-200"
                   style={{ width: `${seekProgress * 100}%`, backgroundColor: 'var(--theme-accent)' }}
                 />
               </div>
-              {/* Hover circle - appears when dragging */}
-              {hoverTime !== null && duration > 0 && (
+              {/* White hover circle - appears when dragging timeline */}
+              {(hoverTime !== null || isDraggingRef.current === 'timeline') && duration > 0 && (
                 <div 
-                  className="absolute -top-2 w-5 h-5 rounded-full bg-[var(--theme-accent)] border-2 border-black shadow-lg flex items-center justify-center transition-all duration-200"
+                  className="absolute -top-2 w-5 h-5 rounded-full bg-white border-2 border-black shadow-lg flex items-center justify-center transition-all duration-200"
                   style={{
                     left: `${seekProgress * 100}%`,
                     transform: 'translateX(-50%)'
@@ -442,18 +448,13 @@ export const BottomPlayerBar: React.FC = () => {
           </div>
         </div>
 
-        {/* RIGHT SECTION: Extra Controls & Volume */}
+        {/* RIGHT SECTION - Volume & Controls */}
         <div className="flex items-center gap-3 w-[30%] min-w-[200px] justify-end">
-          {/* Lyrics Button */}
           <button 
             onClick={(e) => { 
               e.stopPropagation();
-              if (showNowPlaying && nowPlayingTab === 'lyrics') {
-                setShowNowPlaying(false);
-              } else {
-                setShowNowPlaying(true);
-                setNowPlayingTab('lyrics');
-              }
+              if (showNowPlaying && nowPlayingTab === 'lyrics') setShowNowPlaying(false);
+              else { setShowNowPlaying(true); setNowPlayingTab('lyrics'); }
             }}
             className={`p-1.5 rounded-md hover:bg-white/5 transition-all ${
               showNowPlaying && nowPlayingTab === 'lyrics' ? 'text-[#E88EAC]' : 'text-zinc-400 hover:text-white'
@@ -463,16 +464,11 @@ export const BottomPlayerBar: React.FC = () => {
             <Mic2 className="w-5 h-5" />
           </button>
 
-          {/* Queue Button */}
           <button 
             onClick={(e) => { 
               e.stopPropagation();
-              if (showNowPlaying && nowPlayingTab === 'upnext') {
-                setShowNowPlaying(false);
-              } else {
-                setShowNowPlaying(true);
-                setNowPlayingTab('upnext');
-              }
+              if (showNowPlaying && nowPlayingTab === 'upnext') setShowNowPlaying(false);
+              else { setShowNowPlaying(true); setNowPlayingTab('upnext'); }
             }}
             className={`p-1.5 rounded-md hover:bg-white/5 transition-all ${
               showNowPlaying && nowPlayingTab === 'upnext' ? 'text-[#E88EAC]' : 'text-zinc-400 hover:text-white'
@@ -482,7 +478,7 @@ export const BottomPlayerBar: React.FC = () => {
             <ListMusic className="w-5 h-5" />
           </button>
 
-          {/* Volume controls */}
+          {/* Volume with white hover circle */}
           <div className="flex items-center gap-2 max-w-[120px] flex-1">
             <button 
               onClick={(e) => { e.stopPropagation(); toggleMute(); }}
@@ -515,19 +511,26 @@ export const BottomPlayerBar: React.FC = () => {
                   }}
                 />
               </div>
+              {/* White volume hover circle - visible when dragging */}
+              {isDraggingRef.current === 'volume' && (
+                <div 
+                  className="absolute -top-2 w-5 h-5 rounded-full bg-white border-2 border-black shadow-lg flex items-center justify-center transition-all duration-200"
+                  style={{
+                    right: `${volume * 100}%`,
+                    transform: 'translateX(-50%)'
+                  }}
+                >
+                  <div className="w-2 h-2 rounded-full bg-black" />
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Fullscreen Toggle */}
           <button 
             onClick={(e) => { 
               e.stopPropagation();
-              if (showNowPlaying) {
-                setShowNowPlaying(false);
-              } else {
-                setShowNowPlaying(true);
-                setNowPlayingTab('lyrics');
-              }
+              if (showNowPlaying) setShowNowPlaying(false);
+              else { setShowNowPlaying(true); setNowPlayingTab('lyrics'); }
             }}
             className={`p-1.5 transition-all hidden sm:block ${
               showNowPlaying ? 'text-[#E88EAC]' : 'text-zinc-400 hover:text-white'
