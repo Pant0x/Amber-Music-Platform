@@ -44,7 +44,7 @@ const upgradeThumbnailUrl = (url: string | undefined, youtubeId?: string): strin
 };
 
 const formatTime = (secs: number) => {
-  if (isNaN(secs) || secs === null) return '0:00';
+  if (isNaN(secs) || secs === null || secs === undefined) return '0:00';
   const minutes = Math.floor(secs / 60);
   const seconds = Math.floor(secs % 60);
   return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
@@ -72,7 +72,6 @@ export const BottomPlayerBar: React.FC = () => {
     createPlaylist,
     setGlobalLyricsData,
     setGlobalLyricsLoading,
-    queue,
     showNowPlaying,
     nowPlayingTab,
     setShowNowPlaying,
@@ -89,21 +88,20 @@ export const BottomPlayerBar: React.FC = () => {
   const timelineRef = useRef<HTMLDivElement>(null);
   const volumeRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef<'timeline' | 'volume' | null>(null);
+  const lyricsCacheRef = useRef(new Map<string, any>());
+  const lyricsAbortRef = useRef<AbortController | null>(null);
 
-  const lyricsCache = React.useRef(new Map<string, any>());
-  const lyricsAbortRef = React.useRef<AbortController | null>(null);
+  if (!currentTrack) return null;
 
   useEffect(() => {
-    if (!currentTrack) return;
-
     const cacheKey = `${currentTrack.id}_${currentTrack.title}_${currentTrack.channelTitle}_${currentTrack.youtubeId || ''}`;
 
     if (lyricsAbortRef.current) {
       lyricsAbortRef.current.abort();
     }
 
-    if (lyricsCache.current.has(cacheKey)) {
-      setGlobalLyricsData(lyricsCache.current.get(cacheKey));
+    if (lyricsCacheRef.current.has(cacheKey)) {
+      setGlobalLyricsData(lyricsCacheRef.current.get(cacheKey));
       setGlobalLyricsLoading(false);
       return;
     }
@@ -121,10 +119,10 @@ export const BottomPlayerBar: React.FC = () => {
       .then(data => {
         if (controller.signal.aborted) return;
         if (data?.lyrics) {
-          lyricsCache.current.set(cacheKey, data);
+          lyricsCacheRef.current.set(cacheKey, data);
           setGlobalLyricsData(data);
         } else {
-          lyricsCache.current.set(cacheKey, null);
+          lyricsCacheRef.current.set(cacheKey, null);
           setGlobalLyricsData(null);
         }
       })
@@ -141,13 +139,13 @@ export const BottomPlayerBar: React.FC = () => {
     return () => controller.abort();
   }, [currentTrack?.id, currentTrack?.title, currentTrack?.channelTitle, currentTrack?.youtubeId]);
 
-  if (!currentTrack) return null;
-
   const isLiked = likedTracks.some((t) => t.id === currentTrack.id);
   const parsed = parseFeaturedArtists(currentTrack.title);
 
   const handleScrub = useCallback((value: number) => {
-    setSeekTrigger(value * duration);
+    if (duration > 0) {
+      setSeekTrigger(value * duration);
+    }
   }, [duration, setSeekTrigger]);
 
   const toggleMute = () => {
@@ -205,7 +203,7 @@ export const BottomPlayerBar: React.FC = () => {
   };
 
   const handleMouseMove = (e: MouseEvent) => {
-    if (isDraggingRef.current === 'timeline' && timelineRef.current) {
+    if (isDraggingRef.current === 'timeline' && timelineRef.current && duration > 0) {
       const rect = timelineRef.current.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const percentage = Math.max(0, Math.min(1, x / rect.width));
@@ -223,13 +221,13 @@ export const BottomPlayerBar: React.FC = () => {
     }
   };
 
-  const handleMouseUp = () => {
-    if (isDraggingRef.current === 'timeline' && hoverTime !== null) {
-      handleScrub(hoverTime / duration);
+  const handleMouseUp = useCallback(() => {
+    if (isDraggingRef.current === 'timeline' && hoverTime !== null && duration > 0) {
+      setSeekTrigger(hoverTime);
     }
     isDraggingRef.current = null;
     setHoverTime(null);
-  };
+  }, [hoverTime, duration, setSeekTrigger]);
 
   useEffect(() => {
     if (isDraggingRef.current) {
@@ -242,6 +240,8 @@ export const BottomPlayerBar: React.FC = () => {
       };
     }
   }, [isDraggingRef.current]);
+
+  const seekProgress = duration > 0 ? (hoverTime !== null ? hoverTime : playedSeconds) / duration : 0;
 
   return (
     <div 
@@ -415,24 +415,20 @@ export const BottomPlayerBar: React.FC = () => {
                 className="yt-deck-slider absolute w-full opacity-0 cursor-pointer"
                 onMouseDown={(e) => handleMouseDown(e, 'timeline')}
               />
-              {/* Progress bar container */}
+              {/* Progress bar container - no line above timeline */}
               <div className="flex-1 h-1 bg-zinc-700 rounded-full overflow-hidden">
                 {/* Filled portion */}
                 <div 
                   className="h-full transition-all duration-200"
-                  style={
-                    duration > 0 
-                      ? { width: `${(playedSeconds / duration) * 100}%`, backgroundColor: 'var(--theme-accent)' }
-                      : { width: '0%', backgroundColor: 'var(--theme-accent)' }
-                  }
+                  style={{ width: `${seekProgress * 100}%`, backgroundColor: 'var(--theme-accent)' }}
                 />
               </div>
-              {/* Hover circle - appears on hover */}
-              {hoverTime !== null && (
+              {/* Hover circle - appears when dragging */}
+              {hoverTime !== null && duration > 0 && (
                 <div 
                   className="absolute -top-2 w-5 h-5 rounded-full bg-[var(--theme-accent)] border-2 border-black shadow-lg flex items-center justify-center transition-all duration-200"
                   style={{
-                    left: `${(hoverTime / duration) * 100}%`,
+                    left: `${seekProgress * 100}%`,
                     transform: 'translateX(-50%)'
                   }}
                 >
@@ -519,18 +515,6 @@ export const BottomPlayerBar: React.FC = () => {
                   }}
                 />
               </div>
-              {/* Hover circle for volume */}
-              {hoverTime !== null && isDraggingRef.current === 'volume' && (
-                <div 
-                  className="absolute -top-2 w-5 h-5 rounded-full bg-[var(--theme-accent)] border-2 border-black shadow-lg flex items-center justify-center transition-all duration-200"
-                  style={{
-                    right: `${volume * 100}%`,
-                    transform: 'translateX(-50%)'
-                  }}
-                >
-                  <div className="w-2 h-2 rounded-full bg-black" />
-                </div>
-              )}
             </div>
           </div>
 
