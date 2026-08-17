@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
-import { cleanVisualName, parseFeaturedArtists } from '@/utils/text';
-import { recordListen } from '@/lib/recordListen';
-import { ExplicitBadge, PlayingEqualizer } from './pages/shared';
+import { parseFeaturedArtists } from '@/utils/text';
+import { ExplicitBadge } from './pages/shared';
 import {
   Play,
   Pause,
@@ -19,7 +18,8 @@ import {
   Maximize2,
   Mic2
 } from 'lucide-react';
-import { PlusCircle, Check } from 'lucide-react';
+import { PlusCircle, Check, ExternalLink } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const upgradeThumbnailUrl = (url: string | undefined, youtubeId?: string): string => {
   if (!url) {
@@ -80,10 +80,17 @@ export const BottomPlayerBar: React.FC = () => {
     setNowPlayingTab
   } = usePlayerStore();
 
+  const router = useRouter();
   const [isMuted, setIsMuted] = useState(false);
   const [prevVolume, setPrevVolume] = useState(volume);
   const [isShuffle, setIsShuffle] = useState(false);
   const [showPlaylistMenu, setShowPlaylistMenu] = useState(false);
+  const [hoverProgress, setHoverProgress] = useState<number | null>(null);
+  const [hoverVolume, setHoverVolume] = useState<number | null>(null);
+
+  const timelineRef = useRef<HTMLDivElement>(null);
+  const volumeRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef<'timeline' | 'volume' | null>(null);
 
   const lyricsCache = React.useRef(new Map<string, any>());
   const lyricsAbortRef = React.useRef<AbortController | null>(null);
@@ -141,9 +148,13 @@ export const BottomPlayerBar: React.FC = () => {
   const isLiked = likedTracks.some((t) => t.id === currentTrack.id);
   const parsed = parseFeaturedArtists(currentTrack.title);
 
-  const handleScrub = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const fraction = parseFloat(e.target.value);
-    setSeekTrigger(fraction * duration);
+  const handleScrub = (value: number, isDragging: boolean = true) => {
+    if (isDragging && isDraggingRef.current === 'timeline') {
+      setHoverProgress(value);
+    } else if (!isDragging) {
+      setSeekTrigger(value * duration);
+      setHoverProgress(null);
+    }
   };
 
   const toggleMute = () => {
@@ -165,23 +176,88 @@ export const BottomPlayerBar: React.FC = () => {
     }
   };
 
-  const handleDockClick = (e: React.MouseEvent) => {
+  // Navigate to artist/channel page
+  const navigateToTrackPage = () => {
+    if (currentTrack.channelId) {
+      router.push(`/artist/${encodeURIComponent(currentTrack.channelId)}`);
+    }
+  };
+
+  // Click handler for the entire dock
+  const handleDockClick = useCallback((e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
+    
+    // If clicking on buttons, inputs, or slider, don't close
     if (
       target.closest('button') ||
       target.closest('input') ||
-      target.closest('.cursor-pointer') ||
       target.closest('.yt-deck-slider') ||
       target.closest('.yt-volume-slider')
     ) {
       return;
     }
     
+    // If clicking on the left section (track info), navigate to artist page
+    if (target.closest('.track-info-section')) {
+      navigateToTrackPage();
+      return;
+    }
+    
+    // Toggle now playing view
     if (!showNowPlaying) {
       setShowNowPlaying(true);
       setNowPlayingTab('upnext');
     }
-  };
+  }, [showNowPlaying, setShowNowPlaying, setNowPlayingTab, navigateToTrackPage]);
+
+  // Mouse move handlers for hover seek
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    
+    if (isDraggingRef.current === 'timeline' && timelineRef.current) {
+      const rect = timelineRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const percentage = Math.max(0, Math.min(1, x / rect.width));
+      setHoverProgress(percentage);
+    }
+    
+    if (isDraggingRef.current === 'volume' && volumeRef.current) {
+      const rect = volumeRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const percentage = Math.max(0, Math.min(1, x / rect.width));
+      setHoverVolume(percentage);
+    }
+  }, []);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent, element: 'timeline' | 'volume') => {
+    e.preventDefault();
+    e.stopPropagation();
+    isDraggingRef.current = element;
+  }, []);
+
+  const handleMouseUp = useCallback(() => {
+    if (isDraggingRef.current === 'timeline' && hoverProgress !== null) {
+      setSeekTrigger(hoverProgress * duration);
+    }
+    isDraggingRef.current = null;
+    setHoverProgress(null);
+    setHoverVolume(null);
+  }, [hoverProgress, duration, setSeekTrigger]);
+
+  useEffect(() => {
+    if (isDraggingRef.current) {
+      const handler = (e: MouseEvent) => handleMouseMove(e);
+      const upHandler = () => handleMouseUp();
+      
+      document.addEventListener('mousemove', handler);
+      document.addEventListener('mouseup', upHandler);
+      
+      return () => {
+        document.removeEventListener('mousemove', handler);
+        document.removeEventListener('mouseup', upHandler);
+      };
+    }
+  }, [isDraggingRef.current, handleMouseMove, handleMouseUp]);
 
   return (
     <div 
@@ -189,8 +265,8 @@ export const BottomPlayerBar: React.FC = () => {
       className="w-screen px-4 pb-4 pt-1 flex justify-center flex-shrink-0 relative z-50 bg-transparent cursor-pointer"
     >
       <div className="h-[84px] w-full max-w-[1600px] rounded-3xl text-white border border-white/[0.08] px-6 flex items-center justify-between select-none transition-all duration-1000 backdrop-blur-2xl bg-zinc-950/75 shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
-        {/* LEFT SECTION: Track Info */}
-        <div className="flex items-center gap-3 w-[30%] min-w-[200px]">
+        {/* LEFT SECTION: Track Info - Clickable to navigate */}
+        <div className="flex items-center gap-3 w-[30%] min-w-[200px] track-info-section">
           <div className="w-14 h-14 rounded-lg overflow-hidden bg-zinc-900 border border-white/5 flex-shrink-0 shadow-md shadow-black/40">
             <img 
               src={upgradeThumbnailUrl(currentTrack.thumbnailUrl, currentTrack.youtubeId || currentTrack.id)}
@@ -205,7 +281,7 @@ export const BottomPlayerBar: React.FC = () => {
             />
           </div>
           <div className="min-w-0 flex-1">
-            <h4 className="text-sm font-bold text-white truncate leading-tight" title={parsed.title}>
+            <h4 className="text-sm font-bold text-white truncate leading-tight hover:underline cursor-pointer" title={parsed.title}>
               {parsed.title || 'Unknown Track'}
             </h4>
             <div className="text-[11px] text-zinc-400 truncate mt-1 leading-none font-semibold" title={currentTrack.channelTitle}>
@@ -300,7 +376,7 @@ export const BottomPlayerBar: React.FC = () => {
             
             <button 
               onClick={(e) => { e.stopPropagation(); togglePlay(); }}
-              className="w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all flex-shrink-0 group"
+              className="w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all flex-shrink-0"
               title={isPlaying ? 'Pause' : 'Play'}
             >
               {isPlaying ? (
@@ -339,25 +415,64 @@ export const BottomPlayerBar: React.FC = () => {
             </button>
           </div>
 
-          {/* Timeline Seekbar progress */}
-          <div className="flex items-center gap-2.5 w-full">
+          {/* Timeline Seekbar */}
+          <div 
+            ref={timelineRef}
+            className="relative flex items-center gap-2.5 w-full"
+            onMouseEnter={(e) => {
+              const target = e.currentTarget;
+              const rect = target.getBoundingClientRect();
+              const x = 0;
+              const percentage = 1;
+              const initialPos = e.nativeEvent.clientX - rect.left;
+              const initialPercentage = initialPos / rect.width;
+              setHoverProgress(initialPercentage);
+            }}
+          >
             <span className="text-[11px] text-zinc-400 font-semibold w-8 text-right font-mono">
-              {formatTime(playedSeconds)}
+              {formatTime(hoverProgress !== null ? hoverProgress * duration : playedSeconds)}
             </span>
-            <div className="relative flex-1 flex items-center group py-2">
+            <div className="flex-1 h-6 flex items-center justify-center group">
               <input 
                 type="range"
                 min="0"
                 max="0.999"
                 step="any"
                 value={duration > 0 ? playedSeconds / duration : 0}
-                onChange={handleScrub}
-                className="yt-deck-slider w-full z-10 cursor-pointer"
+                onChange={(e) => handleScrub(parseFloat(e.target.value))}
+                className="absolute w-full opacity-0 cursor-pointer"
+                onMouseDown={(e) => handleMouseDown(e, 'timeline')}
+                onMouseEnter={() => {
+                  const target = e.currentTarget;
+                  const rect = target.getBoundingClientRect();
+                  const x = e.nativeEvent.clientX - rect.left;
+                  const percentage = Math.max(0, Math.min(1, x / rect.width));
+                  setHoverProgress(percentage);
+                }}
               />
+              {/* Progress bar */}
               <div 
-                className="absolute left-0 top-1/2 -translate-y-1/2 h-[4px] rounded-full pointer-events-none transition-all duration-300"
-                style={{ width: `${(duration > 0 ? playedSeconds / duration : 0) * 100}%`, backgroundColor: 'var(--theme-accent)' }}
-              />
+                className="h-1 w-full max-w-[400px] bg-zinc-700 rounded-full overflow-hidden"
+                style={{ height: '4px' }}
+              >
+                <div 
+                  className="h-full transition-all duration-200"
+                  style={{ 
+                    width: `${(duration > 0 ? playedSeconds / duration : 0) * 100}%`, 
+                    backgroundColor: 'var(--theme-accent)' 
+                  }}
+                />
+              </div>
+              {/* Hover circle */}
+              {hoverProgress !== null && (
+                <div 
+                  className="absolute -top-2 w-5 h-5 rounded-full bg-[var(--theme-accent)] border-2 border-black shadow-lg flex items-center justify-center transition-all duration-200"
+                  style={{
+                    left: `${hoverProgress * 100}%`,
+                    transform: 'translateX(-50%)'
+                  }}
+                />
+              )}
             </div>
             <span className="text-[11px] text-zinc-400 font-semibold w-8 font-mono">
               {formatTime(duration)}
@@ -418,7 +533,10 @@ export const BottomPlayerBar: React.FC = () => {
                 <Volume2 className="w-5 h-5" />
               )}
             </button>
-            <div className="relative flex-1 flex items-center group py-2">
+            <div 
+              ref={volumeRef}
+              className="relative flex items-center group py-2"
+            >
               <input 
                 type="range"
                 min="0"
@@ -426,12 +544,33 @@ export const BottomPlayerBar: React.FC = () => {
                 step="any"
                 value={isMuted ? 0 : volume}
                 onChange={handleVolumeChange}
-                className="yt-volume-slider w-full z-10 cursor-pointer"
+                className="absolute w-full opacity-0 cursor-pointer"
+                onMouseDown={(e) => handleMouseDown(e, 'volume')}
+                onMouseEnter={() => {
+                  const rect = (e.currentTarget as HTMLInputElement).getBoundingClientRect();
+                  const percentage = 0.5;
+                  setHoverVolume(percentage);
+                }}
               />
-              <div 
-                className="absolute left-0 top-1/2 -translate-y-1/2 h-[3.5px] rounded-full pointer-events-none transition-all duration-300"
-                style={{ width: `${(isMuted ? 0 : volume) * 100}%`, backgroundColor: 'var(--theme-accent)' }}
-              />
+              <div className="w-full h-1 bg-zinc-700 rounded-full overflow-hidden">
+                <div 
+                  className="h-full transition-all duration-200"
+                  style={{ 
+                    width: `${(isMuted ? 0 : volume) * 100}%`, 
+                    backgroundColor: 'var(--theme-accent)' 
+                  }}
+                />
+              </div>
+              {/* Hover circle for volume */}
+              {hoverVolume !== null && (
+                <div 
+                  className="absolute -top-2 w-5 h-5 rounded-full bg-[var(--theme-accent)] border-2 border-black shadow-lg flex items-center justify-center transition-all duration-200"
+                  style={{
+                    right: `${hoverVolume * 100}%`,
+                    transform: 'translateX(-50%)'
+                  }}
+                />
+              )}
             </div>
           </div>
 
