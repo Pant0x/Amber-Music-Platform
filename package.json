@@ -1,18 +1,17 @@
 {
-  "name": "music-player",
-  "version": "0.1.0",
+  "name": "amber-music-platform",
+  "version": "1.0.0",
   "private": true,
+  "main": "main.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "tauri": "tauri",
-    "tauri:icons": "tauri icon",
-    "tauri:run": "tauri dev",
-    "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build",
-    "tauri:build:win": "tauri build --target x86_64-pc-windows-msvc"
+    "desktop:dev": "next build && electron .",
+    "desktop:dist": "next build && electron-builder --win --dir",
+    "desktop:installer": "next build && electron-builder --win nsis",
+    "desktop:portable": "next build && electron-builder --win portable"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.5.20",
@@ -40,9 +39,53 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/spotify-web-api-node": "^5.0.11",
+    "@vercel/nft": "^1.10.2",
+    "electron": "^43.4.0",
+    "electron-builder": "^26.15.3",
     "eslint": "^9",
     "eslint-config-next": "^16.2.10",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "windows-build-tools": "^5.2.2"
+  },
+  "build": {
+    "appId": "com.pant0x.ambermusic",
+    "productName": "Amber Music",
+    "asar": true,
+    "files": [
+      "main.js",
+      ".env.local"
+    ],
+    "extraResources": [
+      {
+        "from": ".next/standalone",
+        "to": "standalone"
+      },
+      {
+        "from": ".next/static",
+        "to": "standalone/.next/static"
+      },
+      {
+        "from": "public",
+        "to": "standalone/public"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "AmberMusic.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Amber Music"
+    }
   }
 }
