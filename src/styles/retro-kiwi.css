@@ -1,0 +1,345 @@
+/**
+ * Retro KIWI Theme - Pixel Art Music Platform
+ * Inspired by 90s/00s MP3 players and retro gaming aesthetics
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Retro KIWI Color Palette */
+  --kiwi-primary: #3DDC84;       /* Kiwi green - main accent */
+  --kiwi-primary-dark: #2BC578;
+  --kiwi-primary-light: #65E39A;
+  --kiwi-secondary: #FF6B6B;     /* Tomato red - secondary accent */
+  --kiwi-secondary-dark: #FF4D4D;
+  --kiwi-tertiary: #FFD166;      /* Yellow - third accent */
+  --kiwi-bg-dark: #0A0A0A;
+  --kiwi-bg: #121212;
+  --kiwi-bg-card: #1A1A1A;
+  --kiwi-bg-card-hover: #252525;
+  --kiwi-text-primary: #FFFFFF;
+  --kiwi-text-secondary: #CCCCCC;
+  --kiwi-text-muted: #999999;
+  --kiwi-border: rgba(255, 255, 255, 0.1);
+  --kiwi-glow: rgba(61, 220, 132, 0.3);
+  --kiwi-pixel: #3DDC84;
+
+  /* Theme variables (for switching) */
+  --background: var(--kiwi-bg-dark);
+  --foreground: var(--kiwi-text-primary);
+  --theme-primary: var(--kiwi-primary);
+  --theme-secondary: var(--kiwi-secondary);
+  --card-bg: var(--kiwi-bg-card);
+  --card-hover: var(--kiwi-bg-card-hover);
+  --text-secondary: var(--kiwi-text-secondary);
+  --text-primary: var(--kiwi-text-primary);
+  --border-subtle: var(--kiwi-border);
+  --theme-accent: var(--kiwi-primary);
+  --theme-accent-hover: var(--kiwi-primary-dark);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card-bg: var(--card-bg);
+  --color-card-hover: var(--card-hover);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-primary: var(--text-primary);
+  --color-border-subtle: var(--border-subtle);
+  
+  --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'SF Mono', 'JetBrains Mono', monospace;
+}
+
+/* === RESETS & BASE STYLES === */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+/* === PIXEL-ART FONT SUPPORT === */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+.pixel-font {
+  font-family: 'Press Start 2P', cursive;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* === RETRO SCROLLBAR === */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--kiwi-primary);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--kiwi-primary-dark);
+}
+
+/* === RETRO BUTTONS === */
+.btn-pixel {
+  @apply px-4 py-2 rounded-md font-bold text-sm transition-all duration-200;
+  background: linear-gradient(135deg, var(--kiwi-primary), var(--kiwi-primary-dark));
+  border: 2px solid var(--kiwi-secondary);
+  box-shadow: 4px 4px 0px var(--kiwi-secondary);
+  color: var(--kiwi-text-primary);
+  
+  &:hover {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px var(--kiwi-secondary);
+  }
+  
+  &:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0px 0px 0px var(--kiwi-secondary);
+  }
+}
+
+/* === RETRO CARD === */
+.card-pixel {
+  @apply rounded-xl border p-6 transition-all duration-300;
+  background: var(--card-bg);
+  border: 2px solid var(--kiwi-border);
+  box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.5);
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 12px 12px 0px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* === RETRO INPUT === */
+.input-pixel {
+  @apply px-4 py-3 rounded-md border bg-black font-mono transition-all duration-200;
+  border: 2px solid var(--kiwi-border);
+  color: var(--kiwi-text-primary);
+  
+  &:focus {
+    outline: none;
+    border-color: var(--kiwi-primary);
+    box-shadow: 0 0 0 2px var(--kiwi-glow);
+  }
+}
+
+/* === ANIMATIONS === */
+@keyframes flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    opacity: 1;
+  }
+  20%, 24%, 55% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes pulse-pixel {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+@keyframes scan-lines {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 100%;
+  }
+}
+
+.animate-flicker {
+  animation: flicker 3s infinite;
+}
+
+.animate-pulse-pixel {
+  animation: pulse-pixel 2s infinite;
+}
+
+.scanlines-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.03),
+    rgba(255, 255, 255, 0.03) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+}
+
+/* === RETRO PROGRESS BAR === */
+.progress-bar-pixel {
+  @apply h-2 rounded-full overflow-hidden;
+  background: var(--kiwi-bg-card);
+  border: 1px solid var(--kiwi-border);
+  
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--kiwi-primary), var(--kiwi-tertiary));
+    transition: width 0.3s ease;
+    box-shadow: 0 0 8px var(--kiwi-glow);
+  }
+}
+
+/* === RETRO HEALTH DIGIT === */
+.digital-pieces {
+  display: flex;
+  gap: 2px;
+}
+
+.digital-pieces span {
+  @apply w-6 h-6 flex items-center justify-center text-xs font-bold rounded;
+  background: var(--kiwi-bg-card);
+  border: 1px solid var(--kiwi-border);
+  color: var(--kiwi-primary);
+}
+
+/* === MINIMIZED PLAYER (Kiwi Style) === */
+.media-deck--minimized-kiwi {
+  height: 48px; /* 64px - 16px padding */
+  min-height: 48px;
+  background: linear-gradient(135deg, var(--kiwi-bg-card), var(--kiwi-bg));
+  border-left: 3px solid var(--kiwi-primary);
+  
+  .minimized-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    
+    img {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--kiwi-border);
+    }
+    
+    .track-info {
+      flex: 1;
+      overflow: hidden;
+      
+      h4 {
+        font-size: 12px;
+        font-weight: 700;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      
+      .artist {
+        font-size: 10px;
+        color: var(--kiwi-text-secondary);
+        margin: 0;
+      }
+    }
+  }
+}
+
+/* === STATUS INDICATOR === */
+.status-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+  
+  &.online {
+    background: var(--kiwi-primary);
+    box-shadow: 0 0 8px var(--kiwi-glow);
+    animation: pulse-pixel 2s infinite;
+  }
+  
+  &.offline {
+    background: var(--kiwi-text-muted);
+  }
+  
+  &.loading {
+    background: var(--kiwi-tertiary);
+    animation: flicker 1.5s infinite;
+  }
+}
+
+/* === RETRO NOTIFICATION TOAST === */
+.toast-pixel {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  min-width: 300px;
+  padding: 16px 20px;
+  background: var(--card-bg);
+  border: 2px solid var(--kiwi-primary);
+  border-left: 8px solid var(--kiwi-primary);
+  box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.5);
+  animation: slide-in-right 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  
+  .toast-icon {
+    margin-right: 12px;
+    color: var(--kiwi-primary);
+  }
+  
+  .toast-message {
+    color: var(--kiwi-text-primary);
+    font-size: 14px;
+  }
+  
+  .toast-close {
+    margin-left: 16px;
+    background: none;
+    border: none;
+    color: var(--kiwi-text-secondary);
+    cursor: pointer;
+    font-size: 20px;
+    opacity: 0.7;
+    
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+/* === RETRO PLAYLIST ITEM === */
+.playlist-item-pixel {
+  @apply p-3 rounded-lg mb-2 transition-all duration-200;
+  background: var(--kiwi-bg-card);
+  border: 1px solid var(--kiwi-border);
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.3);
+  
+  &:hover {
+    background: var(--kiwi-bg-card-hover);
+    transform: translateX(4px);
+    box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.4);
+  }
+  
+  &.active {
+    border-color: var(--kiwi-primary);
+    box-shadow: 0 0 12px var(--kiwi-glow);
+  }
+}

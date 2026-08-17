@@ -2,62 +2,92 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { useUser } from '@clerk/nextjs'
 import { usePlayerStore } from '@/store/usePlayerStore'
-import { Loader2, ArrowRight, Check, Headphones, ListMusic, Zap, Music2, Camera } from 'lucide-react'
+import { Loader2, ArrowRight, Check, Headphones, ListMusic, Zap, Music2 } from 'lucide-react'
 
-// Genre/mood tiles for step 2
-const MOODS = [
-  { label: 'Hip-Hop', emoji: '🎤', color: 'from-yellow-500/20 to-orange-600/20 border-yellow-500/20' },
-  { label: 'Pop', emoji: '✨', color: 'from-pink-500/20 to-purple-600/20 border-pink-500/20' },
-  { label: 'Electronic', emoji: '⚡', color: 'from-cyan-500/20 to-blue-600/20 border-cyan-500/20' },
-  { label: 'Lo-Fi', emoji: '🌙', color: 'from-indigo-500/20 to-violet-600/20 border-indigo-500/20' },
-  { label: 'Rock', emoji: '🎸', color: 'from-rose-500/20 to-pink-700/20 border-rose-500/20' },
-  { label: 'R&B', emoji: '💜', color: 'from-purple-500/20 to-fuchsia-700/20 border-purple-500/20' },
+// Mood/genre tiles for step 2
+const VOICE_TAGS = [
+  { label: 'Music Discovery', emoji: '🎵', color: 'from-pink-500/20 to-rose-600/20 border-pink-500/20' },
+  { label: 'Playlist Builder', emoji: '📋', color: 'from-blue-500/20 to-cyan-600/20 border-blue-500/20' },
+  { label: 'AI Radio', emoji: '🔮', color: 'from-purple-500/20 to-violet-600/20 border-purple-500/20' },
+  { label: 'Lyrics Sync', emoji: '📝', color: 'from-emerald-500/20 to-teal-600/20 border-emerald-500/20' },
+  { label: 'Offline Mode', emoji: '📴', color: 'from-amber-500/20 to-yellow-600/20 border-amber-500/20' },
+  { label: 'Social Features', emoji: '👥', color: 'from-indigo-500/20 to-purple-600/20 border-indigo-500/20' },
 ]
 
-const FEATURES = [
-  { icon: Headphones, title: 'Stream millions of songs', desc: 'Powered by YouTube Music — the full catalog, free.' },
-  { icon: ListMusic, title: 'Build & sync playlists', desc: 'Your library follows you. Saved to the cloud automatically.' },
-  { icon: Zap, title: 'Instant AI radio', desc: 'Drop any song and get an infinite radio station from it.' },
+const PROBLEM_SOLUTIONS = [
+  {
+    icon: Headphones,
+    problem: 'Finding music is hard',
+    solution: 'Instant search across YouTube Music and Spotify',
+    benefit: 'Millions of songs at your fingertips'
+  },
+  {
+    icon: ListMusic,
+    problem: 'Playlists scattered everywhere',
+    solution: 'Your library follows you everywhere',
+    benefit: 'Everything syncs automatically to the cloud'
+  },
+  {
+    icon: Zap,
+    problem: 'Tired of the same songs',
+    solution: 'Infinite AI radio from any track',
+    benefit: 'Never run out of new music'
+  },
 ]
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { isSignedIn, user, isLoaded } = useUser()
-  const { setDisplayName, setAvatarUrl, setOnboardingCompleted } = usePlayerStore()
-
+  const { setDisplayName, setOnboardingCompleted, setAvatarUrl } = usePlayerStore()
+  
   const [step, setStep] = useState(0)
   const [name, setName] = useState('')
-  const [selectedMoods, setSelectedMoods] = useState<string[]>([])
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [animatingOut, setAnimatingOut] = useState(false)
-  const nameRef = useRef<HTMLInputElement>(null)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
 
-  // Pre-fill name and avatar from Clerk once loaded
+  // Auto-suggest display name
   useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      router.push('/sign-in')
-      return
-    }
-    if (user) {
-      const clerkName = user.fullName || user.username || user.primaryEmailAddress?.emailAddress?.split('@')[0] || ''
-      setName(clerkName)
-      if (user.imageUrl) {
-        setAvatarPreview(user.imageUrl)
-      }
-    }
-  }, [isLoaded, isSignedIn, user, router])
+    const suggestedName = `Listener_${Math.floor(Math.random() * 1000)}`
+    setName(suggestedName)
+  }, [])
 
+  const handleAvatarClick = () => avatarInputRef.current?.click()
+  
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
+    if (file && file.type.startsWith('image/')) {
       setAvatarFile(file)
       setAvatarPreview(URL.createObjectURL(file))
     }
+  }
+
+  const handleAvatarUpload = async (): Promise<string | null> => {
+    if (!avatarFile) return avatarPreview || null
+    
+    try {
+      const formData = new FormData()
+      formData.append('file', avatarFile)
+      formData.append('bucket', 'avatars')
+      formData.append('folder', 'onboarding')
+      
+      const uploadRes = await fetch('/api/storage/upload', { 
+        method: 'POST', 
+        body: formData 
+      })
+      
+      if (uploadRes.ok) {
+        const data = await uploadRes.json()
+        return data.url
+      }
+    } catch (err) {
+      console.error('Avatar upload failed:', err)
+    }
+    return null
   }
 
   const goToStep = (next: number) => {
@@ -68,30 +98,19 @@ export default function OnboardingPage() {
     }, 220)
   }
 
-  const toggleMood = (label: string) => {
-    setSelectedMoods(prev =>
-      prev.includes(label) ? prev.filter(m => m !== label) : [...prev, label]
+  const toggleFeature = (label: string) => {
+    setSelectedFeatures(prev =>
+      prev.includes(label) ? prev.filter(f => f !== label) : [...prev, label]
     )
   }
 
   const handleFinish = async () => {
     setLoading(true)
     setError('')
+    
     try {
-      let finalAvatarUrl = user?.imageUrl || ''
-      if (avatarFile) {
-        const formData = new FormData()
-        formData.append('file', avatarFile)
-        formData.append('bucket', 'avatars')
-        formData.append('folder', user?.id || 'onboarding')
-        const uploadRes = await fetch('/api/storage/upload', { method: 'POST', body: formData })
-        if (uploadRes.ok) {
-          const { url } = await uploadRes.json()
-          finalAvatarUrl = url
-        }
-      }
-
-      const finalName = name.trim() || user?.username || 'Listener'
+      const finalAvatarUrl = await handleAvatarUpload()
+      const finalName = name.trim() || 'Music Listener'
 
       setDisplayName(finalName)
       if (finalAvatarUrl) setAvatarUrl(finalAvatarUrl)
@@ -107,72 +126,45 @@ export default function OnboardingPage() {
         }),
       })
 
-      // Update Clerk avatar too
-      if (finalAvatarUrl && finalAvatarUrl !== user?.imageUrl) {
-        await fetch('/api/user/avatar', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ avatarUrl: finalAvatarUrl }),
-        })
-      }
-
       router.push('/')
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Something went wrong'
+      setError(message)
       setLoading(false)
     }
   }
 
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-zinc-600 animate-spin" />
-      </div>
-    )
-  }
-
-  const initials = (name || user?.username || '?').charAt(0).toUpperCase()
+  const initials = (name || 'LM').charAt(0).toUpperCase()
 
   return (
     <div className="relative min-h-screen bg-black flex flex-col items-center justify-center overflow-hidden px-4">
-
-      {/* ── Animated ambient background ── */}
+      {/* Animated background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Pink theme orb top-left */}
         <div
-          className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full"
+          className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full"
           style={{
-            background: 'radial-gradient(circle, rgba(232,142,172,0.12) 0%, transparent 70%)',
-            animation: 'breathe 7s ease-in-out infinite',
+            background: 'radial-gradient(circle, rgba(236,73,160,0.08) 0%, transparent 70%)',
+            animation: 'breathe 8s ease-in-out infinite',
           }}
         />
-        {/* Indigo orb bottom-right */}
         <div
-          className="absolute -bottom-32 -right-32 w-[600px] h-[600px] rounded-full"
+          className="absolute -bottom-40 -right-40 w-[700px] h:[700px] rounded-full"
           style={{
-            background: 'radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 70%)',
-            animation: 'breathe 9s ease-in-out infinite reverse',
-          }}
-        />
-        {/* Subtle grid overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.025]"
-          style={{
-            backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
-            backgroundSize: '40px 40px',
+            background: 'radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%)',
+            animation: 'breathe 10s ease-in-out infinite reverse',
           }}
         />
       </div>
 
-      {/* ── Top logo ── */}
-      <div className="relative z-10 mb-12 flex items-center gap-2.5 select-none">
-        <div className="w-8 h-8 rounded-xl bg-[#E88EAC] flex items-center justify-center shadow-lg shadow-[#E88EAC]/30">
-          <Music2 className="w-4 h-4 text-white" />
+      {/* Logo */}
+      <div className="relative z-10 mb-12 flex items-center gap-3 select-none">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center shadow-lg">
+          <Music2 className="w-5 h-5 text-white" />
         </div>
         <span className="text-white font-extrabold text-xl tracking-tight">Sonora</span>
       </div>
 
-      {/* ── Card ── */}
+      {/* Card */}
       <div
         className="relative z-10 w-full max-w-md"
         style={{
@@ -182,57 +174,58 @@ export default function OnboardingPage() {
         }}
       >
 
-        {/* ───────────── STEP 0: Welcome / Name ───────────── */}
+        {/* Step 0: Welcome */}
         {step === 0 && (
-          <div className="space-y-8 text-center">
-            {/* User avatar upload */}
+          <div className="space-y-10 text-center">
+            {/* Avatar */}
             <div className="flex flex-col items-center gap-4">
-              <label htmlFor="onboarding-avatar-input" className="relative inline-block cursor-pointer group">
-                <div className="w-24 h-24 rounded-full border-2 border-white/10 overflow-hidden bg-zinc-800 shadow-2xl shadow-black/60 ring-4 ring-[#E88EAC]/20 group-hover:border-[#E88EAC]/50 transition-all flex items-center justify-center">
+              <label 
+                htmlFor="onboarding-avatar-input" 
+                className="relative inline-block cursor-pointer group"
+                onClick={handleAvatarClick}
+              >
+                <div className="w-28 h-28 rounded-full border-2 border-white/10 overflow-hidden bg-zinc-800 shadow-2xl shadow-black/60 group-hover:border-pink-500/50 transition-all flex items-center justify-center">
                   {avatarPreview ? (
                     <img src={avatarPreview} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-[#E88EAC] to-purple-700 flex items-center justify-center text-white text-3xl font-bold">
+                    <div className="w-full h-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold">
                       {initials}
                     </div>
                   )}
                 </div>
-                {/* Upload camera overlay on hover */}
-                <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
-                  <Camera className="w-6 h-6 text-white" />
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[#E88EAC] border-2 border-black flex items-center justify-center group-hover:bg-[#E88EAC]/90 transition-colors">
-                  <Camera className="w-3.5 h-3.5 text-white" />
-                </div>
-                <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" id="onboarding-avatar-input" />
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleAvatarChange} 
+                  className="hidden" 
+                  id="onboarding-avatar-input" 
+                  ref={avatarInputRef}
+                />
               </label>
 
               <div>
                 <h1 className="text-3xl font-extrabold text-white tracking-tight">
-                  Hey {user?.firstName || 'there'} 👋
+                  Welcome 👋
                 </h1>
-                <p className="text-zinc-400 text-sm mt-1.5">Your music journey starts here. Click avatar to change photo.</p>
+                <p className="text-zinc-400 text-sm mt-1.5">Pick a photo and tell us your name</p>
               </div>
             </div>
 
             {/* Name input */}
             <div className="space-y-2 text-left">
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Display Name</label>
+              <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest block">Display Name</label>
               <input
-                ref={nameRef}
                 type="text"
                 value={name}
                 onChange={e => setName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && name.trim() && goToStep(1)}
                 maxLength={30}
                 placeholder="Your name..."
-                className="w-full bg-zinc-900/80 border border-white/10 rounded-2xl px-4 py-3.5 text-white text-base font-semibold placeholder-zinc-600 focus:outline-none focus:border-[#E88EAC]/50 focus:ring-2 focus:ring-[#E88EAC]/10 transition-all"
+                className="w-full bg-zinc-900/80 border border-white/10 rounded-2xl px-4 py-3.5 text-white text-base font-semibold placeholder-zinc-600 focus:outline-none focus:border-pink-500/50 focus:ring-2 focus:ring-pink-500/10 transition-all"
               />
             </div>
 
-            {error && (
-              <p className="text-red-400 text-xs font-medium">{error}</p>
-            )}
+            {error && <p className="text-red-400 text-xs font-medium">{error}</p>}
 
             <button
               onClick={() => { if (name.trim()) goToStep(1) }}
@@ -244,32 +237,27 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* ───────────── STEP 1: Mood / Genre ───────────── */}
+        {/* Step 1: What matters to you? */}
         {step === 1 && (
           <div className="space-y-8">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-extrabold text-white tracking-tight">What's your sound?</h2>
-              <p className="text-zinc-400 text-sm">Pick the genres you vibe with. We'll personalize your explore page.</p>
+              <h2 className="text-2xl font-extrabold text-white tracking-tight">What matters to you?</h2>
+              <p className="text-zinc-400 text-sm">Pick features you care about. We'll personalize your experience.</p>
             </div>
 
             <div className="grid grid-cols-3 gap-3">
-              {MOODS.map(({ label, emoji, color }) => {
-                const selected = selectedMoods.includes(label)
+              {VOICE_TAGS.map(({ label, emoji, color }) => {
+                const selected = selectedFeatures.includes(label)
                 return (
                   <button
                     key={label}
-                    onClick={() => toggleMood(label)}
-                    className={`relative flex flex-col items-center justify-center gap-1.5 py-5 rounded-2xl border bg-gradient-to-br transition-all active:scale-95 cursor-pointer overflow-hidden ${color} ${
+                    onClick={() => toggleFeature(label)}
+                    className={`relative flex flex-col items-center justify-center gap-1.5 py-4 rounded-2xl border bg-gradient-to-br transition-all active:scale-95 cursor-pointer overflow-hidden ${color} ${
                       selected
-                        ? 'border-white/40 shadow-lg scale-[1.03]'
+                        ? 'border-pink-500 shadow-lg scale-[1.02]'
                         : 'hover:scale-[1.02] hover:border-white/20'
                     }`}
                   >
-                    {selected && (
-                      <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-white/90 flex items-center justify-center">
-                        <Check className="w-3 h-3 text-black" strokeWidth={3} />
-                      </div>
-                    )}
                     <span className="text-2xl">{emoji}</span>
                     <span className="text-xs font-bold text-white/90">{label}</span>
                   </button>
@@ -286,47 +274,48 @@ export default function OnboardingPage() {
               </button>
               <button
                 onClick={() => goToStep(2)}
-                className="flex-[2] py-3.5 rounded-2xl bg-white text-black text-sm font-extrabold hover:bg-zinc-100 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+                className="flex-[2] py-3.5 rounded-2xl bg-pink-500 text-white text-sm font-extrabold hover:bg-pink-400 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg cursor-pointer"
               >
-                {selectedMoods.length === 0 ? 'Skip' : `Continue (${selectedMoods.length} selected)`} <ArrowRight className="w-4 h-4" />
+                Next <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>
         )}
 
-        {/* ───────────── STEP 2: You're in ───────────── */}
+        {/* Step 2: Solved problems */}
         {step === 2 && (
           <div className="space-y-8">
             <div className="text-center space-y-3">
-              {/* Animated checkmark */}
               <div className="flex items-center justify-center">
-                <div
+                <div 
                   className="w-20 h-20 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center"
                   style={{ animation: 'scale-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
                 >
                   <Check className="w-10 h-10 text-green-400" strokeWidth={2.5} />
                 </div>
               </div>
-              <h2 className="text-3xl font-extrabold text-white tracking-tight">You're in, {name.split(' ')[0]}!</h2>
-              <p className="text-zinc-400 text-sm">Sonora is ready. Here's what you've got:</p>
+              <h2 className="text-3xl font-extrabold text-white tracking-tight">
+                Got it, {name.split(' ')[0]}!
+              </h2>
+              <p className="text-zinc-400 text-sm">Here's how Sonora solves the hard parts:</p>
             </div>
 
-            {/* Feature list */}
+            {/* Problem-Solution list */}
             <div className="space-y-3">
-              {FEATURES.map(({ icon: Icon, title, desc }, i) => (
+              {PROBLEM_SOLUTIONS.map(({ icon: Icon, problem, solution, benefit }, i) => (
                 <div
-                  key={title}
+                  key={problem}
                   className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] transition-colors"
                   style={{
                     animation: `fade-in-up 0.4s ${i * 80}ms cubic-bezier(0.16, 1, 0.3, 1) both`,
                   }}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-[#E88EAC]/10 border border-[#E88EAC]/20 flex items-center justify-center flex-shrink-0">
-                    <Icon className="w-5 h-5 text-[#E88EAC]" />
+                  <div className="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center flex-shrink-0">
+                    <Icon className="w-5 h-5 text-pink-400" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-white">{title}</p>
-                    <p className="text-xs text-zinc-500 mt-0.5">{desc}</p>
+                    <p className="text-sm font-bold text-white">{problem}</p>
+                    <p className="text-xs text-pink-300/70 mt-0.5">{solution} — {benefit}</p>
                   </div>
                 </div>
               ))}
@@ -335,32 +324,41 @@ export default function OnboardingPage() {
             <button
               onClick={handleFinish}
               disabled={loading}
-              className="w-full py-4 rounded-2xl bg-[#E88EAC] hover:bg-[#E88EAC]/90 text-white font-extrabold text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#E88EAC]/25 cursor-pointer disabled:opacity-60"
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-extrabold text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-pink-500/25 cursor-pointer disabled:opacity-60"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              {loading ? 'Getting everything ready...' : 'Start Listening →'}
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Getting ready...
+                </>
+              ) : (
+                <>
+                  Let's Go Music 🎵
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
           </div>
         )}
       </div>
 
-      {/* ── Progress indicators ── */}
-      <div className="relative z-10 mt-10 flex items-center gap-2">
+      {/* Progress indicators */}
+      <div className="relative z-10 mt-8 flex items-center gap-2 justify-center">
         {[0, 1, 2].map(i => (
           <div
             key={i}
-            className="h-1 rounded-full transition-all duration-500"
+            className="h-1.5 rounded-full transition-all duration-500"
             style={{
-              width: step === i ? '32px' : '8px',
-              background: step > i ? '#22c55e' : step === i ? '#ffffff' : 'rgba(255,255,255,0.15)',
+              width: step === i ? '32px' : '10px',
+              background: step > i ? '#22c55e' : step === i ? '#ffffff' : 'rgba(255,255,255,0.2)',
             }}
           />
         ))}
       </div>
 
-      {/* ── Fine print ── */}
-      <p className="relative z-10 mt-6 text-[10px] text-zinc-700 text-center max-w-xs">
-        Free forever. No credit card required. Your data syncs securely via Clerk.
+      {/* Fine print */}
+      <p className="relative z-10 mt-8 text-[11px] text-zinc-600 text-center max-w-xs">
+        Free forever. No accounts needed to start listening.
       </p>
     </div>
   )

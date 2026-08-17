@@ -1,6 +1,13 @@
 @import "tailwindcss";
 
+/*
+ * Dual Theme Support:
+ * - Default: Modern dark theme (Sonora Purple/Pink)
+ * - Retro KIWI: Pixel art green/yellow theme
+ */
+
 :root {
+  /* Default Sonora Theme */
   --background: #000000;
   --foreground: #ffffff;
   --theme-primary: #9DD2E6;
@@ -11,6 +18,17 @@
   --text-primary: #ffffff;
   --border-subtle: rgba(255, 255, 255, 0.08);
   --theme-accent: #9DD2E6;
+  --theme-accent-hover: #8CC0D6;
+  
+  /* Retro KIWI Theme Variables (hidden by default) */
+  --kiwi-primary: #3DDC84;
+  --kiwi-primary-dark: #2BC578;
+  --kiwi-primary-light: #65E39A;
+  --kiwi-secondary: #FF6B6B;
+  --kiwi-bg-dark: #0A0A0A;
+  --kiwi-bg: #121212;
+  --kiwi-bg-card: #1A1A1A;
+  --kiwi-text-secondary: #999999;
 }
 
 @theme inline {
@@ -34,7 +52,6 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
-  /* Prevent horizontal overflow while allowing internal scrolling */
   overflow-x: hidden;
 }
 
@@ -62,7 +79,7 @@ body {
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
-/* Hide scrollbar completely utility */
+/* Hide scrollbar utility */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -71,7 +88,7 @@ body {
   scrollbar-width: none;
 }
 
-/* YT Music Edge-to-Edge Deck Timeline Slider */
+/* Media deck slider */
 .yt-deck-slider {
   -webkit-appearance: none;
   appearance: none;
@@ -80,7 +97,7 @@ body {
   cursor: pointer;
   height: 4px;
   position: absolute;
-  top: -2px; /* Pull it slightly above footer border */
+  top: -2px;
   left: 0;
   right: 0;
   z-index: 50;
@@ -110,7 +127,7 @@ body {
   height: 14px;
   width: 14px;
   border-radius: 50%;
-  background: #9DD2E6;
+  background: var(--theme-accent);
   margin-top: -6px;
   opacity: 0;
   transition: opacity 0.15s;
@@ -122,7 +139,7 @@ body {
   height: 14px;
   width: 14px;
   border-radius: 50%;
-  background: #9DD2E6;
+  background: var(--theme-accent);
   opacity: 0;
   transition: opacity 0.15s;
   box-shadow: 0 0 8px rgba(157, 210, 230, 0.4);
@@ -131,14 +148,12 @@ body {
 .yt-deck-slider-group:hover .yt-deck-slider::-webkit-slider-runnable-track {
   height: 5px;
 }
-.yt-deck-slider-group:hover .yt-deck-slider::-webkit-slider-thumb {
-  opacity: 1;
-}
+.yt-deck-slider-group:hover .yt-deck-slider::-webkit-slider-thumb,
 .yt-deck-slider-group:hover .yt-deck-slider::-moz-range-thumb {
   opacity: 1;
 }
 
-/* Standard Utility Slider (e.g. Volume) */
+/* Volume slider */
 .yt-volume-slider {
   -webkit-appearance: none;
   appearance: none;
@@ -190,9 +205,7 @@ body {
   box-shadow: 0 0 8px rgba(232, 142, 172, 0.4);
 }
 
-.yt-volume-group:hover .yt-volume-slider::-webkit-slider-thumb {
-  opacity: 1;
-}
+.yt-volume-group:hover .yt-volume-slider::-webkit-slider-thumb,
 .yt-volume-group:hover .yt-volume-slider::-moz-range-thumb {
   opacity: 1;
 }
@@ -201,26 +214,6 @@ body {
 @keyframes slide-in {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
-}
-
-.animate-slide-in {
-  animation: slide-in 0.25s ease-out;
-}
-
-/* Micro Animations */
-@keyframes wave-grow-1 {
-  0%, 100% { height: 4px; }
-  50% { height: 14px; }
-}
-
-@keyframes wave-grow-2 {
-  0%, 100% { height: 10px; }
-  50% { height: 4px; }
-}
-
-@keyframes wave-grow-3 {
-  0%, 100% { height: 6px; }
-  50% { height: 12px; }
 }
 
 @keyframes slide-in-right {
@@ -244,42 +237,59 @@ body {
   to { transform: rotate(360deg); }
 }
 
-.animate-fade-in-up {
-  animation: fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.35; }
+  50% { transform: scale(1.08); opacity: 0.55; }
 }
 
-.animate-spin-slow {
-  animation: spin-slow 8s linear infinite;
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
-.animate-wave-1 {
-  animation: wave-grow-1 0.8s ease-in-out infinite;
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
 }
 
-.animate-wave-2 {
-  animation: wave-grow-2 0.7s ease-in-out infinite;
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.animate-wave-3 {
-  animation: wave-grow-3 0.9s ease-in-out infinite;
-}
+.animate-slide-in { animation: slide-in 0.25s ease-out; }
+.animate-spin-slow { animation: spin-slow 8s linear infinite; }
+.animate-wave-1 { animation: wave-grow-1 0.8s ease-in-out infinite; }
+.animate-wave-2 { animation: wave-grow-2 0.7s ease-in-out infinite; }
+.animate-wave-3 { animation: wave-grow-3 0.9s ease-in-out infinite; }
+.animate-slide-in-right { animation: slide-in-right 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.animate-fade-in { animation: fade-in-up 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-fade-in-up { animation: fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-breathe { animation: breathe 6s ease-in-out infinite; }
+.animate-shimmer { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent); background-size: 200% 100%; animation: shimmer 2s ease-in-out infinite; }
+.animate-scale-in { animation: scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-page-enter { animation: page-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-.animate-slide-in {
-  animation: slide-in-right 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+/* Staggered children animation */
+.stagger-children > * {
+  opacity: 0;
+  animation: page-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 250ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 300ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 350ms; }
 
-.animate-fade-in {
-  animation: fade-in-up 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* Minimized MediaDeck styles (CSS-driven collapse) */
+/* Minimized player */
 .media-deck--minimized {
-  height: 2.5rem; /* 40px */
+  height: 2.5rem;
   min-height: 2.5rem;
 }
-.media-deck--minimized .hide-on-minimize {
-  display: none !important;
-}
+.media-deck--minimized .hide-on-minimize { display: none !important; }
 .media-deck--minimized .left-section img {
   width: 32px !important;
   height: 32px !important;
@@ -289,9 +299,7 @@ body {
   font-size: 12px !important;
   opacity: 0.95;
 }
-.media-deck--minimized .yt-deck-slider {
-  top: -1px;
-}
+.media-deck--minimized .yt-deck-slider { top: -1px; }
 
 /* Glassmorphism & Neon Glow System */
 .glass-panel {
@@ -319,58 +327,21 @@ body {
   background: radial-gradient(circle, rgba(157, 210, 230, 0.08) 0%, rgba(232, 142, 172, 0.04) 50%, rgba(0, 0, 0, 0) 100%) !important;
 }
 
-/* Premium Ambient Orb (dynamic theme-aware breathing gradient) */
-@keyframes breathe {
-  0%, 100% { transform: scale(1); opacity: 0.35; }
-  50% { transform: scale(1.08); opacity: 0.55; }
+/* Animations */
+@keyframes wave-grow-1 {
+  0%, 100% { height: 4px; }
+  50% { height: 14px; }
 }
 
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+@keyframes wave-grow-2 {
+  0%, 100% { height: 10px; }
+  50% { height: 4px; }
 }
 
-@keyframes scale-in {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
+@keyframes wave-grow-3 {
+  0%, 100% { height: 6px; }
+  50% { height: 12px; }
 }
-
-@keyframes page-enter {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-breathe {
-  animation: breathe 6s ease-in-out infinite;
-}
-
-.animate-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
-  background-size: 200% 100%;
-  animation: shimmer 2s ease-in-out infinite;
-}
-
-.animate-scale-in {
-  animation: scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-page-enter {
-  animation: page-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* Staggered children animation */
-.stagger-children > * {
-  opacity: 0;
-  animation: page-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
-.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
-.stagger-children > *:nth-child(3) { animation-delay: 100ms; }
-.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
-.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
-.stagger-children > *:nth-child(6) { animation-delay: 250ms; }
-.stagger-children > *:nth-child(7) { animation-delay: 300ms; }
-.stagger-children > *:nth-child(8) { animation-delay: 350ms; }
 
 /* Premium track row hover */
 .track-row-premium {

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Home, Compass, Library, Plus, Music, Heart, User, Star, FileAudio, RefreshCw } from 'lucide-react';
+import { Home, Compass, Library, Plus, Music, Heart, User, Star, ExternalLink } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { usePlayerStore } from '@/store/usePlayerStore';
 
@@ -15,7 +15,9 @@ export const Sidebar: React.FC = () => {
     createPlaylist,
     setShowNowPlaying,
     displayName,
-    avatarUrl
+    avatarUrl,
+    onboardingCompleted,
+    setOnboardingCompleted
   } = usePlayerStore();
 
   const handlePlaylistCreate = () => {
@@ -23,6 +25,10 @@ export const Sidebar: React.FC = () => {
     if (playlistName !== null) {
       createPlaylist(playlistName);
     }
+  };
+
+  const handleStartOnboarding = () => {
+    setOnboardingCompleted(true);
   };
 
   const NavItem = ({ icon: Icon, label, path }: { icon: any, label: string, path: string }) => {
@@ -56,7 +62,7 @@ export const Sidebar: React.FC = () => {
 
       {/* 1. Main Navigation Items */}
       <div className="flex-shrink-0 mb-6">
-        <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest px-3 block mb-2">Discover</span>
+        <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest px-3 block mb-2">Explore</span>
         <nav className="flex flex-col gap-0.5">
           <NavItem icon={Home} label="Home" path="/" />
           <NavItem icon={Compass} label="Browse" path="/explore" />
@@ -68,8 +74,15 @@ export const Sidebar: React.FC = () => {
         <nav className="flex flex-col gap-0.5">
           <NavItem icon={Library} label="Recently Added" path="/library" />
           <NavItem icon={Heart} label="Liked Songs" path="/liked" />
-          <NavItem icon={FileAudio} label="My Files" path="/files" />
-          <NavItem icon={RefreshCw} label="Transfer Playlist" path="/transfer" />
+          {!onboardingCompleted && (
+            <button
+              onClick={handleStartOnboarding}
+              className="flex items-center gap-3 px-3 py-1.5 rounded-lg text-[13px] transition-all duration-200 w-full text-zinc-400 hover:text-white hover:bg-white/5 font-normal"
+            >
+              <User className="w-4 h-4" />
+              Onboard
+            </button>
+          )}
         </nav>
       </div>
 
