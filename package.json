@@ -8,10 +8,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "icon": "node scripts/generate-icon.js",
     "desktop:dev": "next build && electron .",
     "desktop:dist": "next build && electron-builder --win --dir",
     "desktop:installer": "next build && electron-builder --win nsis",
-    "desktop:portable": "next build && electron-builder --win portable"
+    "desktop:portable": "next build && electron-builder --win portable",
+    "exe": "npm run icon && next build && electron-builder --win portable"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.5.20",
@@ -52,9 +54,13 @@
     "appId": "com.pant0x.ambermusic",
     "productName": "Amber Music",
     "asar": true,
+    "directories": {
+      "buildResources": "build"
+    },
     "files": [
       "main.js",
-      ".env.local"
+      ".env.local",
+      "!node_modules/**"
     ],
     "extraResources": [
       {
@@ -71,6 +77,7 @@
       }
     ],
     "win": {
+      "icon": "build/icon.png",
       "target": [
         {
           "target": "portable",

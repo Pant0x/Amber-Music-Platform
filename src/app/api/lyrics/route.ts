@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getYTMusicLyricsBrowseId, getYTMusicLyrics, ytMusicSearch } from '@/lib/youtubei';
 import { isCorrectMatch, isArtistMatch } from '@/lib/match-utils';
+import { rateLimitByIp } from '@/lib/rate-limit';
 
 let cachedAccessToken: string | null = null;
 let tokenExpiresAt = 0;
@@ -209,6 +210,11 @@ const lyricsCache = new Map<string, { lyrics: string; lines: any[]; isSynced: bo
 
 export async function GET(request: Request) {
   try {
+    const limited = rateLimitByIp(request, 30);
+    if (!limited.ok) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const { searchParams } = new URL(request.url);
     const title = searchParams.get('title') || 'Unknown Song';
     const artist = searchParams.get('artist') || 'Unknown Artist';

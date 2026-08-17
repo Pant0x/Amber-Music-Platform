@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useRouter, usePathname } from 'next/navigation';
 import { cleanVisualName, parseFeaturedArtists, splitArtistNames } from '@/utils/text';
+import { upgradeThumbnailUrl } from '@/utils/thumbnail';
 import { recordListen } from '@/lib/recordListen';
 import { ExplicitBadge } from './pages/shared';
 import {
@@ -28,24 +29,6 @@ import {
 } from 'lucide-react';
 
 const ReactPlayer = dynamic(() => import('react-player/youtube'), { ssr: false }) as any;
-
-const upgradeThumbnailUrl = (url: string | undefined, youtubeId?: string): string => {
-  if (!url) {
-    if (youtubeId) return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
-    return '';
-  }
-  if (youtubeId && (url.includes('googleusercontent.com') || url.includes('ggpht.com'))) {
-    return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
-  }
-  if (url.includes('googleusercontent.com')) {
-    return url.replace(/=w\d+-h\d+.*$/, '=w544-h544-l90-rj').replace(/=s\d+.*$/, '=w544-h544-l90-rj');
-  }
-  if (url.includes('i.ytimg.com/vi/') || url.includes('img.youtube.com/vi/')) {
-    const cleanUrl = url.split('?')[0];
-    return cleanUrl.replace(/\/(default|mqdefault|sddefault|hqdefault|maxresdefault)\.jpg/, '/hqdefault.jpg');
-  }
-  return url;
-};
 
 export const MediaDeck: React.FC = () => {
   const {
@@ -446,7 +429,7 @@ export const MediaDeck: React.FC = () => {
     }
     
     if (needsResolve) {
-      console.log(`[MediaDeck] Resolving stream for: "${currentTrack.title}" by "${currentTrack.channelTitle}"`);
+      console.debug(`[MediaDeck] Resolving stream for: "${currentTrack.title}" by "${currentTrack.channelTitle}"`);
       
       const resolveTrack = async () => {
         try {
@@ -459,7 +442,7 @@ export const MediaDeck: React.FC = () => {
           if (res.ok) {
             const data = await res.json();
             if (data.videoId) {
-              console.log(`[MediaDeck] Successfully resolved to videoId: ${data.videoId}`);
+              console.debug(`[MediaDeck] Successfully resolved to videoId: ${data.videoId}`);
               setYoutubeIdForCurrentTrack(data.videoId);
               if (data.track) {
                 // Only enrich non-text metadata — never overwrite title/artist from resolver
@@ -507,7 +490,7 @@ export const MediaDeck: React.FC = () => {
     const nextTrack = queue[0];
     
     if (!nextTrack.youtubeId) {
-      console.log(`[MediaDeck] Pre-resolving next track in queue: "${nextTrack.title}"`);
+      console.debug(`[MediaDeck] Pre-resolving next track in queue: "${nextTrack.title}"`);
       const resolveNext = async () => {
         try {
           const hideExplicit = usePlayerStore.getState().hideExplicit;
@@ -519,7 +502,7 @@ export const MediaDeck: React.FC = () => {
           if (res.ok) {
             const data = await res.json();
             if (data.videoId) {
-              console.log(`[MediaDeck] Successfully pre-resolved next track to: ${data.videoId}`);
+              console.debug(`[MediaDeck] Successfully pre-resolved next track to: ${data.videoId}`);
               usePlayerStore.setState((state) => {
                 const newQueue = state.queue.map((t, idx) => {
                   if (idx === 0) {
@@ -563,7 +546,7 @@ export const MediaDeck: React.FC = () => {
           if (res.ok) {
             const data = await res.json();
             if (data.enriched) {
-              console.log(`[MediaDeck] Successfully enriched YouTube track with Spotify metadata: "${data.title}" by "${data.channelTitle}"`);
+              console.debug(`[MediaDeck] Successfully enriched YouTube track with Spotify metadata: "${data.title}" by "${data.channelTitle}"`);
               enrichCurrentTrack({
                 title: data.title,
                 channelTitle: data.channelTitle,
@@ -619,7 +602,7 @@ export const MediaDeck: React.FC = () => {
       // If we've played past the duration (with a 2s tolerance buffer to let natural events fire),
       // and we are still marked as playing, force transition to the next track.
       if (estimatedPlayedSeconds >= duration + 2) {
-        console.log(`[MediaDeck Watchdog] Track finished in background. Forcing next track.`);
+        console.debug(`[MediaDeck Watchdog] Track finished in background. Forcing next track.`);
         isTransitioningRef.current = true;
         handlePlayerEnded();
       }
@@ -724,7 +707,7 @@ export const MediaDeck: React.FC = () => {
           isReadyRef.current = true;
           const trigger = usePlayerStore.getState().seekTrigger;
           if (trigger !== null && playerRef.current) {
-            console.log(`[MediaDeck] Deferred initial seek to: ${trigger}s`);
+            console.debug(`[MediaDeck] Deferred initial seek to: ${trigger}s`);
             playerRef.current.seekTo(trigger);
             setProgress((prev) => ({
               ...prev,

@@ -21,7 +21,6 @@ export const ShareResolver: React.FC = () => {
 
     if (playId && resolvedRef.current !== playId) {
       resolvedRef.current = playId;
-      console.log(`[Share Resolver] Found play ID in URL: ${playId}`);
 
       const resolveAndPlay = async () => {
         try {

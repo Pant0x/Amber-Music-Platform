@@ -140,6 +140,14 @@ ALTER TABLE public.user_sync_data ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "user_sync_data_manage_own" ON public.user_sync_data
   FOR ALL USING ((auth.jwt() ->> 'sub') = user_id);
 
+-- Enable Row Level Security on all tables (policies above become active)
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.artist_tracks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.artist_follows ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.devices ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_files ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_sync_data ENABLE ROW LEVEL SECURITY;
+
 -- Performance indexes
 CREATE INDEX IF NOT EXISTS idx_artist_tracks_artist_id ON public.artist_tracks(artist_id);
 CREATE INDEX IF NOT EXISTS idx_artist_tracks_created_at ON public.artist_tracks(created_at DESC);

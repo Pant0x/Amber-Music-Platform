@@ -148,7 +148,7 @@ export default function OnboardingPage() {
           }}
         />
         <div
-          className="absolute -bottom-40 -right-40 w-[700px] h:[700px] rounded-full"
+          className="absolute -bottom-40 -right-40 w-[700px] h-[700px] rounded-full"
           style={{
             background: 'radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%)',
             animation: 'breathe 10s ease-in-out infinite reverse',

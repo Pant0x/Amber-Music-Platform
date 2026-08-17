@@ -7,6 +7,11 @@ import { usePlayerStore } from '@/store/usePlayerStore'
 export default function FilesPage() {
   const router = useRouter()
   const { playlists, createPlaylist } = usePlayerStore()
+
+  const handleCreatePlaylist = () => {
+    const name = window.prompt?.('Enter playlist name:') ?? null
+    if (name?.trim()) createPlaylist(name.trim())
+  }
   
   return (
     <div className="max-w-3xl mx-auto p-6 pb-24 space-y-8">
@@ -54,10 +59,7 @@ export default function FilesPage() {
           </button>
           
           <button
-            onClick={() => {
-              const name = prompt('Enter playlist name:')
-              if (name) createPlaylist(name)
-            }}
+            onClick={handleCreatePlaylist}
             className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-pink-600 hover:bg-pink-500 text-white font-bold text-xs transition-all cursor-pointer"
           >
             <Music className="w-3.5 h-3.5" />
@@ -73,10 +75,7 @@ export default function FilesPage() {
           <div className="text-center py-20 bg-zinc-950/20 border border-white/5 rounded-3xl">
             <p className="text-zinc-400">You haven't created any playlists yet</p>
             <button
-              onClick={() => {
-                const name = prompt('Enter playlist name:')
-                if (name) createPlaylist(name)
-              }}
+              onClick={handleCreatePlaylist}
               className="mt-4 px-5 py-2.5 rounded-full bg-pink-600 hover:bg-pink-500 text-white font-bold text-xs transition-all cursor-pointer"
             >
               Create Your First Playlist

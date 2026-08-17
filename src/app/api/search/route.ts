@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
 import { getSpotifyApi } from '@/lib/spotify';
 import { ytMusicSearch, cleanTopicGlobally } from '@/lib/youtubei';
+import { rateLimitByIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
+  const limited = rateLimitByIp(request, 30);
+  if (!limited.ok) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   const { searchParams } = new URL(request.url);
   const query = searchParams.get('q');
   

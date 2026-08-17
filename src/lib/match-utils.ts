@@ -57,16 +57,25 @@ export function isArtistMatch(requestedArtist: string, channelTitle: string): bo
 
   if (individualArtists.length === 0) return true;
 
-  // Clean the channel name of generic suffixes globally (substring replacements to catch "ArtistVEVO")
-  // Then normalize whitespace so cleaned strings like "drake  " become "drake"
-  const channelArtistClean = cleanChannel
-    .replace(/vevo/g, '')
-    .replace(/official/g, '')
-    .replace(/records/g, '')
-    .replace(/music/g, '')
-    .replace(/\s*-\s*topic\b/g, '')
+  // Clean the channel name of generic suffixes (only at the end of the name, to
+  // catch "ArtistVEVO", "DrakeOfficial", "ArtistMusic", "Artist - Topic" etc.)
+  // without stripping "music" from mid-name words like "Music Band".
+  let channelArtistClean = cleanChannel
+    .replace(/\s*-\s*topic\b/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
+
+  const SUFFIXES = ['vevo', 'official', 'records', 'music'];
+  let stripped;
+  do {
+    stripped = false;
+    for (const suffix of SUFFIXES) {
+      if (channelArtistClean.length > suffix.length && channelArtistClean.endsWith(suffix)) {
+        channelArtistClean = channelArtistClean.slice(0, -suffix.length).trim();
+        stripped = true;
+      }
+    }
+  } while (stripped);
 
   // Split channel artists by same separators
   const channelArtists = channelArtistClean

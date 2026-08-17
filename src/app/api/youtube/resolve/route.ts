@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import YTMusic from 'ytmusic-api';
 import { isCorrectMatch, isArtistMatch } from '@/lib/match-utils';
+import { rateLimitByIp } from '@/lib/rate-limit';
 
 const resolveCache = new Map<string, string>();
 const CACHE_VERSION = 'v5'; // bumped for ytmusic-api pure audio resolution
@@ -11,7 +12,11 @@ let ytmusicInitPromise: Promise<any> | null = null;
 async function getYTMusic() {
   if (!ytmusic) {
     ytmusic = new YTMusic();
-    ytmusicInitPromise = ytmusic.initialize();
+    ytmusicInitPromise = ytmusic.initialize().catch((err) => {
+      ytmusic = null;
+      ytmusicInitPromise = null;
+      throw err;
+    });
   }
   if (ytmusicInitPromise) {
     await ytmusicInitPromise;
@@ -22,6 +27,11 @@ async function getYTMusic() {
 
 export async function GET(request: Request) {
   try {
+    const limited = rateLimitByIp(request, 30);
+    if (!limited.ok) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const { searchParams } = new URL(request.url);
     const title = searchParams.get('title');
     const artist = searchParams.get('artist');

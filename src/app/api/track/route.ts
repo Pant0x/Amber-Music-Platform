@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
 import { getSpotifyApi } from '@/lib/spotify';
+import { rateLimitByIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
+    const limited = rateLimitByIp(request, 60);
+    if (!limited.ok) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -71,20 +77,12 @@ export async function GET(request: Request) {
       console.error('[Track Resolve API] YouTube oEmbed resolution failed:', err);
     }
 
-    // Final basic metadata fallback
+    // Final fallback: thumbnail only, no fabricated metadata
     return NextResponse.json({
       id: id,
-      title: 'Shared Track',
-      channelTitle: 'Unknown Artist',
       thumbnailUrl: `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
-      publishedAt: new Date().toISOString(),
-      type: 'music',
-      origin: 'youtube',
-      playbackMode: 'song',
-      artistId: '',
-      duration: '3:30',
-      isExplicit: false
-    });
+      unresolved: true
+    }, { status: 404 });
 
   } catch (error) {
     console.error('[Track Resolve API] Error in resolver:', error);

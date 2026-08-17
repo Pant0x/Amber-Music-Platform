@@ -1,11 +1,17 @@
 import { NextResponse } from 'next/server';
 import { Track } from '@/types/music-player';
 import { cleanTopicGlobally } from '@/lib/youtubei';
+import { rateLimitByIp } from '@/lib/rate-limit';
 
 import ytAdapter from '@/lib/yt-music-adapter';
 
 export async function POST(request: Request) {
   try {
+    const limited = rateLimitByIp(request, 10);
+    if (!limited.ok) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const body = await request.json().catch(() => ({}));
     const history: Track[] = body.history || [];
     const searchHistory: string[] = body.searchHistory || [];

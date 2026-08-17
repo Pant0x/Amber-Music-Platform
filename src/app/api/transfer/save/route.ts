@@ -29,9 +29,17 @@ export async function POST(request: Request) {
 
   const currentPlaylists = Array.isArray(userData?.playlists) ? userData.playlists : []
 
+  const cleanName = String(name).trim().replace(/<[^>]*>/g, '').slice(0, 120)
+  if (!cleanName) {
+    return NextResponse.json({ error: 'Invalid playlist name' }, { status: 400 })
+  }
+  if (currentPlaylists.length >= 100) {
+    return NextResponse.json({ error: 'Playlist limit reached (100)' }, { status: 400 })
+  }
+
   const newPlaylist = {
     id: genId('pl'),
-    name: name.trim(),
+    name: cleanName,
     tracks,
     createdAt: new Date().toISOString(),
   }

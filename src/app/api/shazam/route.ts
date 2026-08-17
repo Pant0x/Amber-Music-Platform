@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { rateLimitByIp } from '@/lib/rate-limit';
 
 // Shazam API integration for song recognition
 // Note: Shazam doesn't have a public API, this provides the structure for integration
@@ -7,6 +8,11 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
+    const limited = rateLimitByIp(request, 10);
+    if (!limited.ok) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const { audioData, audioType = 'mp3', duration } = await request.json();
     
     if (!audioData) {

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { parseFeaturedArtists } from '@/utils/text';
+import { upgradeThumbnailUrl } from '@/utils/thumbnail';
 import {
   Play,
   Pause,
@@ -19,24 +20,6 @@ import {
 } from 'lucide-react';
 import { PlusCircle, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-
-const upgradeThumbnailUrl = (url: string | undefined, youtubeId?: string): string => {
-  if (!url) {
-    if (youtubeId) return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
-    return '';
-  }
-  if (youtubeId && (url.includes('googleusercontent.com') || url.includes('ggpht.com'))) {
-    return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
-  }
-  if (url.includes('googleusercontent.com')) {
-    return url.replace(/=w\d+-h\d+.*$/, '=w544-h544-l90-rj').replace(/=s\d+.*$/, '=w544-h544-l90-rj');
-  }
-  if (url.includes('i.ytimg.com/vi/') || url.includes('img.youtube.com/vi/')) {
-    const cleanUrl = url.split('?')[0];
-    return cleanUrl.replace(/\/(default|mqdefault|sddefault|hqdefault|maxresdefault)\.jpg/, '/hqdefault.jpg');
-  }
-  return url;
-};
 
 const formatTime = (secs: number): string => {
   if (isNaN(secs) || secs === null || secs === undefined || secs <= 0) return '0:00';
@@ -77,6 +60,8 @@ export function BottomPlayerBar() {
   const [prevVol, setPrevVol] = useState(volume);
   const [isShuffle, setIsShuffle] = useState(false);
   const [showPlaylistMenu, setShowPlaylistMenu] = useState(false);
+  const [showCreateInput, setShowCreateInput] = useState(false);
+  const [newPlaylistName, setNewPlaylistName] = useState('');
   const [hoverTime, setHoverTime] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState<'timeline' | 'volume' | null>(null);
 
@@ -87,15 +72,6 @@ export function BottomPlayerBar() {
 
   // Safe duration calculation
   const duration = typeof trackDuration === 'number' && trackDuration > 0 ? trackDuration : 0;
-
-  // Early return CHECK - must be after all hooks
-  if (!currentTrack?.id) {
-    return null;
-  }
-
-  const isLiked = likedTracks.some(track => track.id === currentTrack.id);
-  const parsed = parseFeaturedArtists(currentTrack.title);
-  const trackChannelTitle = currentTrack?.channelTitle || currentTrack?.artistId || 'Unknown Artist';
 
   // Handle lyrics loading effect
   useEffect(() => {
@@ -241,9 +217,19 @@ export function BottomPlayerBar() {
 
   const handleAddTrackToPlaylist = useCallback((e: React.MouseEvent, playlistId: string) => {
     e.stopPropagation();
-    usePlayerStore.getState().addTrackToPlaylist(playlistId, currentTrack);
+    if (currentTrack) {
+      usePlayerStore.getState().addTrackToPlaylist(playlistId, currentTrack);
+    }
     setShowPlaylistMenu(false);
   }, [currentTrack]);
+
+  // Early return - AFTER all hooks to keep hook order stable across renders
+  if (!currentTrack?.id) {
+    return null;
+  }
+
+  const isLiked = likedTracks.some(track => track.id === currentTrack.id);
+  const parsed = parseFeaturedArtists(currentTrack.title);
 
   // Get the correct artist name - use channelTitle which is properly set
   const artistName = currentTrack?.channelTitle || 'Unknown Artist';
@@ -303,12 +289,32 @@ export function BottomPlayerBar() {
                         {hasTrack && <Check className="w-3.5 h-3.5 text-[var(--theme-accent)]" />}
                       </button>
                     );
-                  }) : (
+                  }) : showCreateInput ? (
+                    <div className="p-1">
+                      <input
+                        autoFocus
+                        value={newPlaylistName}
+                        onChange={(e) => setNewPlaylistName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            const name = newPlaylistName.trim();
+                            if (name) createPlaylist(name);
+                            setShowCreateInput(false);
+                            setNewPlaylistName('');
+                            setShowPlaylistMenu(false);
+                          }
+                          if (e.key === 'Escape') setShowCreateInput(false);
+                        }}
+                        placeholder="Playlist name..."
+                        maxLength={80}
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-white placeholder:text-zinc-500 focus:outline-none focus:border-[var(--theme-accent)]"
+                      />
+                    </div>
+                  ) : (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        const name = prompt('Enter Playlist Name:');
-                        if (name) createPlaylist(name);
+                        setShowCreateInput(true);
                       }}
                       className="w-full text-left p-2 rounded-lg hover:bg-white/5 text-zinc-400 hover:text-white"
                     >
@@ -444,7 +450,7 @@ export function BottomPlayerBar() {
               if (showNowPlaying) setShowNowPlaying(false);
               else { setShowNowPlaying(true); setNowPlayingTab('lyrics'); }
             }}
-            className="p-1.5 transition-all hidden sm:block ${showNowPlaying ? 'text-[#E88EAC]' : 'text-zinc-400 hover:text-white'}"
+            className={`p-1.5 transition-all hidden sm:block ${showNowPlaying ? 'text-[#E88EAC]' : 'text-zinc-400 hover:text-white'}`}
             title={showNowPlaying ? "Exit Fullscreen" : "Fullscreen"}
           >
             <Maximize2 className="w-5 h-5" />

@@ -9,7 +9,14 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json()
-  const { target_device_id, track_id, position } = body
+  // Accept both snake_case (API convention) and camelCase (client convention)
+  const targetDeviceId = body.target_device_id || body.targetDeviceId || null
+  const trackId = body.track_id || body.track?.id || null
+  const position = typeof body.position === 'number' ? body.position : 0
+
+  if (!targetDeviceId) {
+    return NextResponse.json({ error: 'Missing target_device_id' }, { status: 400 })
+  }
 
   if (!supabaseAdmin) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 })
@@ -19,19 +26,19 @@ export async function POST(request: Request) {
   await supabaseAdmin
     .from('devices')
     .update({
-      current_track_id: track_id || null,
-      current_position: position || 0,
-      is_playing: true,
+      current_track_id: trackId || null,
+      current_position: position,
+      is_playing: body.playing !== false,
       last_seen: new Date().toISOString(),
     })
-    .eq('id', target_device_id)
+    .eq('id', targetDeviceId)
     .eq('user_id', userId)
 
   return NextResponse.json({
     success: true,
     message: 'Transfer initiated',
-    target_device_id,
-    track_id,
+    target_device_id: targetDeviceId,
+    track_id: trackId,
     position,
   })
 }

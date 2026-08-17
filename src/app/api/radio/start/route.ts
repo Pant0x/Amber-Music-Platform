@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
+import { rateLimitByIp } from '@/lib/rate-limit'
 
 interface TrackInput {
   id: string
@@ -11,6 +12,11 @@ interface TrackInput {
 }
 
 export async function POST(request: Request) {
+  const limited = rateLimitByIp(request, 15)
+  if (!limited.ok) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
+
   const body: { seed: TrackInput; count?: number } = await request.json()
   const { seed, count = 30 } = body
 
@@ -59,8 +65,8 @@ export async function POST(request: Request) {
       if (res.ok) {
         const ytTracks = await res.json()
         if (Array.isArray(ytTracks)) {
-          const mapped = ytTracks.map((t: any) => ({
-            id: t.id || t.youtubeId || t.videoId,
+          const mapped = ytTracks.map((t: { id?: string; youtubeId?: string; videoId?: string; title?: string; channelTitle?: string; artist?: string; bpm?: number; key?: string }) => ({
+            id: String(t.id || t.youtubeId || t.videoId || ''),
             title: t.title,
             artist: t.channelTitle || t.artist,
             bpm: t.bpm,

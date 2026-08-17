@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Home, Compass, Library, Plus, Music, Heart, User, Star, ExternalLink } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { usePlayerStore } from '@/store/usePlayerStore';
@@ -8,7 +8,9 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 export const Sidebar: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
-  
+  const [isCreatingPlaylist, setIsCreatingPlaylist] = useState(false);
+  const [playlistNameInput, setPlaylistNameInput] = useState('');
+
   const {
     playlists,
     likedTracks,
@@ -21,10 +23,17 @@ export const Sidebar: React.FC = () => {
   } = usePlayerStore();
 
   const handlePlaylistCreate = () => {
-    const playlistName = prompt('Enter playlist name:');
-    if (playlistName !== null) {
-      createPlaylist(playlistName);
+    setIsCreatingPlaylist(true);
+    setPlaylistNameInput('');
+  };
+
+  const handlePlaylistNameSubmit = () => {
+    const name = playlistNameInput.trim();
+    if (name) {
+      createPlaylist(name);
     }
+    setIsCreatingPlaylist(false);
+    setPlaylistNameInput('');
   };
 
   const handleStartOnboarding = () => {
@@ -92,6 +101,25 @@ export const Sidebar: React.FC = () => {
           <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest block">Playlists</span>
           <Plus className="w-3.5 h-3.5 text-zinc-500 group-hover:text-white transition-colors" />
         </div>
+
+        {/* Inline playlist name input (window.prompt is unavailable in Electron) */}
+        {isCreatingPlaylist && (
+          <div className="px-3 pb-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+            <input
+              autoFocus
+              value={playlistNameInput}
+              onChange={(e) => setPlaylistNameInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handlePlaylistNameSubmit();
+                if (e.key === 'Escape') setIsCreatingPlaylist(false);
+              }}
+              onBlur={handlePlaylistNameSubmit}
+              placeholder="Playlist name..."
+              maxLength={80}
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-[13px] text-white placeholder:text-zinc-500 focus:outline-none focus:border-[var(--theme-accent)]"
+            />
+          </div>
+        )}
 
         {/* Scrollable Playlist Sub-list */}
         <div className="flex-1 overflow-y-auto space-y-0.5 custom-scrollbar pb-4">

@@ -12,6 +12,19 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { track_id, youtube_id, played_seconds, duration_seconds, metadata } = body;
 
+    if (typeof body !== 'object' || body === null) {
+      return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
+    }
+
+    if (metadata !== null && metadata !== undefined) {
+      if (typeof metadata !== 'object' || Array.isArray(metadata)) {
+        return NextResponse.json({ error: 'metadata must be an object' }, { status: 400 });
+      }
+      if (JSON.stringify(metadata).length > 50_000) {
+        return NextResponse.json({ error: 'metadata too large' }, { status: 413 });
+      }
+    }
+
     let supabase;
     try {
       supabase = createSupabaseServerClient();

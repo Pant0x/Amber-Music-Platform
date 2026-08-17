@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Stale desktop build artifacts (regenerated from src/)
+    "dist/**",
+    "windows-exe/**",
+    "desktop-app.js",
+    "*.min.js",
   ]),
 ]);
 

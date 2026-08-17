@@ -99,7 +99,10 @@ export const createNavigationSlice: StateCreator<StoreState, [], [], NavigationS
 
   fetchChannelDetails: async (idOrName, isName = false) => {
     try {
-      const res = await fetch(`/api/youtube/channel/${encodeURIComponent(idOrName)}`);
+      const url = isName
+        ? `/api/youtube/channel?name=${encodeURIComponent(idOrName)}`
+        : `/api/youtube/channel/${encodeURIComponent(idOrName)}`;
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         set({ currentChannelDetails: data });
@@ -111,7 +114,10 @@ export const createNavigationSlice: StateCreator<StoreState, [], [], NavigationS
 
   fetchNowPlayingChannelDetails: async (idOrName, isName = false) => {
     try {
-      const res = await fetch(`/api/youtube/channel/${encodeURIComponent(idOrName)}`);
+      const url = isName
+        ? `/api/youtube/channel?name=${encodeURIComponent(idOrName)}`
+        : `/api/youtube/channel/${encodeURIComponent(idOrName)}`;
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         set({ nowPlayingChannelDetails: data });
@@ -167,7 +173,6 @@ export const createNavigationSlice: StateCreator<StoreState, [], [], NavigationS
             currentTrack: firstTrack,
             isPlaying: true,
             queue: remaining,
-            history: [],
             showNowPlaying: false
           });
         }

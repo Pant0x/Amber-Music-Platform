@@ -5,6 +5,7 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { Track } from '@/types/music-player';
 import { ExplicitBadge } from './pages/shared';
 import { cleanVisualName, parseFeaturedArtists, splitArtistNames } from '@/utils/text';
+import { upgradeThumbnailUrl } from '@/utils/thumbnail';
 import {
   ChevronDown,
   Play,
@@ -24,24 +25,6 @@ import {
   Share2,
   ArrowDownToLine
 } from 'lucide-react';
-
-const upgradeThumbnailUrl = (url: string | undefined, youtubeId?: string): string => {
-  if (!url) {
-    if (youtubeId) return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
-    return '';
-  }
-  if (youtubeId && (url.includes('googleusercontent.com') || url.includes('ggpht.com'))) {
-    return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
-  }
-  if (url.includes('googleusercontent.com')) {
-    return url.replace(/=w\d+-h\d+.*$/, '=w544-h544-l90-rj').replace(/=s\d+.*$/, '=w544-h544-l90-rj');
-  }
-  if (url.includes('i.ytimg.com/vi/') || url.includes('img.youtube.com/vi/')) {
-    const cleanUrl = url.split('?')[0];
-    return cleanUrl.replace(/\/(default|mqdefault|sddefault|hqdefault|maxresdefault)\.jpg/, '/hqdefault.jpg');
-  }
-  return url;
-};
 
 const LyricSkeleton = () => (
   <div className="flex-1 overflow-y-auto space-y-6 py-8 px-6 animate-pulse select-none custom-scrollbar">
