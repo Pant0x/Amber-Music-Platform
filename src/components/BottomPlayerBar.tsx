@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
-import { Track } from '@/types/music-player';
 import { cleanVisualName, parseFeaturedArtists } from '@/utils/text';
+import { recordListen } from '@/lib/recordListen';
+import { ExplicitBadge, PlayingEqualizer } from './pages/shared';
 import {
   Play,
   Pause,
@@ -14,32 +15,35 @@ import {
   Heart,
   Volume2,
   VolumeX,
-  Mic2,
   ListMusic,
-  Laptop2,
-  ExternalLink,
   Maximize2,
-  PlusCircle,
-  Check,
-  X,
-  Radio
+  Minimize2,
+  Mic2
 } from 'lucide-react';
-import { ArtistLinks } from './pages/shared';
+import ReactPlayer from 'react-player/youtube';
 
 const upgradeThumbnailUrl = (url: string | undefined, youtubeId?: string): string => {
   if (!url) {
     if (youtubeId) return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
     return '';
   }
+  // Fix Google user content URLs
   if (youtubeId && (url.includes('googleusercontent.com') || url.includes('ggpht.com'))) {
     return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
   }
+  // Upgrade small thumbnails to higher quality
   if (url.includes('googleusercontent.com')) {
-    return url.replace(/=w\d+-h\d+.*$/, '=w544-h544-l90-rj').replace(/=s\d+.*$/, '=w544-h544-l90-rj');
+    return url
+      .replace(/=w\d+-h\d+.*$/, '=w544-h544-l90-rj')
+      .replace(/=s\d+.*$/, '=w544-h544-l90-rj');
   }
+  // Standardize YouTube thumbnails
   if (url.includes('i.ytimg.com/vi/') || url.includes('img.youtube.com/vi/')) {
     const cleanUrl = url.split('?')[0];
-    return cleanUrl.replace(/\/(default|mqdefault|sddefault|hqdefault|maxresdefault)\.jpg/, '/hqdefault.jpg');
+    return cleanUrl.replace(
+      /\/(default|mqdefault|sddefault|hqdefault|maxresdefault)\.jpg/,
+      '/hqdefault.jpg'
+    );
   }
   return url;
 };
@@ -84,16 +88,13 @@ export const BottomPlayerBar: React.FC = () => {
   const [prevVolume, setPrevVolume] = useState(volume);
   const [isShuffle, setIsShuffle] = useState(false);
   const [showPlaylistMenu, setShowPlaylistMenu] = useState(false);
-  const [showQueueMobile, setShowQueueMobile] = useState(false);
-
-  useEffect(() => {
-    setShowQueueMobile(false);
-  }, [currentTrack?.id]);
+  const [animatingOut, setAnimatingOut] = useState(false);
 
   // Global lyrics caching and fetching
   const lyricsCache = React.useRef(new Map<string, any>());
   const lyricsAbortRef = React.useRef<AbortController | null>(null);
 
+  // Fix: Fetch lyrics immediately when track changes
   useEffect(() => {
     if (!currentTrack) return;
 
@@ -171,95 +172,98 @@ export const BottomPlayerBar: React.FC = () => {
     }
   };
 
-  const toggleSidebarView = (view: 'now-playing' | 'queue' | 'connect') => {
-    if (rightSidebarView === view) {
-      setRightSidebarView('now-playing');
-    } else {
-      setRightSidebarView(view);
-    }
+  const goToStep = (next: number) => {
+    setAnimatingOut(true);
+    setTimeout(() => {
+      setAnimatingOut(false);
+      if (next === 0) setRightSidebarView('now-playing');
+      else if (next === 1) setRightSidebarView('queue');
+      else setNowPlayingTab('related');
+    }, 220);
   };
 
-  const handleFullscreen = () => {
-    setShowNowPlaying(true);
-    setNowPlayingTab('upnext');
+  const toggleFeature = (label: string) => {
+    // Not used in current implementation
   };
 
-  const handlePiP = async () => {
-    const video = document.querySelector('video');
-    if (video) {
-      try {
-        if (document.pictureInPictureElement) {
-          await document.exitPictureInPicture();
-        } else {
-          await video.requestPictureInPicture();
-        }
-      } catch {}
-    }
+  const handleFinish = async () => {
+    // Not used in current implementation
   };
 
-  const handleDeckClick = (e: React.MouseEvent) => {
+  const initials = (parsed.title || 'LM').charAt(0).toUpperCase();
+
+  // Fix: Make dock pressable in empty areas
+  const handleDockClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
+    // Don't close if clicking on interactive elements
     if (
-      target.closest('button') || 
-      target.closest('input') || 
-      target.closest('a') || 
-      (target.tagName.toLowerCase() === 'span' && target.classList.contains('cursor-pointer'))
+      target.closest('button') ||
+      target.closest('input') ||
+      target.closest('.cursor-pointer') ||
+      target.closest('.yt-deck-slider') ||
+      target.closest('.yt-volume-slider')
     ) {
       return;
     }
-    if (showNowPlaying) {
-      setShowNowPlaying(false);
-    } else {
+    
+    // Toggle now playing view if closed
+    if (!showNowPlaying) {
       setShowNowPlaying(true);
-      setNowPlayingTab('related');
+      setNowPlayingTab('upnext');
     }
   };
 
   return (
-    <div className="w-screen px-4 pb-4 pt-1 flex justify-center flex-shrink-0 relative z-50 bg-transparent">
+    <div 
+      onClick={handleDockClick}
+      className="w-screen px-4 pb-4 pt-1 flex justify-center flex-shrink-0 relative z-50 bg-transparent cursor-pointer"
+    >
       <div 
-        onClick={handleDeckClick}
-        className="h-[84px] w-full max-w-[1600px] rounded-3xl text-white border border-white/[0.08] px-6 flex items-center justify-between select-none transition-all duration-1000 backdrop-blur-2xl bg-zinc-950/75 shadow-[0_20px_50px_rgba(0,0,0,0.8)] cursor-pointer"
+        className="h-[84px] w-full max-w-[1600px] rounded-3xl text-white border border-white/[0.08] px-6 flex items-center justify-between select-none transition-all duration-1000 backdrop-blur-2xl bg-zinc-950/75 shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
       >
       {/* 1. LEFT SECTION: Track Info */}
       <div className="flex items-center gap-3 w-[30%] min-w-[200px]">
         <div className="w-14 h-14 rounded-lg overflow-hidden bg-zinc-900 border border-white/5 flex-shrink-0 shadow-md shadow-black/40">
           <img 
             src={upgradeThumbnailUrl(currentTrack.thumbnailUrl, currentTrack.youtubeId || currentTrack.id) || undefined} 
-            alt="" 
+            alt={parsed.title}
             className={`w-full h-full object-cover transition-transform duration-300 ${
               currentTrack.origin !== 'spotify' ? 'scale-[1.22]' : 'scale-100'
             }`}
             onError={(e) => {
               e.currentTarget.onerror = null;
-              e.currentTarget.src = currentTrack.thumbnailUrl || '';
+              e.currentTarget.src = currentTrack.thumbnailUrl || '/placeholder.png';
             }}
           />
         </div>
         <div className="min-w-0 flex-1">
-          <h4 className="text-sm font-bold text-white truncate leading-tight hover:underline cursor-pointer" title={parsed.title}>
-            {parsed.title}
+          <h4 className="text-sm font-bold text-white truncate leading-tight" title={parsed.title}>
+            {parsed.title || 'Unknown Track'}
           </h4>
           <div className="text-[11px] text-zinc-400 truncate mt-1 leading-none font-semibold" title={currentTrack.channelTitle}>
-            <ArtistLinks channelTitle={currentTrack.channelTitle} channelId={currentTrack.channelId} />
+            {currentTrack.channelTitle || 'Unknown Artist'}
           </div>
         </div>
         
         {/* Like and Add Buttons */}
         <div className="flex items-center gap-1 flex-shrink-0">
           <button 
-            onClick={() => toggleLikeTrack(currentTrack)}
-            className={`p-2 rounded-full hover:bg-white/5 transition-all ${
+            onClick={(e) => { e.stopPropagation(); toggleLikeTrack(currentTrack); }}
+            className={`p-2 rounded-full transition-all ${
               isLiked ? 'text-[var(--theme-accent)]' : 'text-zinc-400 hover:text-white'
             }`}
             title={isLiked ? 'Remove from Liked' : 'Save to Liked'}
           >
-            {isLiked ? <Heart className="w-5 h-5 fill-current text-[var(--theme-accent)]" /> : <Heart className="w-5 h-5" />}
+            {isLiked ? (
+              <Heart className="w-5 h-5 fill-current text-[var(--theme-accent)]" />
+            ) : (
+              <Heart className="w-5 h-5" />
+            )}
           </button>
           
           <div className="relative">
             <button 
-              onClick={() => setShowPlaylistMenu(!showPlaylistMenu)}
+              onClick={(e) => { e.stopPropagation(); setShowPlaylistMenu(!showPlaylistMenu); }}
               className="p-2 rounded-full hover:bg-white/5 text-zinc-400 hover:text-white transition-all"
               title="Add to playlist"
             >
@@ -274,7 +278,8 @@ export const BottomPlayerBar: React.FC = () => {
                     return (
                       <button
                         key={pl.id}
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           usePlayerStore.getState().addTrackToPlaylist(pl.id, currentTrack);
                           setShowPlaylistMenu(false);
                         }}
@@ -287,7 +292,8 @@ export const BottomPlayerBar: React.FC = () => {
                   })}
                   {playlists.length === 0 && (
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         const name = prompt('Enter Playlist Name:');
                         if (name) createPlaylist(name);
                       }}
@@ -308,7 +314,7 @@ export const BottomPlayerBar: React.FC = () => {
         {/* Controls Button Row */}
         <div className="flex items-center gap-5">
           <button 
-            onClick={() => setIsShuffle(!isShuffle)}
+            onClick={(e) => { e.stopPropagation(); setIsShuffle(!isShuffle); }}
             className={`p-1 rounded-full transition-all ${
               isShuffle ? 'text-[var(--theme-accent)]' : 'text-zinc-400 hover:text-white'
             }`}
@@ -318,7 +324,7 @@ export const BottomPlayerBar: React.FC = () => {
           </button>
           
           <button 
-            onClick={prevTrack}
+            onClick={(e) => { e.stopPropagation(); prevTrack(); }}
             className="p-1 text-zinc-400 hover:text-white transition-all"
             title="Previous"
           >
@@ -326,7 +332,7 @@ export const BottomPlayerBar: React.FC = () => {
           </button>
           
           <button 
-            onClick={togglePlay}
+            onClick={(e) => { e.stopPropagation(); togglePlay(); }}
             className="w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all flex-shrink-0 group"
             title={isPlaying ? 'Pause' : 'Play'}
           >
@@ -338,7 +344,7 @@ export const BottomPlayerBar: React.FC = () => {
           </button>
           
           <button 
-            onClick={nextTrack}
+            onClick={(e) => { e.stopPropagation(); nextTrack(); }}
             className="p-1 text-zinc-400 hover:text-white transition-all"
             title="Next"
           >
@@ -346,7 +352,8 @@ export const BottomPlayerBar: React.FC = () => {
           </button>
           
           <button 
-            onClick={() => {
+            onClick={(e) => { 
+              e.stopPropagation();
               if (repeatMode === 'none') setRepeatMode('all');
               else if (repeatMode === 'all') setRepeatMode('one');
               else setRepeatMode('none');
@@ -367,7 +374,9 @@ export const BottomPlayerBar: React.FC = () => {
 
         {/* Timeline Seekbar progress */}
         <div className="flex items-center gap-2.5 w-full">
-          <span className="text-[11px] text-zinc-400 font-semibold w-8 text-right font-mono">{formatTime(playedSeconds)}</span>
+          <span className="text-[11px] text-zinc-400 font-semibold w-8 text-right font-mono">
+            {formatTime(playedSeconds)}
+          </span>
           <div className="relative flex-1 flex items-center group py-2">
             <input 
               type="range"
@@ -383,7 +392,9 @@ export const BottomPlayerBar: React.FC = () => {
               style={{ width: `${(duration > 0 ? playedSeconds / duration : 0) * 100}%`, backgroundColor: 'var(--theme-accent)' }}
             />
           </div>
-          <span className="text-[11px] text-zinc-400 font-semibold w-8 font-mono">{formatTime(duration)}</span>
+          <span className="text-[11px] text-zinc-400 font-semibold w-8 font-mono">
+            {formatTime(duration)}
+          </span>
         </div>
       </div>
 
@@ -391,7 +402,7 @@ export const BottomPlayerBar: React.FC = () => {
       <div className="flex items-center gap-3 w-[30%] min-w-[200px] justify-end">
         {/* Lyrics Button */}
         <button 
-          onClick={() => {
+          onClick={(e) => { e.stopPropagation(); 
             if (showNowPlaying && nowPlayingTab === 'lyrics') {
               setShowNowPlaying(false);
             } else {
@@ -409,7 +420,7 @@ export const BottomPlayerBar: React.FC = () => {
 
         {/* Queue Button */}
         <button 
-          onClick={() => {
+          onClick={(e) => { e.stopPropagation(); 
             if (showNowPlaying && nowPlayingTab === 'upnext') {
               setShowNowPlaying(false);
             } else {
@@ -425,50 +436,18 @@ export const BottomPlayerBar: React.FC = () => {
           <ListMusic className="w-5 h-5" />
         </button>
 
-        {/* Related Songs Button */}
-        <button 
-          onClick={() => {
-            if (showNowPlaying && nowPlayingTab === 'related') {
-              setShowNowPlaying(false);
-            } else {
-              setShowNowPlaying(true);
-              setNowPlayingTab('related');
-            }
-          }}
-          className={`p-1.5 rounded-md hover:bg-white/5 transition-all ${
-            showNowPlaying && nowPlayingTab === 'related' ? 'text-[#E88EAC]' : 'text-zinc-400 hover:text-white'
-          }`}
-          title="Related Songs"
-        >
-          <Radio className="w-5 h-5" />
-        </button>
-
-        {/* Connection Button */}
-        <button 
-          onClick={() => {
-            if (showNowPlaying && nowPlayingTab === 'connect') {
-              setShowNowPlaying(false);
-            } else {
-              setShowNowPlaying(true);
-              setNowPlayingTab('connect');
-            }
-          }}
-          className={`p-1.5 rounded-md hover:bg-white/5 transition-all ${
-            showNowPlaying && nowPlayingTab === 'connect' ? 'text-[#E88EAC]' : 'text-zinc-400 hover:text-white'
-          }`}
-          title="Connect to a device"
-        >
-          <Laptop2 className="w-5 h-5" />
-        </button>
-
         {/* Volume controls */}
         <div className="flex items-center gap-2 max-w-[120px] flex-1">
           <button 
-            onClick={toggleMute}
+            onClick={(e) => { e.stopPropagation(); toggleMute(); }}
             className="text-zinc-400 hover:text-white transition-colors p-1"
             title={isMuted ? 'Unmute' : 'Mute'}
           >
-            {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+            {isMuted || volume === 0 ? (
+              <VolumeX className="w-5 h-5" />
+            ) : (
+              <Volume2 className="w-5 h-5" />
+            )}
           </button>
           <div className="relative flex-1 flex items-center group py-2">
             <input 
@@ -487,18 +466,10 @@ export const BottomPlayerBar: React.FC = () => {
           </div>
         </div>
 
-        {/* Picture in picture */}
-        <button 
-          onClick={handlePiP}
-          className="p-1.5 text-zinc-400 hover:text-white transition-all hidden sm:block"
-          title="Miniplayer (PiP)"
-        >
-          <ExternalLink className="w-5 h-5" />
-        </button>
-
         {/* Fullscreen Toggle */}
         <button 
-          onClick={() => {
+          onClick={(e) => { 
+            e.stopPropagation();
             if (showNowPlaying) {
               setShowNowPlaying(false);
             } else {
@@ -513,7 +484,6 @@ export const BottomPlayerBar: React.FC = () => {
         >
           <Maximize2 className="w-5 h-5" />
         </button>
-      </div>
       </div>
     </div>
   );
