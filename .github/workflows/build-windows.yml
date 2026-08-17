@@ -1,0 +1,71 @@
+name: Build Windows App
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    # Build every day at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Setup Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
+    - name: Install Tauri
+      run: cargo install tauri-cli
+
+    - name: Install build dependencies
+      run: |
+        choco install windows Subsystem for Linux -y
+        # Note: Visual Studio tools are pre-installed on windows-latest
+
+    - name: Install npm dependencies
+      run: npm ci
+
+    - name: Build web application
+      run: npm run build
+
+    - name: Build Tauri application
+      run: npx tauri build --target x86_64-pc-windows-msvc
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: amber-music-windows
+        path: src-tauri/target/release/bundle/msi/
+        if-no-files-found: error
+
+    - name: Create release
+      id: create_release
+      uses: softprops/action-gh-release@v2
+      with:
+        name: Windows Build ${{ github.sha }}
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload release assets
+      uses: softprops/action-gh-release@v2
+      with:
+        files: src-tauri/target/release/bundle/msi/*.msi
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
