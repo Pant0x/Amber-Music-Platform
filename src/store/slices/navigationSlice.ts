@@ -1,7 +1,7 @@
 import type { StateCreator } from 'zustand'
-import type { StoreState, NavigationSlice } from '@/store/types'
+import type { StoreState, NavStateSlice } from '@/store/types'
 
-export const createNavigationSlice: StateCreator<StoreState, [], [], NavigationSlice> = (set, get) => ({
+export const createNavigationSlice: StateCreator<StoreState, [], [], NavStateSlice> = (set, get) => ({
   activeTab: 'home',
   searchQuery: '',
   selectedMood: 'none',

@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react'
 
 type Theme = 'sonora' | 'kiwi'
 
@@ -18,12 +18,15 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>('sonora')
+  const isMounted = useRef(false)
 
+  // Use ref to avoid cascading renders
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as Theme
     if (savedTheme && (savedTheme === 'sonora' || savedTheme === 'kiwi')) {
       setThemeState(savedTheme)
     }
+    isMounted.current = true
   }, [])
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export interface ExtractedColors {
   dominant: string;     // rgba(r, g, b, 0.08) for main sidebar bg
@@ -8,27 +8,30 @@ export interface ExtractedColors {
   cardBg: string;       // rgba(r, g, b, 0.04) for lyrics page scroll backing
 }
 
+const FALLBACK_COLORS: ExtractedColors = {
+  dominant: 'rgba(239, 35, 60, 0.05)', // fallback dominant (light red tint)
+  glow: 'rgba(239, 35, 60, 0.25)',     // fallback glow
+  accent: 'rgba(239, 35, 60, 0.8)',
+  border: 'rgba(239, 35, 60, 0.12)',
+  cardBg: 'rgba(239, 35, 60, 0.03)'
+}
+
 export function useDominantColor(imageUrl: string | null | undefined): ExtractedColors {
-  const [colors, setColors] = useState<ExtractedColors>({
-    dominant: 'rgba(239, 35, 60, 0.05)', // fallback dominant (light red tint)
-    glow: 'rgba(239, 35, 60, 0.25)',     // fallback glow
-    accent: 'rgba(239, 35, 60, 0.8)',
-    border: 'rgba(239, 35, 60, 0.12)',
-    cardBg: 'rgba(239, 35, 60, 0.03)'
-  });
+  const [colors, setColors] = useState<ExtractedColors>(FALLBACK_COLORS);
+  const isMounted = useRef(false);
 
   useEffect(() => {
+    // Only run on actual image changes, not on initial mount with no image
     if (!imageUrl) {
-      setColors({
-        dominant: 'rgba(239, 35, 60, 0.05)',
-        glow: 'rgba(239, 35, 60, 0.25)',
-        accent: 'rgba(239, 35, 60, 0.8)',
-        border: 'rgba(239, 35, 60, 0.12)',
-        cardBg: 'rgba(239, 35, 60, 0.03)'
-      });
+      if (isMounted.current) {
+        setColors(FALLBACK_COLORS);
+      }
       return;
     }
 
+    isMounted.current = true;
+    const prevUrl = imageUrl;
+    
     const img = new Image();
     img.crossOrigin = 'Anonymous';
     img.src = imageUrl;
@@ -54,24 +57,20 @@ export function useDominantColor(imageUrl: string | null | undefined): Extracted
         });
       } catch (e) {
         // Fallback on CORS issues
-        setColors({
-          dominant: 'rgba(239, 35, 60, 0.05)',
-          glow: 'rgba(239, 35, 60, 0.25)',
-          accent: 'rgba(239, 35, 60, 0.8)',
-          border: 'rgba(239, 35, 60, 0.12)',
-          cardBg: 'rgba(239, 35, 60, 0.03)'
-        });
+        if (isMounted.current) {
+          setColors(FALLBACK_COLORS);
+        }
       }
     };
 
     img.onerror = () => {
-      setColors({
-        dominant: 'rgba(239, 35, 60, 0.05)',
-        glow: 'rgba(239, 35, 60, 0.25)',
-        accent: 'rgba(239, 35, 60, 0.8)',
-        border: 'rgba(239, 35, 60, 0.12)',
-        cardBg: 'rgba(239, 35, 60, 0.03)'
-      });
+      if (isMounted.current) {
+        setColors(FALLBACK_COLORS);
+      }
+    };
+
+    return () => {
+      isMounted.current = false;
     };
   }, [imageUrl]);
 

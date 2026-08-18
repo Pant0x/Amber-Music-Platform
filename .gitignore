@@ -1,17 +1,38 @@
-# Build outputs
+# Build outputs and release artifacts
 dist/
 release/
 release2/
 windows-exe/
 
-# IDE and local config
+# IDE and editors
 .vscode/
+
+# Local environment
 .env.local
+
+# Logs
 *.log
 
 # Documentation
-READY-TO-RUN.txt
 WINDOWS_BUILD.md
+READY-TO-RUN.txt
 
-# Other
+# Scripts (temporary)
 scripts/
+
+# Build helper scripts
+setup-windows-app.sh
+install-and-run.bat
+run-app.bat
+build-and-launch.sh
+build-and-launch.bat
+
+# Other temp files
+desktop.js
+desktop-launcher.js
+main.js
+electron-main.js
+package-windows.json
+package-native.json
+create-assets.js
+build-exe.js

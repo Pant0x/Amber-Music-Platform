@@ -4,9 +4,11 @@ const { app, BrowserWindow, Menu } = require("electron");
 const { spawn } = require("child_process");
 const path = require("path");
 const fs = require("fs");
+const os = require("os");
 const http = require("http");
 
 const PORT = Number(process.env.PORT || 3210);
+const DEBUG = process.env.AMBER_DEBUG === "1";
 let mainWindow = null;
 let serverProc = null;
 let windowCreated = false;
@@ -49,15 +51,15 @@ function getStandaloneDir() {
 function waitForServer(url, timeoutMs, cb) {
   const startedAt = Date.now();
   const tick = () => {
+    if (Date.now() - startedAt > timeoutMs) {
+      cb(new Error("Server did not start in time"));
+      return;
+    }
     const req = http.get(url, (res) => {
       res.resume();
       cb(null);
     });
     req.on("error", () => {
-      if (Date.now() - startedAt > timeoutMs) {
-        cb(new Error("Server did not start in time"));
-        return;
-      }
       setTimeout(tick, 400);
     });
     req.setTimeout(2000, () => {
@@ -82,15 +84,22 @@ function startServer() {
       ...process.env,
       ...env,
       PORT: String(PORT),
-      HOSTNAME: "127.0.0.1",
+      HOSTNAME: "localhost",
       NEXT_TELEMETRY_DISABLED: "1",
       ELECTRON_RUN_AS_NODE: "1",
     };
 
+    let serverStdio = "ignore";
+    if (DEBUG) {
+      const logPath = path.join(os.tmpdir(), "amber-server.log");
+      const logFd = fs.openSync(logPath, "a");
+      serverStdio = ["ignore", logFd, logFd];
+    }
+
     serverProc = spawn(process.execPath, ["server.js"], {
       cwd: standalone,
       env: childEnv,
-      stdio: app.isPackaged ? "ignore" : "inherit",
+      stdio: serverStdio,
       windowsHide: true,
     });
 
@@ -99,7 +108,7 @@ function startServer() {
       if (mainWindow) app.quit();
     });
 
-    waitForServer(`http://127.0.0.1:${PORT}`, 30000, (err) => {
+    waitForServer(`http://localhost:${PORT}`, 120000, (err) => {
       if (err) reject(err);
       else resolve();
     });
@@ -125,7 +134,7 @@ function createWindow() {
 
   Menu.setApplicationMenu(null);
 
-  mainWindow.loadURL(`http://127.0.0.1:${PORT}`);
+  mainWindow.loadURL(`http://localhost:${PORT}`);
 
   mainWindow.once("ready-to-show", () => {
     mainWindow.show();

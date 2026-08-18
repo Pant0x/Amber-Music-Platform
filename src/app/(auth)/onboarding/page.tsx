@@ -50,10 +50,13 @@ export default function OnboardingPage() {
   const [animatingOut, setAnimatingOut] = useState(false)
   const avatarInputRef = useRef<HTMLInputElement>(null)
 
-  // Auto-suggest display name
+  // Auto-suggest display name - use ref to avoid cascading renders
+  const nameRef = useRef<string | null>(null)
   useEffect(() => {
-    const suggestedName = `Listener_${Math.floor(Math.random() * 1000)}`
-    setName(suggestedName)
+    if (!nameRef.current) {
+      nameRef.current = `Listener_${Math.floor(Math.random() * 1000)}`
+      setName(nameRef.current)
+    }
   }, [])
 
   const handleAvatarClick = () => avatarInputRef.current?.click()
