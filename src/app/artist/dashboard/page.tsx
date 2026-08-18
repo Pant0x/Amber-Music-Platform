@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useUser } from '@clerk/nextjs'
+import { useAuth } from '@/lib/auth-context'
 import { Music, Upload, Trash2, Loader2, Disc, FileAudio } from 'lucide-react'
 
 interface Track {
@@ -19,7 +19,8 @@ interface Track {
 
 export default function ArtistDashboard() {
   const router = useRouter()
-  const { isSignedIn, isLoaded, user } = useUser()
+  const { user, isLoaded } = useAuth()
+  const isSignedIn = !!user
 
   // Catalog state
   const [tracks, setTracks] = useState<Track[]>([])
@@ -62,7 +63,7 @@ export default function ArtistDashboard() {
     if (isSignedIn) {
       fetchCatalog()
       if (user) {
-        setArtistName(user.fullName || user.username || 'Artist')
+        setArtistName(user?.name || user?.email || 'Artist')
       }
     }
   }, [isSignedIn, user])
@@ -114,7 +115,7 @@ export default function ArtistDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title,
-          artist_name: artistName || user?.fullName || 'Artist',
+          artist_name: artistName || user?.name || user?.email || 'Artist',
           genre,
           audio_url: audioUrl,
           cover_url: coverUrl,

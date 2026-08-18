@@ -22,12 +22,13 @@ import {
   X 
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useUser, SignInButton } from '@clerk/nextjs';
+import { useAuth } from '@/lib/auth-context';
 import { PlayingEqualizer, ExplicitBadge } from '@/components/pages/shared';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { isSignedIn, user } = useUser();
+  const { user } = useAuth();
+  const isSignedIn = !!user;
   const {
     playlists,
     likedTracks,
@@ -89,7 +90,7 @@ export default function ProfilePage() {
       const { url } = await uploadRes.json();
       setTempAvatar(url);
       
-      // Also update Clerk avatar
+      // Update avatar record
       await fetch('/api/user/avatar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -143,18 +144,18 @@ export default function ProfilePage() {
     }
   }, [subscribedChannels]);
 
-  // Sync Clerk data to store if local fields are not set
+  // Sync Supabase auth data to store if local fields are not set
   useEffect(() => {
-    if (isSignedIn && user) {
+    if (user) {
       if (!displayName) {
-        const name = user.fullName || user.username || user.primaryEmailAddress?.emailAddress || '';
+        const name = user.name || user.email || '';
         if (name) setDisplayName(name);
       }
       if (!avatarUrl) {
         if (user.imageUrl) setAvatarUrl(user.imageUrl);
       }
     }
-  }, [isSignedIn, user, displayName, avatarUrl, setDisplayName, setAvatarUrl]);
+  }, [user, displayName, avatarUrl, setDisplayName, setAvatarUrl]);
 
   // Playback handlers
   const handlePlaySong = (track: Track, contextList: Track[]) => {
@@ -193,12 +194,13 @@ export default function ProfilePage() {
         <User className="w-16 h-16 text-zinc-600" />
         <h2 className="text-2xl font-bold text-white">Sign in to view your profile</h2>
         <p className="text-zinc-400 max-w-md">Connect your account to see your playlists, liked tracks, and listening history.</p>
-        <SignInButton mode="modal">
-          <button className="flex items-center gap-2 px-6 py-3 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium transition-all hover:scale-105">
-            <LogIn className="w-5 h-5" />
-            Sign In
-          </button>
-        </SignInButton>
+        <button
+          onClick={() => router.push('/sign-in')}
+          className="flex items-center gap-2 px-6 py-3 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium transition-all hover:scale-105"
+        >
+          <LogIn className="w-5 h-5" />
+          Sign In
+        </button>
       </div>
     );
   }
@@ -259,7 +261,7 @@ export default function ProfilePage() {
             </div>
           )}
           
-          <p className="text-xs text-zinc-500 font-medium">Synced instantly across the database via secure Clerk authentication.</p>
+          <p className="text-xs text-zinc-500 font-medium">Synced instantly across the database via secure Supabase authentication.</p>
 
           {isAdmin && (
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 pt-2">

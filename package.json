@@ -16,21 +16,19 @@
     "exe": "npm run icon && next build && electron-builder --win portable"
   },
   "dependencies": {
-    "@clerk/nextjs": "^7.5.20",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.108.3",
     "@types/qrcode": "^1.5.6",
     "fast-average-color": "^9.5.2",
     "framer-motion": "^12.42.2",
     "lucide-react": "^1.21.0",
-    "next": "^16.2.10",
+    "next": "^16.3.1",
     "node-youtube-music": "^0.10.3",
     "qrcode": "^1.5.4",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-player": "^2.16.1",
     "spotify-web-api-node": "^5.0.2",
-    "svix": "^1.98.0",
     "youtubei.js": "^17.0.1",
     "ytmusic-api": "^5.3.1",
     "zustand": "^5.0.15"
@@ -45,10 +43,9 @@
     "electron": "^43.4.0",
     "electron-builder": "^26.15.3",
     "eslint": "^9",
-    "eslint-config-next": "^16.2.10",
+    "eslint-config-next": "^16.3.1",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "windows-build-tools": "^5.2.2"
+    "typescript": "^5"
   },
   "build": {
     "appId": "com.pant0x.ambermusic",
@@ -59,14 +56,16 @@
     },
     "files": [
       "main.js",
-      ".env.local",
       "!node_modules/**"
     ],
     "extraResources": [
       {
         "from": ".next/standalone",
         "to": "standalone",
-        "filter": ["**/*", "!node_modules/**"]
+        "filter": [
+          "**/*",
+          "!node_modules/**"
+        ]
       },
       {
         "from": ".next/standalone/node_modules",
@@ -86,7 +85,9 @@
       "target": [
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },

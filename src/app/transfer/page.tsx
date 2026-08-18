@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useUser } from '@clerk/nextjs'
+import { useAuth } from '@/lib/auth-context'
 import { usePlayerStore } from '@/store/usePlayerStore'
 import { Link2, Loader2, ArrowRightLeft, Music, CheckCircle2, AlertCircle, Play, Plus, ListMusic } from 'lucide-react'
 import { genId } from '@/utils/text'
@@ -24,7 +24,8 @@ interface ImportResult {
 
 export default function PlaylistTransferPage() {
   const router = useRouter()
-  const { isSignedIn } = useUser()
+  const { user } = useAuth()
+  const isSignedIn = !!user
   const playlists = usePlayerStore(state => state.playlists)
   const fetchDatabaseData = usePlayerStore(state => state.fetchDatabaseData)
 

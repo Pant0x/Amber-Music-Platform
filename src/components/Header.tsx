@@ -4,13 +4,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, X, Play, ChevronLeft, ChevronRight, Clock, TrendingUp, User, LogIn, BadgeCheck, Star } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useRouter, usePathname } from 'next/navigation';
-import { useUser, useClerk } from '@clerk/nextjs';
+import { useAuth } from '@/lib/auth-context';
 
 export const Header: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
-  const { isSignedIn, user } = useUser();
-  const { signOut } = useClerk();
+  const { user, signOut } = useAuth();
+  const isSignedIn = !!user;
   const {
     searchQuery,
     setSearchQuery,
@@ -30,8 +30,8 @@ export const Header: React.FC = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isSignedIn && user) {
-      setDisplayName(user.fullName || user.username || user.primaryEmailAddress?.emailAddress || 'User');
+    if (user) {
+      setDisplayName(user.name || user.email || 'User');
       setAvatarUrl(user.imageUrl || '');
     }
   }, [isSignedIn, user, setDisplayName, setAvatarUrl]);
@@ -271,7 +271,7 @@ export const Header: React.FC = () => {
                 />
               </div>
               <span className="text-sm font-medium text-white hidden sm:block max-w-[100px] truncate">
-                {user?.fullName || user?.username || 'User'}
+                {user?.name || user?.email || 'User'}
               </span>
             </button>
             <button

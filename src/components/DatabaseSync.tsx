@@ -2,13 +2,14 @@
 
 import React, { useEffect, useRef } from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
-import { useUser } from '@clerk/nextjs';
+import { useAuth } from '@/lib/auth-context';
 import { useRouter, usePathname } from 'next/navigation';
 
 export const DatabaseSync: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
-  const { isSignedIn, isLoaded } = useUser();
+  const { user, isLoaded } = useAuth();
+  const isSignedIn = !!user;
 
   const playlists = usePlayerStore(state => state.playlists);
   const likedTracks = usePlayerStore(state => state.likedTracks);

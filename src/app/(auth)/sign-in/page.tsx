@@ -1,36 +1,7 @@
 'use client'
 
-import { SignIn } from '@clerk/nextjs'
+import { AuthForm } from '@/components/auth/AuthForm'
 import { Star } from 'lucide-react'
-
-const clerkAppearance = {
-  elements: {
-    card: 'bg-zinc-900/90 shadow-2xl border border-white/8 rounded-3xl backdrop-blur-xl',
-    headerTitle: 'text-white font-extrabold text-xl tracking-tight',
-    headerSubtitle: 'text-zinc-400 text-sm',
-    socialButtonsBlockButton:
-      'bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-white/20 rounded-xl font-semibold transition-all',
-    socialButtonsBlockButtonText: 'text-white font-semibold',
-    socialButtonsBlockButtonArrow: 'text-zinc-400',
-    dividerLine: 'bg-white/8',
-    dividerText: 'text-zinc-600 text-xs',
-    formFieldLabel: 'text-zinc-400 text-[11px] font-bold uppercase tracking-wider',
-    formFieldInput:
-      'bg-zinc-800/80 border-white/10 text-white rounded-xl focus:border-[#E88EAC]/50 focus:ring-2 focus:ring-[#E88EAC]/10 placeholder-zinc-600 transition-all',
-    formButtonPrimary:
-      'bg-white text-black hover:bg-zinc-100 rounded-xl font-extrabold shadow-lg transition-all active:scale-[0.98]',
-    footerActionLink: 'text-[#E88EAC] font-semibold hover:text-[#e27396]',
-    footerActionText: 'text-zinc-500',
-    identityPreviewText: 'text-white',
-    identityPreviewEditButton: 'text-[#E88EAC] hover:text-[#e27396]',
-    formResendCodeLink: 'text-[#E88EAC] hover:text-[#e27396]',
-    otpCodeFieldInput: 'bg-zinc-800 border-white/10 text-white rounded-xl focus:border-[#E88EAC]/50',
-    alternativeMethodsBlockButton: 'text-zinc-400 hover:text-white border-white/10',
-  },
-  layout: {
-    socialButtonsPlacement: 'top' as const,
-  },
-}
 
 export default function SignInPage() {
   return (
@@ -59,7 +30,7 @@ export default function SignInPage() {
         <div className="w-9 h-9 rounded-xl bg-[#E88EAC] flex items-center justify-center shadow-lg shadow-[#E88EAC]/30">
           <Star className="w-5 h-5 text-white fill-current" />
         </div>
-        <span className="text-white font-extrabold text-2xl tracking-tight">Sonora</span>
+        <span className="text-white font-extrabold text-2xl tracking-tight">Amber Music</span>
       </div>
 
       {/* Heading */}
@@ -68,9 +39,11 @@ export default function SignInPage() {
         <p className="text-zinc-400 text-sm">Sign in to continue your music journey</p>
       </div>
 
-      {/* Clerk card */}
+      {/* Auth card */}
       <div className="relative z-10 w-full max-w-sm">
-        <SignIn appearance={clerkAppearance as any} />
+        <div className="bg-zinc-900/90 shadow-2xl border border-white/8 rounded-3xl backdrop-blur-xl p-6">
+          <AuthForm mode="sign-in" />
+        </div>
       </div>
 
       {/* Footer */}

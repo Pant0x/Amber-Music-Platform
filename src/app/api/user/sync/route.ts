@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth, clerkClient } from '@clerk/nextjs/server';
+import { auth, getSupabaseUser } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase-server';
 
 export const dynamic = 'force-dynamic';
@@ -14,23 +14,28 @@ async function ensureUserProfile(userId: string) {
       .single();
 
     if (!profile) {
-      const client = await clerkClient();
-      const clerkUser = await client.users.getUser(userId);
-      const displayName = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || clerkUser.username || 'Listener';
-      
-      const email = clerkUser.primaryEmailAddress?.emailAddress || '';
-      const username = clerkUser.username || '';
-      const adminUser = process.env.ADMIN_USERNAME || 'admin';
-      const isAdmin = username === adminUser || email === adminUser || email.startsWith('admin@') || username.toLowerCase() === 'admin';
+      const supabaseUser = await getSupabaseUser();
+      const meta = supabaseUser?.user_metadata || {};
+      const displayName =
+        typeof meta.full_name === 'string'
+          ? meta.full_name
+          : typeof meta.name === 'string'
+            ? meta.name
+            : supabaseUser?.email?.split('@')[0] || 'Listener'
 
       await supabaseAdmin
         .from('profiles')
         .upsert({
           user_id: userId,
           display_name: displayName,
-          avatar_url: clerkUser.imageUrl || null,
+          avatar_url:
+            typeof meta.avatar_url === 'string'
+              ? meta.avatar_url
+              : typeof meta.picture === 'string'
+                ? meta.picture
+                : null,
           is_artist: false,
-          is_admin: isAdmin,
+          is_admin: false,
           artist_status: 'none',
           updated_at: new Date().toISOString()
         }, { onConflict: 'user_id' });

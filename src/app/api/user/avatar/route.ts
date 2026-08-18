@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { auth, clerkClient } from '@clerk/nextjs/server';
+import { auth } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase-server';
+import { fetchImageSafely } from '@/lib/safe-fetch';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,31 +17,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid avatar URL' }, { status: 400 });
     }
 
-    let parsedUrl: URL;
-    try {
-      parsedUrl = new URL(avatarUrl);
-    } catch {
-      return NextResponse.json({ error: 'Invalid avatar URL' }, { status: 400 });
-    }
-    if (parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
-      return NextResponse.json({ error: 'avatar URL must be http(s)' }, { status: 400 });
-    }
-
-    // Update Clerk user profile image
-    try {
-      const client = await clerkClient();
-      // Clerk requires a Blob/File, fetch the image from the URL
-      const imageResponse = await fetch(avatarUrl, { redirect: 'follow', signal: AbortSignal.timeout(15_000) });
-      if (imageResponse.ok) {
-        const blob = await imageResponse.blob();
-        if (blob.size > 10 * 1024 * 1024) {
-          return NextResponse.json({ error: 'Image too large (max 10MB)' }, { status: 413 });
-        }
-        const file = new File([blob], 'avatar.jpg', { type: blob.type || 'image/jpeg' });
-        await client.users.updateUserProfileImage(userId, { file });
-      }
-    } catch (err) {
-      console.warn('[Avatar] Clerk update failed (non-fatal):', err);
+    // SSRF-safe fetch: https-only, public-IP DNS validation, image content-type, 10MB cap
+    const result = await fetchImageSafely(avatarUrl, { maxBytes: 10 * 1024 * 1024 });
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
     // Update Supabase profiles table if available

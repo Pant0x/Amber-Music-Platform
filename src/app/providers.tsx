@@ -1,17 +1,17 @@
 'use client'
 
-import { ClerkProvider } from '@clerk/nextjs'
+import { AuthProvider } from '@/lib/auth-context'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ThemeProvider } from '@/context/ThemeContext'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
+    <AuthProvider>
       <ErrorBoundary>
         <ThemeProvider>
           {children}
         </ThemeProvider>
       </ErrorBoundary>
-    </ClerkProvider>
+    </AuthProvider>
   )
 }
