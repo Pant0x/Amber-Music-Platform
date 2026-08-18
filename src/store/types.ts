@@ -44,19 +44,20 @@ export interface NavStateSlice {
   currentPlaylistId: string | null
   currentChannelId: string | null
   artistSubTab: 'overview' | 'songs' | 'albums' | 'videos' | 'about'
-  navHistory: { activeTab: any; currentPlaylistId: any; currentChannelId: any; artistSubTab?: any }[]
-  navForward: { activeTab: any; currentPlaylistId: any; currentChannelId: any; artistSubTab?: any }[]
+  navHistory: { activeTab: NavStateSlice['activeTab']; currentPlaylistId: string | null; currentChannelId: string | null; artistSubTab?: NavStateSlice['artistSubTab'] }[]
+  navForward: { activeTab: NavStateSlice['activeTab']; currentPlaylistId: string | null; currentChannelId: string | null; artistSubTab?: NavStateSlice['artistSubTab'] }[]
   setActiveTab: (tab: 'home' | 'explore' | 'library' | 'playlist' | 'liked' | 'channel' | 'search' | 'lyrics') => void
   setSearchQuery: (query: string) => void
   setSelectedMood: (mood: string) => void
   setCurrentPlaylistId: (id: string | null) => void
   setCurrentChannelId: (id: string | null) => void
   setArtistSubTab: (tab: 'overview' | 'songs' | 'albums' | 'videos' | 'about') => void
-  pushNavState: (activeTab: any, currentPlaylistId: any, currentChannelId: any, artistSubTab?: any) => void
+  pushNavState: (activeTab: NavStateSlice['activeTab'], currentPlaylistId: string | null, currentChannelId: string | null, artistSubTab?: NavStateSlice['artistSubTab']) => void
   navigateBack: () => void
   navigateForward: () => void
   fetchChannelDetails: (idOrName: string, isName?: boolean) => Promise<void>
   fetchNowPlayingChannelDetails: (idOrName: string, isName?: boolean) => Promise<void>
+  loadChannelDetails: (idOrName: string, isName: boolean, target: 'currentChannelDetails' | 'nowPlayingChannelDetails') => Promise<void>
   viewChannel: (channelTitle: string, channelId?: string) => Promise<void>
   playArtistRadio: (artistIdOrName: string) => Promise<void>
 }
@@ -72,11 +73,13 @@ export interface CollectionSlice {
   avatarUrl: string
   onboardingCompleted: boolean
   isAdmin: boolean
+  planTier: 'free' | 'plus'
   shareTrack: Track | null
 
   setDisplayName: (name: string) => void
   setAvatarUrl: (url: string) => void
   setOnboardingCompleted: (completed: boolean) => void
+  setPlanTier: (tier: 'free' | 'plus') => void
   setShareTrack: (track: Track | null) => void
   fetchDatabaseData: () => Promise<void>
   createPlaylist: (name: string) => void

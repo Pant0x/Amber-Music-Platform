@@ -19,9 +19,12 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Allow users to read any profile (public profiles)
+-- Allow users to read any profile (public profiles), except admin rows
+-- whose is_admin flag must never be exposed to anonymous readers.
 CREATE POLICY "profiles_select_public" ON public.profiles
-  FOR SELECT USING (true);
+  FOR SELECT USING (
+    (auth.jwt() ->> 'sub') = user_id OR is_admin = false
+  );
 
 -- Allow authenticated users to update their own profile
 CREATE POLICY "profiles_update_own" ON public.profiles
@@ -118,8 +121,7 @@ CREATE POLICY "user_files_manage_own" ON public.user_files
 -- Allow anyone with share_token to read unlisted files
 CREATE POLICY "user_files_select_unlisted" ON public.user_files
   FOR SELECT USING (
-    privacy_tier = 'unlisted' AND share_token IS NOT NULL
-    OR (auth.jwt() ->> 'sub') = user_id
+    (auth.jwt() ->> 'sub') = user_id
   );
 
 -- User sync data table (replaces user_ip_data)
@@ -140,6 +142,20 @@ ALTER TABLE public.user_sync_data ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "user_sync_data_manage_own" ON public.user_sync_data
   FOR ALL USING ((auth.jwt() ->> 'sub') = user_id);
 
+-- Subscription tier (free/plus/pro), free-only billing model
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS plan_tier TEXT DEFAULT 'free';
+
+-- Audio fingerprints for Shazam-style matching against artist uploads
+CREATE TABLE IF NOT EXISTS public.track_fingerprints (
+  track_id UUID PRIMARY KEY REFERENCES public.artist_tracks(id) ON DELETE CASCADE,
+  artist_id TEXT NOT NULL,
+  algo_version INT DEFAULT 1,
+  hashes TEXT[] NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_track_fingerprints_artist ON public.track_fingerprints(artist_id);
+
 -- Enable Row Level Security on all tables (policies above become active)
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.artist_tracks ENABLE ROW LEVEL SECURITY;
@@ -147,6 +163,11 @@ ALTER TABLE public.artist_follows ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.devices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_files ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_sync_data ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.track_fingerprints ENABLE ROW LEVEL SECURITY;
+
+-- Artists may manage fingerprints for their own tracks (service role bypasses RLS)
+CREATE POLICY "track_fingerprints_manage_own" ON public.track_fingerprints
+  FOR ALL USING ((auth.jwt() ->> 'sub') = artist_id);
 
 -- Performance indexes
 CREATE INDEX IF NOT EXISTS idx_artist_tracks_artist_id ON public.artist_tracks(artist_id);

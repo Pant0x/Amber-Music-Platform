@@ -13,7 +13,7 @@ The Amber Music Platform is a Next.js 16 application targeting both web and Wind
 - **React**: 19.2.7
 - **UI**: Tailwind CSS v4 with custom retro-kiwi theme
 - **State Management**: Zustand v5
-- **Auth**: Clerk v7 (`@clerk/nextjs`)
+- **Auth**: Supabase Auth (`@supabase/ssr`)
 - **Database**: Supabase (free tier)
 - **Music APIs**: YouTube Music (primary via youtubei.js), Spotify (supplemental)
 - **Desktop**: Electron 43.4.0 + Electron Builder 26.15.3

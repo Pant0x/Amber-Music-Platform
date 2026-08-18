@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
+import { auth } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase-server'
 import { genId } from '@/utils/text'
 
@@ -36,11 +36,14 @@ export async function POST(request: Request) {
   if (currentPlaylists.length >= 100) {
     return NextResponse.json({ error: 'Playlist limit reached (100)' }, { status: 400 })
   }
+  if (tracks.length > 500) {
+    return NextResponse.json({ error: 'Too many tracks (max 500 per playlist)' }, { status: 400 })
+  }
 
   const newPlaylist = {
     id: genId('pl'),
     name: cleanName,
-    tracks,
+    tracks: tracks.slice(0, 500),
     createdAt: new Date().toISOString(),
   }
 

@@ -1,25 +1,10 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
-
-async function checkAdmin() {
-  const { userId } = await auth()
-  if (!userId) return false
-
-  if (!supabaseAdmin) return false
-
-  const { data } = await supabaseAdmin
-    .from('profiles')
-    .select('is_admin')
-    .eq('user_id', userId)
-    .single()
-
-  return data?.is_admin === true
-}
+import { requireAdmin, unauthorized } from '@/lib/admin'
 
 export async function POST(req: Request) {
-  if (!await checkAdmin()) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!await requireAdmin()) {
+    return unauthorized()
   }
 
   if (!supabaseAdmin) {

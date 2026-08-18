@@ -694,7 +694,7 @@ export const MediaDeck: React.FC = () => {
               : '' // Wait for resolution — never load raw ID (could be VEVO/video clip)
         }
         playing={isPlaying && !trackNeedsResolve}
-        volume={volume}
+        volume={volume * 0.8}
         muted={isMuted}
         onProgress={handlePlayerProgress}
         progressInterval={200}

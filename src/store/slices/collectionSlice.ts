@@ -14,11 +14,13 @@ export const createCollectionSlice: StateCreator<StoreState, [], [], CollectionS
   avatarUrl: '',
   onboardingCompleted: false,
   isAdmin: false,
+  planTier: 'free',
   shareTrack: null,
 
   setDisplayName: (name) => set({ displayName: name }),
   setAvatarUrl: (url) => set({ avatarUrl: url }),
   setOnboardingCompleted: (completed) => set({ onboardingCompleted: completed }),
+  setPlanTier: (tier) => set({ planTier: tier }),
   setShareTrack: (track) => set({ shareTrack: track }),
 
   fetchDatabaseData: async () => {
@@ -31,6 +33,7 @@ export const createCollectionSlice: StateCreator<StoreState, [], [], CollectionS
           avatarUrl: data.avatar_url || 'bg-gradient-to-tr from-blue-600 to-indigo-900',
           onboardingCompleted: data.onboarding_completed || false,
           isAdmin: data.is_admin || false,
+          planTier: data.plan_tier || 'free',
           likedTracks: data.liked_tracks || [],
           subscribedChannels: data.subscribed_channels || [],
           playlists: data.playlists || [],

@@ -3,7 +3,6 @@ dist/
 release/
 release2/
 windows-exe/
-build/
 .next/
 node_modules/
 
@@ -24,20 +23,9 @@ tsconfig.tsbuildinfo
 WINDOWS_BUILD.md
 READY-TO-RUN.txt
 
-# Scripts (temporary)
-scripts/
-
-# Build helper scripts
-setup-windows-app.sh
-install-and-run.bat
-run-app.bat
-build-and-launch.sh
-build-and-launch.bat
-
 # Other temp files
 desktop.js
 desktop-launcher.js
-main.js
 electron-main.js
 package-windows.json
 package-native.json

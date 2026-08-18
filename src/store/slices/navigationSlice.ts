@@ -1,5 +1,7 @@
 import type { StateCreator } from 'zustand'
 import type { StoreState, NavStateSlice } from '@/store/types'
+import type { Track } from '@/types/music-player'
+import { seededShuffle } from '@/utils/random'
 
 export const createNavigationSlice: StateCreator<StoreState, [], [], NavStateSlice> = (set, get) => ({
   activeTab: 'home',
@@ -98,21 +100,14 @@ export const createNavigationSlice: StateCreator<StoreState, [], [], NavStateSli
   },
 
   fetchChannelDetails: async (idOrName, isName = false) => {
-    try {
-      const url = isName
-        ? `/api/youtube/channel?name=${encodeURIComponent(idOrName)}`
-        : `/api/youtube/channel/${encodeURIComponent(idOrName)}`;
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        set({ currentChannelDetails: data });
-      }
-    } catch (e) {
-      console.error('Error fetching channel details:', e);
-    }
+    await get().loadChannelDetails(idOrName, isName, 'currentChannelDetails');
   },
 
   fetchNowPlayingChannelDetails: async (idOrName, isName = false) => {
+    await get().loadChannelDetails(idOrName, isName, 'nowPlayingChannelDetails');
+  },
+
+  loadChannelDetails: async (idOrName: string, isName: boolean, target: 'currentChannelDetails' | 'nowPlayingChannelDetails') => {
     try {
       const url = isName
         ? `/api/youtube/channel?name=${encodeURIComponent(idOrName)}`
@@ -120,10 +115,10 @@ export const createNavigationSlice: StateCreator<StoreState, [], [], NavStateSli
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
-        set({ nowPlayingChannelDetails: data });
+        set({ [target]: data } as Partial<StoreState>);
       }
     } catch (e) {
-      console.error('Error fetching now playing channel details:', e);
+      console.error('Error fetching channel details:', e);
     }
   },
 
@@ -140,41 +135,17 @@ export const createNavigationSlice: StateCreator<StoreState, [], [], NavStateSli
     try {
       const res = await fetch(`/api/youtube/channel/${encodeURIComponent(artistIdOrName)}`);
       if (res.ok) {
-        const data = await res.json();
+        const data = (await res.json()) as { topSongs?: Track[] };
         const topSongs = (data.topSongs || []).slice(0, 20);
         if (topSongs.length > 0) {
           const seedStr = artistIdOrName || 'default_seed';
-          const shuffled = [...topSongs];
-
-          let h = 2166136261 >>> 0;
-          for (let i = 0; i < seedStr.length; i++) {
-            h ^= seedStr.charCodeAt(i);
-            h = Math.imul(h, 16777619) >>> 0;
-          }
-
-          const rand = () => {
-            h += 0x6D2B79F5;
-            let t = Math.imul(h ^ (h >>> 15), 1 | h);
-            t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-          };
-
-          for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(rand() * (i + 1));
-            const temp = shuffled[i];
-            shuffled[i] = shuffled[j];
-            shuffled[j] = temp;
-          }
-
+          const shuffled = seededShuffle(topSongs, seedStr);
           const firstTrack = shuffled[0];
           const remaining = shuffled.slice(1);
 
-          set({
-            currentTrack: firstTrack,
-            isPlaying: true,
-            queue: remaining,
-            showNowPlaying: false
-          });
+          // Route through playTrack so history/context/autoplay stay consistent
+          get().playTrack(firstTrack, remaining);
+          set({ showNowPlaying: false });
         }
       }
     } catch (e) {

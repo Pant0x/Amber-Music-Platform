@@ -88,7 +88,14 @@ export function BottomPlayerBar() {
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    fetch(`/api/lyrics?videoId=${currentTrack.youtubeId || currentTrack.id}`)
+    const params = new URLSearchParams({
+      videoId: currentTrack.youtubeId || currentTrack.id,
+      title: currentTrack.title || '',
+      artist: currentTrack.channelTitle || '',
+      duration: String(trackDuration || ''),
+    });
+
+    fetch(`/api/lyrics?${params.toString()}`)
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (!controller.signal.aborted && data?.lyrics) {

@@ -5,7 +5,7 @@ import type { StoreState, PlaybackSlice } from '@/store/types'
 export const createPlaybackSlice: StateCreator<StoreState, [], [], PlaybackSlice> = (set, get) => ({
   currentTrack: null,
   isPlaying: false,
-  volume: 1,
+  volume: 0.7,
   queue: [],
   history: [],
   repeatMode: 'none',
@@ -52,22 +52,25 @@ export const createPlaybackSlice: StateCreator<StoreState, [], [], PlaybackSlice
 
   playTrack: (track, contextTracks = []) => {
     set((state) => {
+      const previous = state.currentTrack;
       let newQueue: Track[] = state.queue;
-      let newHistory = state.history;
 
       if (contextTracks.length > 0) {
         const idx = contextTracks.findIndex((t: Track) => t.id === track.id);
         if (idx !== -1) {
           newQueue = contextTracks.slice(idx + 1);
-          const prevContextTracks = contextTracks.slice(0, idx).reverse();
-          newHistory = [...prevContextTracks, ...state.history.filter(t => !contextTracks.some(ct => ct.id === t.id))].slice(0, 50);
         } else {
           newQueue = contextTracks;
         }
+      }
+
+      // History = actually-played tracks only (never unplayed queue items).
+      // The previous current track is pushed first, deduped against the new one.
+      let newHistory = state.history;
+      if (previous && previous.id !== track.id) {
+        newHistory = [previous, ...state.history.filter(t => t.id !== previous.id && t.id !== track.id)].slice(0, 50);
       } else {
-        if (state.currentTrack) {
-          newHistory = [state.currentTrack, ...state.history.filter(t => t.id !== state.currentTrack?.id)].slice(0, 50);
-        }
+        newHistory = state.history.filter(t => t.id !== track.id).slice(0, 50);
       }
 
       return {
@@ -90,9 +93,11 @@ export const createPlaybackSlice: StateCreator<StoreState, [], [], PlaybackSlice
   setPlaying: (playing) => set({ isPlaying: playing }),
   setVolume: (volume) => set({ volume }),
 
-  addToQueue: (track) => set((state) => ({
-    queue: [...state.queue, track]
-  })),
+  addToQueue: (track) => set((state) => {
+    const dup = state.queue.some(t => t.id === track.id) || state.currentTrack?.id === track.id;
+    if (dup) return state;
+    return { queue: [...state.queue, track] };
+  }),
 
   removeFromQueue: (id) => set((state) => {
     const index = state.queue.findIndex(t => t.id === id);
@@ -105,7 +110,7 @@ export const createPlaybackSlice: StateCreator<StoreState, [], [], PlaybackSlice
   clearQueue: () => set({ queue: [] }),
 
   playNext: (track) => set((state) => {
-    const filteredQueue = state.queue.filter(t => t.id !== track.id);
+    const filteredQueue = state.queue.filter(t => t.id !== track.id && t.id !== state.currentTrack?.id);
     return { queue: [track, ...filteredQueue] };
   }),
 
@@ -119,13 +124,10 @@ export const createPlaybackSlice: StateCreator<StoreState, [], [], PlaybackSlice
       state.playTrack(next, state.contextQueue);
     } else if (state.isAutoplayEnabled && state.autoplayQueue.length > 0) {
       const next = state.autoplayQueue[0];
-      const newAutoplay = state.autoplayQueue.slice(1);
+      const newAutoplay = state.autoplayQueue.slice(1).filter(t => t.id !== next.id);
       state.playTrack(next);
       set({
         autoplayQueue: newAutoplay,
-        history: state.currentTrack
-          ? [state.currentTrack, ...state.history.filter(t => t.id !== state.currentTrack?.id)].slice(0, 50)
-          : state.history
       });
     } else {
       set({ isPlaying: false, playedSeconds: 0 });
@@ -137,11 +139,15 @@ export const createPlaybackSlice: StateCreator<StoreState, [], [], PlaybackSlice
     if (state.history.length > 0) {
       const prev = state.history[0];
       const newHistory = state.history.slice(1);
+      const current = state.currentTrack;
+      const queueWithoutCurrent = current
+        ? state.queue.filter(t => t.id !== current.id)
+        : state.queue;
       set({
         currentTrack: prev,
         isPlaying: true,
         history: newHistory,
-        queue: state.currentTrack ? [state.currentTrack, ...state.queue] : state.queue
+        queue: queueWithoutCurrent
       });
       const resolvedId = prev.youtubeId || (prev.origin === 'youtube' ? prev.id : null);
       if (resolvedId) {

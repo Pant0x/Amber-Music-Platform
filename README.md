@@ -1,8 +1,8 @@
-# Kiwi Music Player
+# Amber Music
 
 > 🎵 A premium, high-fidelity hybrid music streaming platform.
 
-Kiwi merges the Spotify search ecosystem with the YouTube Music database to deliver a beautiful, seamless streaming experience. Built with Next.js 16, Zustand, Clerk auth, and Supabase.
+Amber Music merges the Spotify search ecosystem with the YouTube Music database to deliver a beautiful, seamless streaming experience. Built with Next.js 16, Zustand, Supabase (auth + DB + storage), and Electron — **one codebase, two surfaces**: the web app (Vercel) and the native Windows desktop app (Electron), like Spotify's web player + desktop player. Same Supabase backend, same accounts, same library on both.
 
 ---
 
@@ -23,7 +23,7 @@ Kiwi merges the Spotify search ecosystem with the YouTube Music database to deli
 
 - **Framework**: Next.js 16 (App Router)
 - **State**: Zustand v5 (persisted to localStorage)
-- **Auth**: Clerk v7
+- **Auth**: Supabase Auth (email/password + magic links)
 - **Database**: Supabase (free tier)
 - **Styling**: Tailwind CSS v4 & Lucide Icons
 - **Media**: ReactPlayer Engine
@@ -47,11 +47,7 @@ npm install
 ### 3. Setup environment variables
 Create a `.env.local` file in the root directory with:
 ```env
-# Clerk (required for auth)
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
-CLERK_SECRET_KEY=
-
-# Supabase (required for persistence)
+# Supabase (required for auth & persistence)
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
@@ -70,7 +66,14 @@ GENIUS_CLIENT_SECRET=
 # Admin dashboard credentials
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=
+
+# SerpApi (optional YouTube search fallback)
+SERPAPI_API_KEY=
 ```
+
+> **Desktop builds (security note):** the packaged `.exe` does NOT embed `.env.local`.
+> Place the file next to the executable (or set environment variables) before
+> launching so API keys are never extractable from the distributed binary.
 
 ### 4. Run the development server
 ```bash
@@ -79,11 +82,34 @@ npm run dev
 
 ---
 
-## ⚡ Deployment on Vercel
+## 🖥️ Two Surfaces, One Codebase (Spotify-style)
 
-1. Push to GitHub and import to [Vercel](https://vercel.com/new)
-2. Add all environment variables from `.env.local` (excluding comments)
-3. Deploy — Vercel builds and serves automatically
+The same Next.js app is delivered in two ways:
+
+| Surface | How it runs | Deploy/run |
+|---------|-------------|------------|
+| **Web** | Next.js serverless on Vercel | `git push` → Vercel auto-deploy (env vars in Vercel dashboard) |
+| **Windows desktop** | Electron shell spawning the Next.js standalone server locally (port 3210) | `npm run desktop:installer` |
+
+- **Same Supabase DB + auth**: profiles, playlists, likes, history all live in one Supabase project. Sign in once per surface (like Spotify — sessions are per-app), data is shared instantly.
+- **Supabase redirect URLs** must include all three: `http://localhost:3000/**` (dev), `http://localhost:3210/**` (desktop dev), the Vercel URL (web), and `ambermusic://auth/confirm` (desktop magic-link deep link).
+
+### Web (Vercel)
+```bash
+git push origin main   # Vercel auto-deploys from the GitHub repo
+```
+Set the same env vars from `.env.local` in the Vercel dashboard (project → Settings → Environment Variables). `SUPABASE_SERVICE_ROLE_KEY` is server-only — never expose it in `NEXT_PUBLIC_*`.
+
+### Desktop (Windows)
+```bash
+npm run desktop:dev     # build + launch in Electron (dev)
+npm run desktop:dist    # build + package a folder (win)
+npm run desktop:portable  # build + package a portable .exe
+npm run desktop:installer # build + NSIS installer .exe
+```
+
+> `next build` runs automatically as part of every desktop script. The packaged
+> app loads `.env.local` from next to the executable at runtime.
 
 ## Supabase: `listen_history` RLS recommendation
 When using Supabase for server-side listen writes, follow least-privilege patterns. The server route uses the Supabase Service Role key to insert rows; front-end clients should NOT have this key. Recommended RLS for `listen_history`:

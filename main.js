@@ -78,8 +78,16 @@ function startServer() {
       return;
     }
 
-    // Load .env.local and pass through (server-side secrets needed at runtime)
-    const env = loadEnvFile(path.join(__dirname, ".env.local"));
+    // Load .env.local and pass through (server-side secrets needed at runtime).
+    // Packaged: secrets are NOT embedded in the asar; the user must place
+    // .env.local next to the executable (or set env vars) so keys are never
+    // extractable from the distributed binary.
+    // Dev: read from the project root as before.
+    const isPackaged = !!process.resourcesPath;
+    const envPath = isPackaged
+      ? path.join(path.dirname(process.execPath), ".env.local")
+      : path.join(__dirname, ".env.local");
+    const env = loadEnvFile(envPath);
     const childEnv = {
       ...process.env,
       ...env,

@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePlayerStore } from '@/store/usePlayerStore'
-import { Loader2, ArrowRight, Check, Headphones, ListMusic, Zap, Music2 } from 'lucide-react'
+import { Loader2, ArrowRight, Check, Headphones, ListMusic, Zap, Music2, Mic, Upload, Activity, Fingerprint } from 'lucide-react'
+import { analyzeAudioPcm, decodeAudioToPcm, extractFingerprintHashes, formatBpm } from '@/lib/audio-analysis'
 
-// Mood/genre tiles for step 2
+// Pain-point diagnostic tiles (step 1)
 const VOICE_TAGS = [
   { label: 'Music Discovery', emoji: '🎵', color: 'from-pink-500/20 to-rose-600/20 border-pink-500/20' },
   { label: 'Playlist Builder', emoji: '📋', color: 'from-blue-500/20 to-cyan-600/20 border-blue-500/20' },
@@ -36,10 +37,12 @@ const PROBLEM_SOLUTIONS = [
   },
 ]
 
+const TOTAL_STEPS = 6
+
 export default function OnboardingPage() {
   const router = useRouter()
-  const { setDisplayName, setOnboardingCompleted, setAvatarUrl } = usePlayerStore()
-  
+  const { setDisplayName, setOnboardingCompleted, setAvatarUrl, setPlanTier } = usePlayerStore()
+
   const [step, setStep] = useState(0)
   const [name, setName] = useState('')
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
@@ -49,6 +52,22 @@ export default function OnboardingPage() {
   const [error, setError] = useState('')
   const [animatingOut, setAnimatingOut] = useState(false)
   const avatarInputRef = useRef<HTMLInputElement>(null)
+
+  // Step 3-4: live audio analysis state
+  const [recording, setRecording] = useState(false)
+  const [analyzing, setAnalyzing] = useState(false)
+  const [analysisDone, setAnalysisDone] = useState(false)
+  const [bpmResult, setBpmResult] = useState<number | null>(null)
+  const [keyResult, setKeyResult] = useState<string | null>(null)
+  const [modeResult, setModeResult] = useState<'Major' | 'Minor' | null>(null)
+  const [hashes, setHashes] = useState<string[]>([])
+  const [recognition, setRecognition] = useState<{ status: string; match?: string; confidence?: number } | null>(null)
+  const [recognizing, setRecognizing] = useState(false)
+  const recorderRef = useRef<MediaRecorder | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Step 5: plan choice (free-only billing — plus is a stub)
+  const [planChoice, setPlanChoice] = useState<'free' | 'plus'>('free')
 
   // Auto-suggest display name - use ref to avoid cascading renders
   const nameRef = useRef<string | null>(null)
@@ -60,7 +79,7 @@ export default function OnboardingPage() {
   }, [])
 
   const handleAvatarClick = () => avatarInputRef.current?.click()
-  
+
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file && file.type.startsWith('image/')) {
@@ -71,18 +90,17 @@ export default function OnboardingPage() {
 
   const handleAvatarUpload = async (): Promise<string | null> => {
     if (!avatarFile) return avatarPreview || null
-    
+
     try {
       const formData = new FormData()
       formData.append('file', avatarFile)
       formData.append('bucket', 'avatars')
-      formData.append('folder', 'onboarding')
-      
-      const uploadRes = await fetch('/api/storage/upload', { 
-        method: 'POST', 
-        body: formData 
+
+      const uploadRes = await fetch('/api/storage/upload', {
+        method: 'POST',
+        body: formData
       })
-      
+
       if (uploadRes.ok) {
         const data = await uploadRes.json()
         return data.url
@@ -107,10 +125,101 @@ export default function OnboardingPage() {
     )
   }
 
+  // --- Live BPM/key demo (step 3) ---
+  const analyzeBlob = useCallback(async (blob: Blob) => {
+    setAnalyzing(true)
+    setError('')
+    try {
+      const decoded = await decodeAudioToPcm(blob)
+      if (!decoded) {
+        setError('Could not decode audio. Try a WAV/MP3/M4A clip.')
+        return
+      }
+      const { pcm, sampleRate } = decoded
+      const result = analyzeAudioPcm(pcm, sampleRate)
+      setBpmResult(result.bpm ?? null)
+      setKeyResult(result.key ?? null)
+      setModeResult(result.mode ?? null)
+      setHashes(extractFingerprintHashes(pcm, sampleRate, 400))
+      setAnalysisDone(true)
+    } catch {
+      setError('Audio analysis failed')
+    } finally {
+      setAnalyzing(false)
+    }
+  }, [])
+
+  const startRecording = async () => {
+    setError('')
+    if (recording) return
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const recorder = new MediaRecorder(stream)
+      const chunks: Blob[] = []
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data) }
+      recorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop())
+        if (chunks.length > 0) {
+          await analyzeBlob(new Blob(chunks, { type: recorder.mimeType || 'audio/webm' }))
+        }
+      }
+      recorder.start()
+      setRecording(true)
+      recorderRef.current = recorder
+      setTimeout(() => {
+        if (recorderRef.current?.state !== 'inactive') {
+          recorderRef.current?.stop()
+          setRecording(false)
+        }
+      }, 8000)
+    } catch {
+      setError('Microphone access denied — upload an audio file instead')
+    }
+  }
+
+  const stopRecording = () => {
+    if (recorderRef.current?.state !== 'inactive') {
+      recorderRef.current?.stop()
+      setRecording(false)
+    }
+  }
+
+  const handleFileAnalysis = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) analyzeBlob(file)
+  }
+
+  // --- Recognition demo (step 4) ---
+  const runRecognition = async () => {
+    if (hashes.length < 32) {
+      setRecognition({ status: 'no-clip' })
+      return
+    }
+    setRecognizing(true)
+    setRecognition(null)
+    try {
+      const res = await fetch('/api/shazam', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hashes }),
+      })
+      const data = await res.json()
+      if (data.success && data.track) {
+        setRecognition({ status: 'match', match: `${data.track} — ${data.artist || 'Unknown artist'}`, confidence: data.confidence })
+      } else {
+        setRecognition({ status: 'no-match' })
+      }
+    } catch {
+      setRecognition({ status: 'no-match' })
+    } finally {
+      setRecognizing(false)
+    }
+  }
+
   const handleFinish = async () => {
     setLoading(true)
     setError('')
-    
+
     try {
       const finalAvatarUrl = await handleAvatarUpload()
       const finalName = name.trim() || 'Music Listener'
@@ -118,6 +227,7 @@ export default function OnboardingPage() {
       setDisplayName(finalName)
       if (finalAvatarUrl) setAvatarUrl(finalAvatarUrl)
       setOnboardingCompleted(true)
+      setPlanTier(planChoice)
 
       await fetch('/api/user/sync', {
         method: 'POST',
@@ -127,6 +237,12 @@ export default function OnboardingPage() {
           avatar_url: finalAvatarUrl,
           onboarding_completed: true,
         }),
+      })
+
+      await fetch('/api/subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan_tier: planChoice }),
       })
 
       router.push('/')
@@ -164,7 +280,7 @@ export default function OnboardingPage() {
         <div className="w-9 h-9 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center shadow-lg">
           <Music2 className="w-5 h-5 text-white" />
         </div>
-        <span className="text-white font-extrabold text-xl tracking-tight">Sonora</span>
+        <span className="text-white font-extrabold text-xl tracking-tight">Amber Music</span>
       </div>
 
       {/* Card */}
@@ -182,8 +298,8 @@ export default function OnboardingPage() {
           <div className="space-y-10 text-center">
             {/* Avatar */}
             <div className="flex flex-col items-center gap-4">
-              <label 
-                htmlFor="onboarding-avatar-input" 
+              <label
+                htmlFor="onboarding-avatar-input"
                 className="relative inline-block cursor-pointer group"
                 onClick={handleAvatarClick}
               >
@@ -196,12 +312,12 @@ export default function OnboardingPage() {
                     </div>
                   )}
                 </div>
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handleAvatarChange} 
-                  className="hidden" 
-                  id="onboarding-avatar-input" 
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                  id="onboarding-avatar-input"
                   ref={avatarInputRef}
                 />
               </label>
@@ -240,12 +356,12 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* Step 1: What matters to you? */}
+        {/* Step 1: Pain-point diagnostic */}
         {step === 1 && (
           <div className="space-y-8">
             <div className="text-center space-y-2">
               <h2 className="text-2xl font-extrabold text-white tracking-tight">What matters to you?</h2>
-              <p className="text-zinc-400 text-sm">Pick features you care about. We'll personalize your experience.</p>
+              <p className="text-zinc-400 text-sm">Pick what you care about. We&apos;ll personalize your experience.</p>
             </div>
 
             <div className="grid grid-cols-3 gap-3">
@@ -285,12 +401,12 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* Step 2: Solved problems */}
+        {/* Step 2: Mirrored summary */}
         {step === 2 && (
           <div className="space-y-8">
             <div className="text-center space-y-3">
               <div className="flex items-center justify-center">
-                <div 
+                <div
                   className="w-20 h-20 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center"
                   style={{ animation: 'scale-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
                 >
@@ -300,7 +416,7 @@ export default function OnboardingPage() {
               <h2 className="text-3xl font-extrabold text-white tracking-tight">
                 Got it, {name.split(' ')[0]}!
               </h2>
-              <p className="text-zinc-400 text-sm">Here's how Sonora solves the hard parts:</p>
+              <p className="text-zinc-400 text-sm">Here&apos;s how Amber Music solves the hard parts:</p>
             </div>
 
             {/* Problem-Solution list */}
@@ -325,29 +441,237 @@ export default function OnboardingPage() {
             </div>
 
             <button
-              onClick={handleFinish}
-              disabled={loading}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-extrabold text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-pink-500/25 cursor-pointer disabled:opacity-60"
+              onClick={() => goToStep(3)}
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-extrabold text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-pink-500/25 cursor-pointer"
             >
-              {loading ? (
+              Try the live analysis <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Step 3: Live BPM/key demo */}
+        {step === 3 && (
+          <div className="space-y-8">
+            <div className="text-center space-y-2">
+              <div className="flex items-center justify-center gap-2">
+                <Activity className="w-5 h-5 text-pink-400" />
+                <h2 className="text-2xl font-extrabold text-white tracking-tight">Live BPM & Key</h2>
+              </div>
+              <p className="text-zinc-400 text-sm">Hum into your mic or upload a clip — the engine detects tempo and musical key in your browser.</p>            </div>
+
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={recording ? stopRecording : startRecording}
+                disabled={analyzing}
+                className={`flex items-center justify-center gap-2 py-4 rounded-2xl border font-extrabold text-sm transition-all cursor-pointer disabled:opacity-50 ${
+                  recording
+                    ? 'bg-red-500/20 border-red-500/40 text-red-300 animate-pulse'
+                    : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+                }`}
+              >
+                {recording ? <Mic className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                {recording ? 'Recording… tap to stop (max 8s)' : analyzing ? 'Analyzing…' : 'Record 8s of audio'}
+              </button>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={analyzing || recording}
+                className="flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white text-sm font-bold hover:bg-white/10 transition-all cursor-pointer disabled:opacity-50"
+              >
+                <Upload className="w-4 h-4" /> Upload an audio file instead
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="audio/*"
+                onChange={handleFileAnalysis}
+                className="hidden"
+              />
+            </div>
+
+            {error && <p className="text-red-400 text-xs font-medium text-center">{error}</p>}
+
+            {analysisDone && (
+              <div className="grid grid-cols-2 gap-3" style={{ animation: 'fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both' }}>
+                <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 text-center">
+                  <p className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Tempo</p>
+                  <p className="text-3xl font-extrabold text-white mt-1">{formatBpm(bpmResult)} <span className="text-sm font-bold text-zinc-400">BPM</span></p>
+                </div>
+                <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 text-center">
+                  <p className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Key</p>
+                  <p className="text-3xl font-extrabold text-white mt-1">{keyResult || '--'} <span className="text-sm font-bold text-zinc-400">{modeResult}</span></p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => goToStep(2)}
+                className="flex-1 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white text-sm font-bold hover:bg-white/10 transition-all cursor-pointer"
+              >
+                Back
+              </button>
+              <button
+                onClick={() => goToStep(4)}
+                disabled={!analysisDone}
+                className="flex-[2] py-3.5 rounded-2xl bg-pink-500 text-white text-sm font-extrabold hover:bg-pink-400 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg cursor-pointer disabled:opacity-30"
+              >
+                Next <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 4: Recognition demo */}
+        {step === 4 && (
+          <div className="space-y-8">
+            <div className="text-center space-y-2">
+              <div className="flex items-center justify-center gap-2">
+                <Fingerprint className="w-5 h-5 text-purple-400" />
+                <h2 className="text-2xl font-extrabold text-white tracking-tight">Sound Recognition</h2>
+              </div>
+              <p className="text-zinc-400 text-sm">Your clip was fingerprinted locally. Check it against the artist catalog — no external API.</p>
+            </div>
+
+            <button
+              onClick={runRecognition}
+              disabled={recognizing || hashes.length < 32}
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white font-extrabold text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg cursor-pointer disabled:opacity-40"
+            >
+              {recognizing ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Getting ready...
+                  <Loader2 className="w-4 h-4 animate-spin" /> Matching fingerprints…
                 </>
+              ) : hashes.length < 32 ? (
+                <>Need a clip — go back and record one first</>
               ) : (
-                <>
-                  Let's Go Music 🎵
-                  <ArrowRight className="w-4 h-4" />
-                </>
+                <>Check catalog ({hashes.length} hashes)</>
               )}
             </button>
+
+            {recognition && (
+              <div
+                className={`p-4 rounded-2xl border text-sm ${
+                  recognition.status === 'match'
+                    ? 'bg-green-500/10 border-green-500/30 text-green-300'
+                    : recognition.status === 'no-match'
+                      ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                      : 'bg-white/[0.03] border-white/5 text-zinc-400'
+                }`}
+                style={{ animation: 'fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both' }}
+              >
+                {recognition.status === 'match' && (
+                  <>
+                    <p className="font-extrabold">Match found 🎉</p>
+                    <p className="mt-1">{recognition.match}</p>
+                    {recognition.confidence !== undefined && (
+                      <p className="mt-0.5 text-xs opacity-70">Confidence: {Math.round(recognition.confidence * 100)}%</p>
+                    )}
+                  </>
+                )}
+                {recognition.status === 'no-match' && (
+                  <p>No match in the catalog — that&apos;s expected unless an artist registered this clip. Recognition pipeline is live.</p>
+                )}
+                {recognition.status === 'no-clip' && (
+                  <p>No fingerprint available. Record or upload audio on the previous step first.</p>
+                )}
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => goToStep(3)}
+                className="flex-1 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white text-sm font-bold hover:bg-white/10 transition-all cursor-pointer"
+              >
+                Back
+              </button>
+              <button
+                onClick={() => goToStep(5)}
+                className="flex-[2] py-3.5 rounded-2xl bg-pink-500 text-white text-sm font-extrabold hover:bg-pink-400 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+              >
+                Next <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 5: Plan choice (paywall stub) */}
+        {step === 5 && (
+          <div className="space-y-8">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-extrabold text-white tracking-tight">Your plan</h2>
+              <p className="text-zinc-400 text-sm">Everything you need is free. Pick a plan — you can change anytime.</p>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => setPlanChoice('free')}
+                className={`w-full p-4 rounded-2xl border text-left transition-all cursor-pointer ${
+                  planChoice === 'free'
+                    ? 'border-pink-500 bg-pink-500/10 shadow-lg'
+                    : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.06]'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-extrabold text-white">Free</p>
+                    <p className="text-xs text-zinc-400 mt-0.5">Full catalog search, playlists, radio — $0 forever</p>
+                  </div>
+                  {planChoice === 'free' && <Check className="w-5 h-5 text-pink-400" />}
+                </div>
+              </button>
+
+              <button
+                onClick={() => setPlanChoice('plus')}
+                className={`w-full p-4 rounded-2xl border text-left transition-all cursor-pointer ${
+                  planChoice === 'plus'
+                    ? 'border-purple-500 bg-purple-500/10 shadow-lg'
+                    : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.06]'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-extrabold text-white">Amber Plus <span className="ml-1 text-[10px] font-bold uppercase tracking-widest text-purple-400">Coming soon</span></p>
+                    <p className="text-xs text-zinc-400 mt-0.5">Offline downloads, lossless audio, smart playlists</p>
+                  </div>
+                  {planChoice === 'plus' && <Check className="w-5 h-5 text-purple-400" />}
+                </div>
+              </button>
+            </div>
+
+            {error && <p className="text-red-400 text-xs font-medium text-center">{error}</p>}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => goToStep(4)}
+                className="flex-1 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white text-sm font-bold hover:bg-white/10 transition-all cursor-pointer"
+              >
+                Back
+              </button>
+              <button
+                onClick={handleFinish}
+                disabled={loading}
+                className="flex-[2] py-3.5 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white text-sm font-extrabold active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-pink-500/25 cursor-pointer disabled:opacity-60"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Getting ready...
+                  </>
+                ) : (
+                  <>
+                    Let&apos;s Go Music 🎵
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         )}
       </div>
 
       {/* Progress indicators */}
       <div className="relative z-10 mt-8 flex items-center gap-2 justify-center">
-        {[0, 1, 2].map(i => (
+        {Array.from({ length: TOTAL_STEPS }, (_, i) => (
           <div
             key={i}
             className="h-1.5 rounded-full transition-all duration-500"
@@ -361,7 +685,7 @@ export default function OnboardingPage() {
 
       {/* Fine print */}
       <p className="relative z-10 mt-8 text-[11px] text-zinc-600 text-center max-w-xs">
-        Free forever. No accounts needed to start listening.
+        Free forever. No accounts needed to start listening. Analysis runs entirely in your browser.
       </p>
     </div>
   )

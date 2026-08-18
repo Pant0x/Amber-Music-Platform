@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth } from '@/lib/auth';
 import { getSpotifyApi } from '@/lib/spotify';
 import { ytMusicSearch, ytMusicBrowse, ytMusicArtistDiscography, cleanArtistName, upgradeThumbnailUrl, parseSubscriberCount, cleanTopicGlobally } from '@/lib/youtubei';
 import createSupabaseServerClient from '@/lib/supabase-server';
