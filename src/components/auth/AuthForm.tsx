@@ -43,11 +43,15 @@ export function AuthForm({ mode }: AuthFormProps) {
         router.push('/')
         router.refresh()
       } else {
+        const redirectTo = window.amberMusic
+          ? 'ambermusic://auth/confirm'
+          : `${window.location.origin}/auth/confirm`
         const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: { full_name: name.trim() || email.split('@')[0] || 'Listener' },
+            emailRedirectTo: redirectTo,
           },
         })
         if (signUpError) {
@@ -76,7 +80,13 @@ export function AuthForm({ mode }: AuthFormProps) {
     setError('')
     setMagicLoading(true)
     try {
-      const { error: otpError } = await supabase.auth.signInWithOtp({ email })
+      const redirectTo = window.amberMusic
+        ? 'ambermusic://auth/confirm'
+        : `${window.location.origin}/auth/confirm`
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: redirectTo },
+      })
       if (otpError) {
         setError(otpError.message)
         return

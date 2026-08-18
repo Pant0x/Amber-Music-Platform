@@ -106,10 +106,18 @@ npm run desktop:dev     # build + launch in Electron (dev)
 npm run desktop:dist    # build + package a folder (win)
 npm run desktop:portable  # build + package a portable .exe
 npm run desktop:installer # build + NSIS installer .exe
+npm run desktop:release  # build + publish NSIS installer to GitHub Releases (auto-update)
 ```
 
 > `next build` runs automatically as part of every desktop script. The packaged
 > app loads `.env.local` from next to the executable at runtime.
+
+### Desktop behaviors (Spotify-style)
+- **Single instance**: launching the app again focuses the existing window (no port clash).
+- **Tray**: closing the window minimizes to the tray — the app keeps playing. Use tray → Quit to exit.
+- **Launch at startup**: toggle in the tray menu.
+- **Magic links**: `ambermusic://` protocol is registered on Windows, so email links open the desktop app and sign you in automatically.
+- **Auto-update**: `desktop:release` publishes installers to GitHub Releases; installed apps self-update (needs a GitHub token at build time).
 
 ## Supabase: `listen_history` RLS recommendation
 When using Supabase for server-side listen writes, follow least-privilege patterns. The server route uses the Supabase Service Role key to insert rows; front-end clients should NOT have this key. Recommended RLS for `listen_history`:

@@ -13,12 +13,14 @@
     "desktop:dist": "next build && electron-builder --win --dir",
     "desktop:installer": "next build && electron-builder --win nsis",
     "desktop:portable": "next build && electron-builder --win portable",
+    "desktop:release": "next build && electron-builder --win nsis --publish always",
     "exe": "npm run icon && next build && electron-builder --win portable"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.108.3",
     "@types/qrcode": "^1.5.6",
+    "electron-updater": "^6.8.9",
     "fast-average-color": "^9.5.2",
     "framer-motion": "^12.42.2",
     "lucide-react": "^1.21.0",
@@ -56,8 +58,15 @@
     },
     "files": [
       "main.js",
+      "preload.js",
+      "build/icon.png",
       "!node_modules/**"
     ],
+    "publish": {
+      "provider": "github",
+      "owner": "Pant0x",
+      "repo": "Amber-Music-Platform"
+    },
     "extraResources": [
       {
         "from": ".next/standalone",

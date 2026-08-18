@@ -55,6 +55,28 @@ body {
   overflow-x: hidden;
 }
 
+/* Desktop (Electron) window chrome */
+html.amber-desktop body {
+  -webkit-app-region: no-drag;
+}
+
+html.amber-desktop .desktop-drag {
+  -webkit-app-region: drag;
+}
+
+/* Keep content clear of the native window controls (top-right overlay) */
+html.amber-desktop header {
+  padding-right: 150px;
+}
+
+html.amber-desktop .desktop-drag button,
+html.amber-desktop .desktop-drag input,
+html.amber-desktop .desktop-drag a,
+html.amber-desktop .desktop-drag select,
+html.amber-desktop .desktop-drag textarea {
+  -webkit-app-region: no-drag;
+}
+
 /* Scrollbar customization */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;

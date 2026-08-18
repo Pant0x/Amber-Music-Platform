@@ -7,6 +7,7 @@ const isPublicRoute = (pathname: string) => {
     '/sign-in',
     '/sign-up',
     '/onboarding',
+    '/auth/confirm',
     '/api/public',
     '/api/webhooks',
     '/api/artist/status',

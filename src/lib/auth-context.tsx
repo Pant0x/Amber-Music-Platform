@@ -2,6 +2,7 @@
 
 import { createBrowserClient } from '@supabase/ssr'
 import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 
 export interface AuthUser {
   id: string
@@ -44,6 +45,7 @@ function mapUser(u: { id: string; email?: string | null; user_metadata?: Record<
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
   const supabase = useMemo(() => {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -52,6 +54,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const [user, setUser] = useState<AuthUser | null>(null)
   const [isLoaded, setIsLoaded] = useState(!supabase)
+
+  const handleAuthLink = useCallback(
+    (rawUrl: string) => {
+      if (!supabase) return
+      let parsed: URL
+      try {
+        parsed = new URL(rawUrl)
+      } catch {
+        return
+      }
+      const tokenHash = parsed.searchParams.get('token_hash')
+      const type = parsed.searchParams.get('type')
+      const next = parsed.searchParams.get('next') || '/'
+      if (!tokenHash || !type) return
+      const otpTypes = ['magiclink', 'email', 'recovery', 'invite', 'sms'] as const
+      if (!otpTypes.includes(type as (typeof otpTypes)[number])) return
+      supabase.auth
+        .verifyOtp({ token_hash: tokenHash, type: type as (typeof otpTypes)[number] })
+        .then(({ error }) => {
+          if (!error) router.push(next)
+        })
+    },
+    [supabase, router]
+  )
 
   useEffect(() => {
     if (!supabase) return
@@ -63,10 +89,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(mapUser(session?.user))
       setIsLoaded(true)
     })
+    const bridge = typeof window !== 'undefined' ? window.amberMusic : undefined
+    if (bridge?.onAuthLink) {
+      bridge.onAuthLink(handleAuthLink)
+    }
     return () => {
       sub.subscription.unsubscribe()
     }
-  }, [supabase])
+  }, [supabase, handleAuthLink])
 
   const signOut = useCallback(async () => {
     if (supabase) await supabase.auth.signOut()

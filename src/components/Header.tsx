@@ -113,7 +113,7 @@ export const Header: React.FC = () => {
 
   return (
     <header
-      className="h-16 w-full px-6 flex items-center justify-between select-none relative z-50 flex-shrink-0 transition-all duration-1000 backdrop-blur-xl border-b border-white/[0.03]"
+      className="desktop-drag h-16 w-full px-6 flex items-center justify-between select-none relative z-50 flex-shrink-0 transition-all duration-1000 backdrop-blur-xl border-b border-white/[0.03]"
       style={{ background: 'var(--theme-main-bg, #030303)' }}
     >
       <div className="flex items-center gap-4 flex-shrink-0">
