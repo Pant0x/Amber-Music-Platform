@@ -23,25 +23,28 @@ const AuthContext = createContext<AuthState>({
   signOut: async () => {},
 })
 
-function mapUser(u: { id: string; email?: string | null; user_metadata?: Record<string, unknown> | null } | undefined | null): AuthUser | null {
+function mapUser(u: { id: string; email?: string | null; user_metadata?: Record<string, unknown> | null; identities?: { provider?: string }[] | null } | undefined | null): AuthUser | null {
   if (!u) return null
   const meta = (u.user_metadata || {}) as Record<string, unknown>
-  return {
-    id: u.id,
-    email: u.email ?? undefined,
-    name:
-      typeof meta.full_name === 'string'
-        ? meta.full_name
-        : typeof meta.name === 'string'
-          ? meta.name
-          : u.email?.split('@')[0] ?? undefined,
-    imageUrl:
-      typeof meta.avatar_url === 'string'
-        ? meta.avatar_url
-        : typeof meta.picture === 'string'
-          ? meta.picture
-          : undefined,
+  const provider = u.identities?.[0]?.provider ?? 'email'
+
+  let name: string | undefined
+  if (typeof meta.full_name === 'string') name = meta.full_name
+  else if (typeof meta.name === 'string') name = meta.name
+  else if (provider === 'discord' && typeof meta.global_name === 'string') name = meta.global_name
+  else if (provider === 'discord' && typeof meta.username === 'string') name = meta.username
+  else name = u.email?.split('@')[0] ?? undefined
+
+  let imageUrl: string | undefined
+  if (typeof meta.avatar_url === 'string' && /^https?:\/\//.test(meta.avatar_url)) {
+    imageUrl = meta.avatar_url
+  } else if (typeof meta.picture === 'string' && /^https?:\/\//.test(meta.picture)) {
+    imageUrl = meta.picture
+  } else if (provider === 'discord' && typeof meta.avatar === 'string' && meta.avatar.length > 0) {
+    imageUrl = `https://cdn.discordapp.com/avatars/${u.id}/${meta.avatar}.png?size=256`
   }
+
+  return { id: u.id, email: u.email ?? undefined, name, imageUrl }
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -64,6 +67,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch {
         return
       }
+
+      const oauthCode = parsed.searchParams.get('code')
+      const oauthError = parsed.searchParams.get('error')
+      if (oauthCode) {
+        supabase.auth
+          .exchangeCodeForSession(oauthCode)
+          .then(({ error }) => {
+            if (!error) router.push('/')
+          })
+        return
+      }
+      if (oauthError) {
+        router.push('/sign-in')
+        return
+      }
+
       const tokenHash = parsed.searchParams.get('token_hash')
       const type = parsed.searchParams.get('type')
       const next = parsed.searchParams.get('next') || '/'

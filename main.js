@@ -1,6 +1,6 @@
 "use strict";
 
-const { app, BrowserWindow, Menu, Tray, nativeImage } = require("electron");
+const { app, BrowserWindow, Menu, Tray, nativeImage, ipcMain, shell } = require("electron");
 const { spawn } = require("child_process");
 const path = require("path");
 const fs = require("fs");
@@ -49,6 +49,15 @@ function handleDeepLink(url) {
   } else {
     pendingAuthUrl = url;
   }
+}
+
+function setupIpc() {
+  ipcMain.handle("ambermusic:open-external", (_event, url) => {
+    if (typeof url === "string" && /^https?:\/\//.test(url)) {
+      return shell.openExternal(url);
+    }
+    return Promise.resolve();
+  });
 }
 
 function registerProtocol() {
@@ -323,6 +332,7 @@ function createWindow() {
 app.whenReady().then(async () => {
   app.setAppUserModelId("com.pant0x.ambermusic");
   registerProtocol();
+  setupIpc();
 
   const startupUrl = extractDeepLink(process.argv);
   if (startupUrl) pendingAuthUrl = startupUrl;

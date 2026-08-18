@@ -13,4 +13,7 @@ contextBridge.exposeInMainWorld("amberMusic", {
       callback(url);
     });
   },
+  openExternal: (url) => {
+    ipcRenderer.invoke("ambermusic:open-external", url);
+  },
 });
