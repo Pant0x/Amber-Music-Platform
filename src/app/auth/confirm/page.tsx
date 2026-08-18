@@ -34,7 +34,7 @@ function AuthConfirmInner() {
           setState('error')
         } else {
           setState('success')
-          setTimeout(() => router.push(next), 1200)
+          setTimeout(() => router.push(type === 'recovery' ? '/auth/reset-password' : next), 1200)
         }
       })
       .catch(() => setState('error'))

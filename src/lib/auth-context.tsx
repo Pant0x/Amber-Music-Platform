@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       supabase.auth
         .verifyOtp({ token_hash: tokenHash, type: type as (typeof otpTypes)[number] })
         .then(({ error }) => {
-          if (!error) router.push(next)
+          if (!error) router.push(type === 'recovery' ? '/auth/reset-password' : next)
         })
     },
     [supabase, router]
