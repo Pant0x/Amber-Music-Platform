@@ -3,6 +3,13 @@ dist/
 release/
 release2/
 windows-exe/
+build/
+.next/
+node_modules/
+
+# TypeScript
+next-env.d.ts
+tsconfig.tsbuildinfo
 
 # IDE and editors
 .vscode/

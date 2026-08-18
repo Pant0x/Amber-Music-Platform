@@ -1,5 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse, type NextFetchEvent, type NextRequest } from 'next/server'
 
 const isPublicRoute = createRouteMatcher([
   '/',
@@ -36,7 +36,7 @@ const clerkHandler = hasClerkKeys
     })
   : null
 
-export const proxy = async (request: NextRequest, event: any) => {
+export const proxy = async (request: NextRequest, event: NextFetchEvent) => {
   const res = (clerkHandler ? await clerkHandler(request, event) : NextResponse.next())!;
 
   const rewrite = res.headers.get('x-middleware-rewrite');
