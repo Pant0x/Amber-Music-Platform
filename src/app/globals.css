@@ -1,0 +1,338 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+
+@theme {
+  --color-amber-50: #fffbeb;
+  --color-amber-100: #fef3c7;
+  --color-amber-200: #fde68a;
+  --color-amber-300: #fcd34d;
+  --color-amber-400: #fbbf24;
+  --color-amber-500: #f59e0b;
+  --color-amber-600: #d97706;
+  --color-amber-700: #b45309;
+  --color-amber-800: #92400e;
+  --color-amber-900: #78350f;
+  --color-amber-950: #451a03;
+
+  --color-bg-primary: #0d0d0d;
+  --color-bg-secondary: #141414;
+  --color-bg-tertiary: #1e1e1e;
+  --color-bg-hover: #282828;
+  --color-bg-active: #333333;
+
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #b3b3b3;
+  --color-text-muted: #737373;
+  --color-text-inverse: #000000;
+
+  --color-border-primary: #333333;
+  --color-border-secondary: #404040;
+
+  --color-accent: #f59e0b;
+  --color-accent-hover: #fbbf24;
+  --color-accent-muted: #d97706;
+
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+
+  --font-sans: "Inter Variable", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-full: 9999px;
+
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 350ms ease;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border-primary);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  ::selection {
+    background-color: var(--color-amber-500);
+    background-color: color-mix(in srgb, var(--color-amber-500) 30%, transparent);
+    color: var(--color-text-primary);
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-border-primary);
+    border-radius: var(--radius-full);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-border-secondary);
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
+@utility glass {
+  background-color: color-mix(in srgb, var(--color-bg-secondary) 80%, transparent);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--color-border-primary);
+  border-opacity: 0.5;
+}
+
+@utility glass-strong {
+  background-color: color-mix(in srgb, var(--color-bg-secondary) 95%, transparent);
+  backdrop-filter: blur(40px);
+  border: 1px solid var(--color-border-primary);
+  border-opacity: 0.3;
+}
+
+@utility text-gradient {
+  background: linear-gradient(to right, var(--color-amber-400), var(--color-amber-600));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility bg-gradient-amber {
+  background: linear-gradient(to bottom right, color-mix(in srgb, var(--color-amber-500) 10%, transparent), transparent, color-mix(in srgb, var(--color-amber-600) 10%, transparent));
+}
+
+@utility animate-fade-in {
+  animation: fadeIn var(--transition-normal) ease-out;
+}
+
+@utility animate-slide-up {
+  animation: slideUp var(--transition-normal) ease-out;
+}
+
+@utility animate-slide-down {
+  animation: slideDown var(--transition-normal) ease-out;
+}
+
+@utility animate-scale-in {
+  animation: scaleIn var(--transition-fast) ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@utility hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@utility hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Component utilities */
+@utility btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-lg);
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  outline: none;
+}
+
+@utility btn:focus-visible {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-amber-500) 50%, transparent);
+  outline-offset: 2px;
+  outline-color: var(--color-bg-primary);
+}
+
+@utility btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@utility btn-primary {
+  @apply btn;
+  background-color: var(--color-amber-500);
+  color: var(--color-text-inverse);
+}
+
+@utility btn-primary:hover {
+  background-color: var(--color-amber-400);
+}
+
+@utility btn-primary:active {
+  background-color: var(--color-amber-600);
+}
+
+@utility btn-secondary {
+  @apply btn;
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+@utility btn-secondary:hover {
+  background-color: var(--color-bg-hover);
+}
+
+@utility btn-secondary:active {
+  background-color: var(--color-bg-active);
+}
+
+@utility btn-ghost {
+  @apply btn;
+  background-color: transparent;
+}
+
+@utility btn-ghost:hover {
+  background-color: var(--color-bg-hover);
+}
+
+@utility btn-ghost:active {
+  background-color: var(--color-bg-active);
+}
+
+@utility btn-danger {
+  @apply btn;
+  background-color: color-mix(in srgb, var(--color-error) 20%, transparent);
+  color: var(--color-error);
+}
+
+@utility btn-danger:hover {
+  background-color: color-mix(in srgb, var(--color-error) 30%, transparent);
+}
+
+@utility btn-danger:active {
+  background-color: color-mix(in srgb, var(--color-error) 40%, transparent);
+}
+
+@utility input {
+  width: 100%;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border-primary);
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  color: var(--color-text-primary);
+  transition: all var(--transition-fast);
+}
+
+@utility input::placeholder {
+  color: var(--color-text-muted);
+}
+
+@utility input:focus {
+  border-color: var(--color-amber-500);
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-amber-500) 20%, transparent);
+}
+
+@utility card {
+  @apply glass;
+  border-radius: var(--radius-xl);
+  padding: 1rem;
+  transition: all var(--transition-fast);
+}
+
+@utility card:hover {
+  border-color: var(--color-border-secondary);
+  border-opacity: 0.5;
+}
+
+@utility card-hover {
+  @apply card;
+}
+
+@utility card-hover:hover {
+  background-color: var(--color-bg-hover);
+  box-shadow: var(--shadow-lg);
+}
+
+@utility sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: var(--radius-lg);
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  transition: all var(--transition-fast);
+}
+
+@utility sidebar-item:hover {
+  background-color: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+@utility sidebar-item-active {
+  @apply sidebar-item;
+  background-color: color-mix(in srgb, var(--color-amber-500) 10%, transparent);
+  color: var(--color-amber-400);
+}
+
+@utility track-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
+}
+
+@utility track-row:hover {
+  background-color: var(--color-bg-hover);
+}
+
+@utility track-row-playing {
+  @apply track-row;
+  background-color: color-mix(in srgb, var(--color-amber-500) 5%, transparent);
+}

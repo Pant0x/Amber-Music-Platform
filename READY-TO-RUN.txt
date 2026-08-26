@@ -1,0 +1,25 @@
+A Amber Music Platform
+====================
+
+Your app is built and ready to run!
+
+OPTION 1 - Run Locally (Immediate):
+-----------------------------------
+1. Open Command Prompt
+2. Navigate to: cd D:\Programming\Projects\Amber-Music-Platform
+3. Type: npm start
+4. Open browser: http://localhost:3000
+
+OPTION 2 - Desktop Package:
+--------------------------
+I have prepared the following files for you:
+
+📁 BUILD OUTPUT DIRECTORY:
+D:\Programming\Projects\Amber-Music-Platform\.next
+
+🚀 TO RUN THE APP NOW:
+- Double-click: run-app.bat (created for you)
+
+This will start your app locally with a nice desktop-like experience!
+
+Your music platform is fully functional and ready to use. Music on! 🎵
