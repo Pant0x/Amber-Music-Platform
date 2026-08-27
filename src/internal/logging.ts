@@ -36,6 +36,18 @@ export function logInternalWarn(message: string, context?: any) {
   appendLogEntry(logEntry);
 }
 
+export function logInternalDebug(message: string, context?: any) {
+  const timestamp = new Date().toISOString();
+  const logEntry = {
+    timestamp,
+    level: "debug",
+    message,
+    context,
+  };
+  console.debug(`[${timestamp}] DEBUG:`, logEntry);
+  appendLogEntry(logEntry);
+}
+
 function appendLogEntry(entry: any) {
   try {
     const logs = JSON.parse(localStorage.getItem("amber-internal-logs") || "[]");

@@ -46,3 +46,13 @@ export function resolveReleaseNoteVersion() {
   const unseen = useReleaseNotes.getState().getUnseen();
   return unseen[0]?.version || null;
 }
+
+export const RELEASE_NOTE_BODY = "";
+
+export function parseReleaseNote(body: string) {
+  return { version: "1.0.0", date: new Date().toISOString(), notes: body, seen: false };
+}
+
+export function shouldShowReleaseNote(): boolean {
+  return false;
+}

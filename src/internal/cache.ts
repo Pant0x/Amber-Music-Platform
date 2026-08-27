@@ -70,3 +70,11 @@ export const useCache = create<CacheState>()(
 export function clearCache() {
   useCache.getState().clear();
 }
+
+export function getCachedJson<T>(key: string): T | null {
+  return useCache.getState().get<T>(key);
+}
+
+export function setCachedJson<T>(key: string, data: T, ttl?: number): void {
+  useCache.getState().set(key, data, ttl);
+}

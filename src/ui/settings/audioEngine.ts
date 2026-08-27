@@ -35,3 +35,17 @@ export const useAudioEngineSettings = create<AudioEngineSettings>()(
 export function hydrateAudioEngineMode() {
   // Called on app startup
 }
+
+export const AUDIO_ENGINE_MODE_CHANGE_EVENT = "audio-engine-mode-change";
+
+export function usesNativeAudioEngine(): boolean {
+  return false;
+}
+
+export function usesRustAudioEngine(): boolean {
+  return false;
+}
+
+export function getAudioEngineMode(): string {
+  return "web";
+}

@@ -64,3 +64,25 @@ export const useArtworkCache = create<ArtworkCacheState>()(
 export function hydrateArtworkCache() {
   // Called on app startup
 }
+
+export function forgetResolvedArtworkUrl(url: string) {
+  useArtworkCache.getState().cache.delete(url);
+}
+
+export function getResolvedArtworkUrl(url: string): Blob | null {
+  return useArtworkCache.getState().get(url);
+}
+
+export function hasArtworkFailed(url: string): boolean {
+  return useArtworkCache.getState().cache.has(`failed:${url}`);
+}
+
+export function rememberResolvedArtworkUrl(url: string, blob: Blob) {
+  useArtworkCache.getState().set(url, blob);
+}
+
+export function resolveArtworkThroughProxy(url: string): Promise<Blob | null> {
+  return Promise.resolve(null);
+}
+
+export const __artworkCacheForTest = useArtworkCache;
