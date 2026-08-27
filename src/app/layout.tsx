@@ -3,6 +3,7 @@ import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://amber-music-platform.vercel.app"),
   title: "Amber Music Platform",
   description: "A modern music platform with YouTube Music integration, lyrics, and desktop app",
   keywords: ["music", "youtube music", "player", "lyrics", "desktop app"],

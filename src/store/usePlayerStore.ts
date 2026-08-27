@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { immer } from "zustand/middleware/immer";
 import type {
   PlaybackState,
   NavigationState,
@@ -26,14 +25,14 @@ type AppState = PlaybackState &
 
 export const usePlayerStore = create<AppState>()(
   persist(
-    immer((...args) => ({
+    (...args) => ({
       ...createPlaybackSlice(...args),
       ...createNavigationSlice(...args),
       ...createCollectionSlice(...args),
       ...createUISlice(...args),
       ...createLyricsSlice(...args),
       ...createPersistenceSlice(...args),
-    })),
+    }),
     {
       name: "amber-music-storage-v1",
       storage: createJSONStorage(() => localStorage),
@@ -162,10 +161,12 @@ export const useUIStore = () => usePlayerStore((s) => ({
   notifications: s.notifications,
   toggleLeftPanel: s.toggleLeftPanel,
   setLeftPanel: s.setLeftPanel,
+  setLeftPanelOpen: s.setLeftPanelOpen,
   toggleRightPanel: s.toggleRightPanel,
   setRightPanel: s.setRightPanel,
+  setRightPanelOpen: s.setRightPanelOpen,
   toggleLyrics: s.toggleLyrics,
-  setLyrics: s.setLyrics,
+  setLyricsOpen: s.setLyricsOpen,
   setMinimized: s.setMinimized,
   toggleMinimized: s.toggleMinimized,
   setHideExplicit: s.setHideExplicit,

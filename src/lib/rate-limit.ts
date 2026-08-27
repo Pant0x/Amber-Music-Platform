@@ -23,9 +23,9 @@ export function rateLimitByIp(request: Request, limit: number): { ok: boolean; r
 // Cleanup old entries periodically
 setInterval(() => {
   const now = Date.now();
-  for (const [ip, record] of ipRequests.entries()) {
+  ipRequests.forEach((record, ip) => {
     if (now > record.resetAt) {
       ipRequests.delete(ip);
     }
-  }
+  });
 }, 5 * 60 * 1000);

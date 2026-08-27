@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   Music,
@@ -14,6 +14,7 @@ import {
   Sun,
   Moon,
   Monitor,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUIStore, usePlaybackStore } from "@/store/usePlayerStore";
@@ -109,7 +110,7 @@ export function Header() {
 function SearchOverlay() {
   const { openModal, closeModal, activeModal } = useUIStore();
   const [query, setQuery] = useState("");
-  const inputRef = useState<HTMLInputElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const isOpen = activeModal === "search";
 
   if (!isOpen) return null;

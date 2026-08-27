@@ -10,10 +10,10 @@ import type { QueueItem } from "@/store/types";
 
 export function QueuePanel() {
   const { queue, queueIndex, isPlaying, removeFromQueue, setQueueIndex, clearQueue, nextTrack, prevTrack } = usePlaybackStore();
-  const { rightPanelOpen, setRightPanelOpen, setLyrics } = useUIStore();
+  const { rightPanelOpen, setRightPanelOpen } = useUIStore();
   const [collapsed, setCollapsed] = useState(false);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Escape") setRightPanelOpen(false);
   };
 

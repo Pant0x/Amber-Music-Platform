@@ -1,4 +1,4 @@
-import { createSlice, type StateCreator } from "zustand";
+import type { StateCreator } from "zustand";
 import type { LyricsData } from "../types";
 
 export interface LyricsState {
@@ -21,7 +21,7 @@ export interface LyricsState {
 
 export const createLyricsSlice: StateCreator<
   LyricsState,
-  [["zustand/immer", never]],
+  [],
   [],
   LyricsState
 > = (set) => ({

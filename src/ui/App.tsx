@@ -80,7 +80,7 @@ async function loadTauriImports() {
       invoke: core.invoke,
       emit: event.emit,
       listen: event.listen,
-      WebviewWindow: windowApi.WebviewWindow,
+      WebviewWindow: (windowApi as any).WebviewWindow,
       getCurrentWindow: windowApi.getCurrentWindow,
       currentMonitor: windowApi.currentMonitor,
       primaryMonitor: windowApi.primaryMonitor,
@@ -200,7 +200,7 @@ function App() {
   };
 
   return (
-    <MotionConfig reduceMotion={reduceMotion} transition={{ duration: 0.2 }}>
+    <MotionConfig reducedMotion={reduceMotion ? "always" : "never"} transition={{ duration: 0.2 }}>
       <AnimatePresence mode="wait">
         {loading && <AppLoadingScreen />}
         {!loading && (

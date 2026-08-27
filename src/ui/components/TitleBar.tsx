@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Minimize, Maximize, Close, Menu, Sun, Moon, Monitor, Music } from "lucide-react";
+import { Minimize, Maximize, X as Close, Menu, Sun, Moon, Monitor, Music } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/store/usePlayerStore";
 import { useTheme } from "@/components/providers/ThemeProvider";
@@ -80,15 +80,15 @@ export function TitleBar() {
       className="flex h-12 items-center justify-between px-4 border-b border-border-primary bg-bg-secondary/80 backdrop-blur-xl -ml-4 -mt-4 ml-4 mt-4"
       style={{
         WebkitAppRegion: "drag",
-      }}
+      } as any}
     >
-      <div className="flex items-center gap-2" style={{ WebkitAppRegion: "drag" }}>
+      <div className="flex items-center gap-2" style={{ WebkitAppRegion: "drag" } as any}>
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-amber-600">
           <Music className="h-5 w-5 text-black" />
         </div>
         <span className="font-semibold text-text-primary">Amber Music</span>
       </div>
-      <div className="flex items-center gap-1" style={{ WebkitAppRegion: "no-drag" }}>
+      <div className="flex items-center gap-1" style={{ WebkitAppRegion: "no-drag" } as any}>
         <button
           onClick={handleThemeCycle}
           className="btn-ghost h-8 w-8 p-0"

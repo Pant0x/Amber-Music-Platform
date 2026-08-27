@@ -35,7 +35,7 @@ export function HistoryPage() {
         <div className="space-y-2">
           {playHistory.slice(0, 50).map((item, index) => (
             <motion.div
-              key={`${item.trackId}-${item.playedAt}`}
+              key={`${item.track?.id || index}-${item.playedAt}`}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.02 }}
@@ -46,19 +46,19 @@ export function HistoryPage() {
               </span>
               <div className="relative h-10 w-10 flex-shrink-0 rounded overflow-hidden">
                 <img
-                  src={item.thumbnailUrl}
-                  alt={item.title}
+                  src={item.track?.thumbnailUrl}
+                  alt={item.track?.title}
                   className="h-full w-full object-cover"
                   loading="lazy"
                 />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="font-medium text-text-primary truncate">{item.title}</p>
-                <p className="text-sm text-text-muted truncate">{item.artist}</p>
+                <p className="font-medium text-text-primary truncate">{item.track?.title}</p>
+                <p className="text-sm text-text-muted truncate">{item.track?.channelTitle}</p>
               </div>
               <div className="flex items-center gap-4 text-sm text-text-muted">
                 <span className="w-16 text-right">{formatDate(item.playedAt)}</span>
-                <span className="w-10 text-right">{formatDuration(item.duration)}</span>
+                <span className="w-10 text-right">{formatDuration(item.track?.duration || 0)}</span>
                 <span className="w-10 text-right">{Math.round(item.progress * 100)}%</span>
               </div>
             </motion.div>

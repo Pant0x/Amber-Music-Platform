@@ -213,21 +213,15 @@ export function ForgotPassword({ onSubmit, onBack }: {
   onBack: () => void;
 }) {
   const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    const result = await onSubmit(email);
-    setLoading(false);
-    if (result.error) {
-      setError(result.error.message || "Failed to send reset email");
-    } else {
+  const handleAuthSubmit = async (submittedEmail: string) => {
+    setEmail(submittedEmail);
+    const result = await onSubmit(submittedEmail);
+    if (!result?.error) {
       setSuccess(true);
     }
+    return result || {};
   };
 
   if (success) {
@@ -252,7 +246,7 @@ export function ForgotPassword({ onSubmit, onBack }: {
 
   return (
     <AuthForm
-      onSubmit={handleSubmit}
+      onSubmit={handleAuthSubmit}
       onBack={onBack}
       title="Forgot password?"
       subtitle="Enter your email to receive a reset link"
@@ -392,31 +386,30 @@ export function VerifyOtp({ onSubmit, onBack }: {
   const [error, setError] = useState("");
   const [step, setStep] = useState<"email" | "otp">("email");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleEmailSubmit = async (submittedEmail: string) => {
+    setEmail(submittedEmail);
+    const result = await onSubmit(submittedEmail, "");
+    if (!result?.error) {
+      setStep("otp");
+    }
+    return result || {};
+  };
+
+  const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
-    if (step === "email") {
-      const result = await onSubmit(email, "");
-      setLoading(false);
-      if (result.error) {
-        setError(result.error.message || "Failed to send code");
-      } else {
-        setStep("otp");
-      }
-    } else {
-      const result = await onSubmit(email, token);
-      setLoading(false);
-      if (result.error) {
-        setError(result.error.message || "Invalid code");
-      }
+    const result = await onSubmit(email, token);
+    setLoading(false);
+    if (result?.error) {
+      setError(result.error.message || "Invalid code");
     }
   };
 
   if (step === "email") {
     return (
       <AuthForm
-        onSubmit={handleSubmit}
+        onSubmit={handleEmailSubmit}
         onBack={onBack}
         title="Verify email"
         subtitle="Enter your email to receive a verification code"
@@ -427,7 +420,7 @@ export function VerifyOtp({ onSubmit, onBack }: {
 
   return (
     <motion.form
-      onSubmit={handleSubmit}
+      onSubmit={handleOtpSubmit}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6"

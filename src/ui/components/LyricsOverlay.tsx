@@ -9,7 +9,7 @@ import { useTheme } from "@/components/providers/ThemeProvider";
 
 export function LyricsOverlay() {
   const { currentLyrics, loading, error, offset, fontScale, translationLanguage, showTranslation, setOffset, setFontScale, setTranslationLanguage, setShowTranslation } = useLyricsStore();
-  const { lyricsOpen, setLyrics, minimized } = useUIStore();
+  const { lyricsOpen, setLyricsOpen, minimized } = useUIStore();
   const { currentTrack, isPlaying, progress } = usePlaybackStore();
   const { resolvedTheme } = useTheme();
   const [expanded, setExpanded] = useState(false);
@@ -23,7 +23,7 @@ export function LyricsOverlay() {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        onClick={() => setLyrics(false)}
+        onClick={() => setLyricsOpen(false)}
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -73,7 +73,7 @@ export function LyricsOverlay() {
                 {expanded ? <Minimize className="h-5 w-5" /> : <Expand className="h-5 w-5" />}
               </button>
               <button
-                onClick={() => setLyrics(false)}
+                onClick={() => setLyricsOpen(false)}
                 className="btn-ghost h-8 w-8 p-0 text-error hover:text-error/80"
                 aria-label="Close lyrics"
               >
@@ -113,7 +113,12 @@ export function LyricsOverlay() {
               <div className="flex-1 h-1 bg-bg-tertiary rounded-full overflow-hidden">
                 <motion.div
                   className="h-full bg-amber-500 rounded-full"
-                  style={{ width: `${Math.min((progress / (currentTrack?.duration || 1)) * 100, 100)}%` }}
+                  style={{
+                    width: `${Math.min(
+                      (progress / (Number(currentTrack?.duration) || 1)) * 100,
+                      100
+                    )}%`,
+                  }}
                 />
               </div>
               <span className="text-xs text-text-muted w-10 text-right">
@@ -158,8 +163,13 @@ function LyricsContent({ lyrics, translation, showTranslation, fontScale, curren
   );
 }
 
-function formatTime(seconds: number): string {
-  if (!seconds || isNaN(seconds)) return "0:00";
+function formatTime(seconds: number | string): string {
+  if (!seconds) return "0:00";
+  if (typeof seconds === "string") {
+    if (seconds.includes(":")) return seconds;
+    seconds = Number(seconds);
+  }
+  if (isNaN(seconds)) return "0:00";
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs < 10 ? "0" : ""}${secs}`;

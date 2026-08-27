@@ -37,7 +37,7 @@ export function PlayerBar() {
     setShuffle,
     setRepeat,
   } = usePlaybackStore();
-  const { lyricsOpen, setLyrics, rightPanelOpen, setRightPanelOpen } = useUIStore();
+  const { lyricsOpen, setLyricsOpen, rightPanelOpen, setRightPanelOpen } = useUIStore();
   const { currentLyrics, offset } = useLyricsStore();
   const progressRef = useRef<HTMLInputElement>(null);
   const volumeRef = useRef<HTMLInputElement>(null);
@@ -52,7 +52,7 @@ export function PlayerBar() {
     setVolume(value);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === " ") {
       e.preventDefault();
       togglePlay();
@@ -158,7 +158,7 @@ export function PlayerBar() {
       {/* Right Side */}
       <div className="flex items-center gap-2 min-w-0" style={{ minWidth: 200 }}>
         <button
-          onClick={() => setLyrics(!lyricsOpen)}
+          onClick={() => setLyricsOpen(!lyricsOpen)}
           className={cn("btn-ghost h-8 w-8 p-0", lyricsOpen && "text-amber-500")}
           aria-label="Lyrics"
         >

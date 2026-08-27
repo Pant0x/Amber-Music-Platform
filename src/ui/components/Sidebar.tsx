@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Home,
   Compass,
@@ -42,9 +42,10 @@ const LIBRARY_SECTIONS = [
   { id: "history", icon: Clock, label: "History" },
 ];
 
-export function Sidebar({ collapsed }: { collapsed: boolean }) {
+export function Sidebar({ className, collapsed: propCollapsed }: { className?: string; collapsed?: boolean }) {
   const { activeTab, setActiveTab, navigateWithParams } = useNavigationStore();
   const { leftPanelOpen, setLeftPanelOpen } = useUIStore();
+  const collapsed = propCollapsed !== undefined ? propCollapsed : !leftPanelOpen;
   const [libraryOpen, setLibraryOpen] = useState(true);
   const [playlistsOpen, setPlaylistsOpen] = useState(false);
 
@@ -81,14 +82,14 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
     </button>
   );
 
-  const SectionHeader = ({ label, icon, onClick, open, badge }: { label: string; icon: React.ComponentType<{ className?: string }>; onClick: () => void; open: boolean; badge?: string }) => (
+  const SectionHeader = ({ label, icon: Icon, onClick, open, badge }: { label: string; icon: React.ComponentType<{ className?: string }>; onClick: () => void; open: boolean; badge?: string }) => (
     <button
       onClick={onClick}
       className={cn(
         "flex w-full items-center gap-3 px-3 py-2 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded-lg transition-colors"
       )}
     >
-      <icon className="h-5 w-5 flex-shrink-0" />
+      <Icon className="h-5 w-5 flex-shrink-0" />
       {!collapsed && (
         <>
           <span className="truncate">{label}</span>
@@ -106,7 +107,7 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
   );
 
   return (
-    <div className="flex h-full flex-col overflow-hidden">
+    <div className={cn("flex h-full flex-col overflow-hidden", className)}>
       {/* Logo */}
       <div className="flex h-16 items-center justify-center px-4 border-b border-border-primary">
         {!collapsed && (

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronRight, ChevronLeft, Check, Music, Zap, Globe, Download, Heart, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";

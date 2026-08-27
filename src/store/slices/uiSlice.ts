@@ -1,4 +1,4 @@
-import { createSlice, type StateCreator } from "zustand";
+import type { StateCreator } from "zustand";
 
 export interface UISliceState {
   leftPanelOpen: boolean;
@@ -14,10 +14,12 @@ export interface UISliceState {
   notifications: Array<{ id: string; message: string; type: "info" | "success" | "warning" | "error"; duration?: number }>;
   toggleLeftPanel: () => void;
   setLeftPanel: (open: boolean) => void;
+  setLeftPanelOpen: (open: boolean) => void;
   toggleRightPanel: () => void;
   setRightPanel: (open: boolean) => void;
+  setRightPanelOpen: (open: boolean) => void;
   toggleLyrics: () => void;
-  setLyrics: (open: boolean) => void;
+  setLyricsOpen: (open: boolean) => void;
   setMinimized: (minimized: boolean) => void;
   toggleMinimized: () => void;
   setHideExplicit: (hide: boolean) => void;
@@ -33,7 +35,7 @@ export interface UISliceState {
 
 export const createUISlice: StateCreator<
   UISliceState,
-  [["zustand/immer", never]],
+  [],
   [],
   UISliceState
 > = (set, get) => ({
@@ -51,12 +53,14 @@ export const createUISlice: StateCreator<
 
   toggleLeftPanel: () => set((state) => ({ leftPanelOpen: !state.leftPanelOpen })),
   setLeftPanel: (leftPanelOpen) => set({ leftPanelOpen }),
+  setLeftPanelOpen: (leftPanelOpen) => set({ leftPanelOpen }),
 
   toggleRightPanel: () => set((state) => ({ rightPanelOpen: !state.rightPanelOpen })),
   setRightPanel: (rightPanelOpen) => set({ rightPanelOpen }),
+  setRightPanelOpen: (rightPanelOpen) => set({ rightPanelOpen }),
 
   toggleLyrics: () => set((state) => ({ lyricsOpen: !state.lyricsOpen })),
-  setLyrics: (lyricsOpen) => set({ lyricsOpen }),
+  setLyricsOpen: (lyricsOpen) => set({ lyricsOpen }),
 
   setMinimized: (minimized) => set({ minimized }),
   toggleMinimized: () => set((state) => ({ minimized: !state.minimized })),

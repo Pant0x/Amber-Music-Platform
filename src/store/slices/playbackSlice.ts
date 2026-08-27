@@ -1,4 +1,4 @@
-import { createSlice, type StateCreator } from "zustand";
+import type { StateCreator } from "zustand";
 import type { Track, QueueItem } from "../types";
 
 export interface PlaybackState {
@@ -41,7 +41,7 @@ const createQueueItem = (track: Track): QueueItem => ({
 
 export const createPlaybackSlice: StateCreator<
   PlaybackState,
-  [["zustand/immer", never]],
+  [],
   [],
   PlaybackState
 > = (set, get) => ({

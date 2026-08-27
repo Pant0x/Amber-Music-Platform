@@ -4,7 +4,7 @@
 import YTMusic from "ytmusic-api";
 
 let ytMusicClient: YTMusic | null = null;
-let initPromise: Promise<void> | null = null;
+let initPromise: Promise<any> | null = null;
 
 async function getYTMusic(): Promise<YTMusic> {
   if (!ytMusicClient) {

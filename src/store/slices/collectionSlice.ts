@@ -1,4 +1,4 @@
-import { createSlice, type StateCreator } from "zustand";
+import type { StateCreator } from "zustand";
 import type { Playlist, Track, Artist } from "../types";
 
 export interface CollectionState {
@@ -28,7 +28,7 @@ export interface CollectionState {
 
 export const createCollectionSlice: StateCreator<
   CollectionState,
-  [["zustand/immer", never]],
+  [],
   [],
   CollectionState
 > = (set, get) => ({

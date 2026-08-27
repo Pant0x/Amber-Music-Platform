@@ -30,6 +30,8 @@ export interface Album {
   thumbnailUrl: string;
   releaseType?: string;
   artistId?: string;
+  tracks?: Track[];
+  trackCount?: number;
   origin?: "youtube" | "spotify";
 }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { createContext, useContext, useState, ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Play, Heart, Download, Share2, Copy, Edit, Trash2, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -76,4 +77,38 @@ function ContextMenuItem({
       {label}
     </button>
   );
+}
+
+interface PlaylistContextMenuContextType {
+  openContextMenu: (playlist: Playlist, x: number, y: number) => void;
+  closeContextMenu: () => void;
+}
+
+const PlaylistContextMenuContext = createContext<PlaylistContextMenuContextType | null>(null);
+
+export function PlaylistContextMenuProvider({ children }: { children: ReactNode }) {
+  const [contextMenu, setContextMenu] = useState<{ playlist: Playlist; x: number; y: number } | null>(null);
+
+  return (
+    <PlaylistContextMenuContext.Provider
+      value={{
+        openContextMenu: (playlist, x, y) => setContextMenu({ playlist, x, y }),
+        closeContextMenu: () => setContextMenu(null),
+      }}
+    >
+      {children}
+      {contextMenu && (
+        <PlaylistContextMenu
+          playlist={contextMenu.playlist}
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
+    </PlaylistContextMenuContext.Provider>
+  );
+}
+
+export function usePlaylistContextMenu() {
+  return useContext(PlaylistContextMenuContext);
 }

@@ -27,7 +27,7 @@ export async function getSpotifyApi(): Promise<SpotifyWebApi> {
   return spotifyApi;
 }
 
-export async function searchSpotify(query: string, types: string[] = ["track", "artist", "album", "playlist"], limit = 20) {
+export async function searchSpotify(query: string, types: Array<"track" | "artist" | "album" | "playlist"> = ["track", "artist", "album", "playlist"], limit = 20) {
   const api = await getSpotifyApi();
   return api.search(query, types, { limit });
 }

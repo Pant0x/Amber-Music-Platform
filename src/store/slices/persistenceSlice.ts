@@ -1,4 +1,4 @@
-import { createSlice, type StateCreator } from "zustand";
+import type { StateCreator } from "zustand";
 import type { Track, PlayHistoryItem } from "../types";
 
 export interface PersistenceState {
@@ -22,7 +22,7 @@ export interface PersistenceState {
 
 export const createPersistenceSlice: StateCreator<
   PersistenceState,
-  [["zustand/immer", never]],
+  [],
   [],
   PersistenceState
 > = (set, get) => ({

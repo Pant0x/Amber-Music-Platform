@@ -1,6 +1,6 @@
-import { createSlice, type StateCreator } from "zustand";
+import type { StateCreator } from "zustand";
 
-export type ActiveTab = "home" | "explore" | "library" | "liked" | "playlists" | "artists" | "albums" | "files" | "search" | "settings" | "transfer";
+export type ActiveTab = "home" | "explore" | "library" | "liked" | "playlists" | "artists" | "albums" | "files" | "search" | "settings" | "transfer" | "history" | "artistDashboard";
 
 export interface NavigationState {
   activeTab: ActiveTab;
@@ -19,7 +19,7 @@ export interface NavigationState {
 
 export const createNavigationSlice: StateCreator<
   NavigationState,
-  [["zustand/immer", never]],
+  [],
   [],
   NavigationState
 > = (set, get) => ({

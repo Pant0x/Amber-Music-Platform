@@ -41,7 +41,7 @@ async function request<T>(
   return response.json();
 }
 
-export const api = {
+const baseApi = {
   get: <T>(endpoint: string, options?: RequestOptions) => request<T>(endpoint, { ...options, method: "GET" }),
   post: <T>(endpoint: string, body: unknown, options?: RequestOptions) =>
     request<T>(endpoint, { ...options, method: "POST", body: JSON.stringify(body) }),
@@ -52,6 +52,24 @@ export const api = {
   delete: <T>(endpoint: string, options?: RequestOptions) =>
     request<T>(endpoint, { ...options, method: "DELETE" }),
 };
+
+export const api = Object.assign(baseApi, {
+  search: null as any,
+  youtube: null as any,
+  lyrics: null as any,
+  radio: null as any,
+  recommendations: null as any,
+  transfer: null as any,
+  artist: null as any,
+  storage: null as any,
+  devices: null as any,
+  files: null as any,
+  subscription: null as any,
+  admin: null as any,
+  shazam: null as any,
+  spotify: null as any,
+  listenHistory: null as any,
+});
 
 export const searchApi = {
   search: (query: string, options?: RequestOptions) =>
@@ -208,5 +226,21 @@ export const listenHistoryApi = {
   record: (data: { trackId: string; source: string; progress: number }, options?: RequestOptions) =>
     api.post<void>("/listen_history", data, options),
 };
+
+api.search = searchApi;
+api.youtube = youtubeApi;
+api.lyrics = lyricsApi;
+api.radio = radioApi;
+api.recommendations = recommendationsApi;
+api.transfer = transferApi;
+api.artist = artistApi;
+api.storage = storageApi;
+api.devices = devicesApi;
+api.files = filesApi;
+api.subscription = subscriptionApi;
+api.admin = adminApi;
+api.shazam = shazamApi;
+api.spotify = spotifyApi;
+api.listenHistory = listenHistoryApi;
 
 export default api;

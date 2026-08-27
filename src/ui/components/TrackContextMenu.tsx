@@ -1,10 +1,11 @@
 "use client";
 
+import { createContext, useContext, useState, ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronDown, ChevronUp, Play, Heart, Download, Share2, Copy, MoreHorizontal, Flag, Trash2 } from "lucide-react";
+import { X, ChevronDown, ChevronUp, Play, Heart, HeartOff, Download, Share2, Copy, MoreHorizontal, Flag, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePlaybackStore, useCollectionStore } from "@/store/usePlayerStore";
-import type { Track, Playlist } from "@/store/types";
+import type { Track } from "@/store/types";
 
 interface TrackContextMenuProps {
   track: Track;
@@ -83,4 +84,38 @@ function ContextMenuItem({
       {label}
     </button>
   );
+}
+
+interface TrackContextMenuContextType {
+  openContextMenu: (track: Track, x: number, y: number) => void;
+  closeContextMenu: () => void;
+}
+
+const TrackContextMenuContext = createContext<TrackContextMenuContextType | null>(null);
+
+export function TrackContextMenuProvider({ children }: { children: ReactNode }) {
+  const [contextMenu, setContextMenu] = useState<{ track: Track; x: number; y: number } | null>(null);
+
+  return (
+    <TrackContextMenuContext.Provider
+      value={{
+        openContextMenu: (track, x, y) => setContextMenu({ track, x, y }),
+        closeContextMenu: () => setContextMenu(null),
+      }}
+    >
+      {children}
+      {contextMenu && (
+        <TrackContextMenu
+          track={contextMenu.track}
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
+    </TrackContextMenuContext.Provider>
+  );
+}
+
+export function useTrackContextMenu() {
+  return useContext(TrackContextMenuContext);
 }

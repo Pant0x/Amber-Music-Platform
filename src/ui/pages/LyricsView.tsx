@@ -90,7 +90,12 @@ export function LyricsView() {
           <div className="flex-1 h-1 bg-bg-tertiary rounded-full overflow-hidden">
             <motion.div
               className="h-full bg-amber-500 rounded-full"
-              style={{ width: `${Math.min((progress / (currentTrack?.duration || 1)) * 100, 100)}%` }}
+              style={{
+                width: `${Math.min(
+                  (progress / (Number(currentTrack?.duration) || 1)) * 100,
+                  100
+                )}%`,
+              }}
             />
           </div>
           <span className="text-xs text-text-muted w-10 text-right">
@@ -133,8 +138,13 @@ function LyricsContent({ lyrics, translation, showTranslation, fontScale, curren
   );
 }
 
-function formatTime(seconds: number): string {
-  if (!seconds || isNaN(seconds)) return "0:00";
+function formatTime(seconds: number | string): string {
+  if (!seconds) return "0:00";
+  if (typeof seconds === "string") {
+    if (seconds.includes(":")) return seconds;
+    seconds = Number(seconds);
+  }
+  if (isNaN(seconds)) return "0:00";
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
