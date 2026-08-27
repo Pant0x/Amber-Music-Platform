@@ -1,199 +1,302 @@
-# Amber Music Platform
+<p align="center">
+  <img width="120px" src="assets/img/Logo.png" alt="Zuno" />
+</p>
 
-A modern, cross-platform music platform with YouTube Music integration, lyrics, and a native desktop experience.
+<h1 align="center">Zuno</h1>
+
+<p align="center">
+  A fast, native-feeling desktop client for YouTube Music.<br />
+  Built with Tauri, React and TypeScript for <b>Windows, macOS and Linux</b>.
+</p>
+
+<p align="center">
+  <a href="https://github.com/noFAYZ/zuno/releases/latest"><img src="https://img.shields.io/github/downloads/noFAYZ/zuno/total?style=for-the-badge&color=ff0033&label=downloads" alt="Downloads"></a>
+  <a href="https://github.com/noFAYZ/zuno/releases/latest"><img src="https://img.shields.io/github/package-json/v/noFAYZ/zuno?style=for-the-badge&color=ff3d00&label=version" alt="Version"></a>
+  <a href="https://github.com/noFAYZ/zuno/blob/main/LICENSE"><img src="https://img.shields.io/github/license/noFAYZ/zuno?style=for-the-badge&color=ff6900" alt="License"></a>
+  <a href="https://github.com/noFAYZ/zuno/stargazers"><img src="https://img.shields.io/github/stars/noFAYZ/zuno?style=for-the-badge&color=ff9700&label=stars" alt="Stars"></a>
+  <a href="https://aur.archlinux.org/packages/zuno"><img src="https://img.shields.io/aur/version/zuno?style=for-the-badge&color=ffc300&label=AUR" alt="AUR"></a>
+</p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/img/zuno-d1-1.2.PNG" />
+    <source media="(prefers-color-scheme: light)" srcset="assets/img/zuno-l4-1.2.PNG" />
+    <img src="assets/img/zuno-d1-1.2.PNG" alt="Zuno home view" width="900" />
+  </picture>
+</p>
+
+> [!IMPORTANT]
+> Zuno is an independent, unofficial project. It is not affiliated with, authorized by,
+> sponsored by, or endorsed by YouTube or Google.
+
+<br />
+
+## About
+
+Zuno brings YouTube Music to the desktop as its own application, not a browser tab. There is
+no official desktop client, so the goal is a fast, native-feeling one that holds up with large
+libraries.
+
+If you find it useful, **starring the repo** genuinely helps.
+
+<br />
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><b>Synced lyrics</b></td>
+    <td width="50%"><b>Artist page</b></td>
+  </tr>
+  <tr>
+    <td><img src="assets/img/zuno-d-1.2.PNG" alt="Synced lyrics following the current line" /></td>
+    <td><img src="assets/img/zuno-d4-1.2.PNG" alt="An artist page showing popular songs and releases" /></td>
+  </tr>
+  <tr>
+    <td><sub>Click a line to seek, nudge the timing if a match is off, and see which source the words came from.</sub></td>
+    <td><sub>Popular tracks and every release, filtered by albums, singles or EPs.</sub></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td width="50%"><b>Queue</b></td>
+    <td width="50%"><b>Library</b></td>
+  </tr>
+  <tr>
+    <td><img src="assets/img/zuno-d3-1.2.PNG" alt="The queue panel open beside the home view" /></td>
+    <td><img src="assets/img/zuno-l5-1.2.PNG" alt="The library songs list, with explicit badges and the now-playing meter" /></td>
+  </tr>
+  <tr>
+    <td><sub>Separates what you added by hand from what came next on its own.</sub></td>
+    <td><sub>Marks what is liked, downloaded and explicit at a glance.</sub></td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="assets/img/zuno-set-1.2.PNG" alt="Zuno settings, showing the library and lyrics options" width="860" />
+  <br />
+  <sub>Settings — quality, lyrics source, translation and text size, downloads and the disk cap.</sub>
+</p>
+
+<br />
 
 ## Features
 
-- 🎵 **YouTube Music Integration** - Search, play, and discover music from YouTube Music
-- 📱 **Cross-Platform** - Web (Vercel) + Native Desktop (Tauri) for Windows, macOS, Linux
-- 🎤 **Synced Lyrics** - Line-by-line lyrics that follow the song
-- 🌍 **Multi-Language** - Lyrics translation in 20+ languages
-- 💾 **Offline Downloads** - Save songs, albums, and playlists for offline listening
-- 🎧 **Advanced Player** - Equalizer, crossfade, playback speed, queue management
-- 🔄 **Playlist Transfer** - Import/export playlists from Spotify, YouTube Music, Deezer
-- 🎨 **Themes** - Light/Dark/System with custom accent colors
-- 🔔 **Discord Rich Presence** - Show what you're listening to
-- 📊 **Last.fm Scrobbling** - Track your listening history
-- 🔐 **Supabase Auth** - Email/password, magic links, OAuth (Google, Discord, Spotify)
-- ⌨️ **Global Shortcuts** - Media keys, custom hotkeys
-- 💾 **Local Files** - Play your own music library alongside streaming
+| Feature | Description |
+|---|---|
+| **Search** | Ctrl+Space from anywhere, across artists, songs, playlists and albums |
+| **Multiple tabs** | Each tab keeps its own queue, volume and player state — start an album in one, browse in another, and the first keeps playing |
+| **Offline downloads** | Save a song, a selection, or a whole album or playlist, with its own quality setting and a size cap you control |
+| **Mini player** | A morphing capsule that appears when you tab away; drag it anywhere, hover to expand |
+| **Synced lyrics** | Line-by-line lyrics that follow the song, unlike the official web client. Click a line to jump to it, nudge the timing if a match is off, and pick which source is tried first |
+| **Lyrics translation** | A translation under each line, in any of twenty languages, with an adjustable text size |
+| **Like & dislike** | Rate from the row, the player or the right-click menu — ratings sync to your YouTube Music account |
+| **Batch actions** | Shift/ctrl-select rows, then queue, download, add to a playlist or remove them together |
+| **Queue control** | Collapses to an artwork-only rail; end the queue at a track, generate more from it, shuffle or clear what's next |
+| **Recommendations** | Personalised suggestions plus a "surprise me" shuffle — hide the carousel if you would rather open on your library |
+| **Browse** | Explore, charts, moods and genres, and podcasts, with mood chips you can drill into |
+| **Local files** | Folders from your own machine sit alongside your library, with a tag editor for fixing metadata |
+| **Discord & Last.fm** | Rich Presence and scrobbling, each toggleable straight from the toolbar |
+| **Account support** | Sign in with Google for your library and playlists, and switch between channels on the same account |
+| **Playlist import/export** | Save a playlist to a file and bring it back, on this machine or another |
+| **Desktop integration** | Media keys, minimise to tray, launch at login, remembered window position, rebindable shortcuts |
+| **Light & dark themes** | Follows the OS by default, or pin either one — plus a reduced-motion mode |
+| **Caching** | Playlists, lyrics and artwork are cached, so revisits are instant |
+| **Auto-updates** | Signed updates install themselves; no manual re-download |
 
-## Tech Stack
+<br />
 
-- **Frontend**: React 19, Next.js 16 (App Router), TypeScript
-- **Desktop**: Tauri 2 (Rust), WebView2/WebKitGTK
-- **Styling**: Tailwind CSS v4
-- **State**: Zustand v5 (persisted)
-- **Auth**: Supabase Auth
-- **Database**: Supabase (PostgreSQL)
-- **Storage**: Supabase Storage
-- **APIs**: YouTube Music (via youtubei.js), Spotify, Genius
-- **Deployment**: Vercel (web), GitHub Releases (desktop)
+## Download
 
-## Getting Started
+Grab the newest installer from the **[latest release](https://github.com/noFAYZ/zuno/releases/latest)**
+for Windows, macOS or Linux.
+
+On Arch and derivatives, install from the AUR instead:
+
+```bash
+yay -S zuno     # or: paru -S zuno
+```
+
+<br />
+
+## Platform support
+
+- **Windows** — primary target; the most tested of the three.
+- **macOS** — supported; the build is unsigned (see below).
+- **Linux** — supported across major distros; runs on your system's WebKitGTK and GStreamer.
+
+### Linux notes
+
+Install the `.deb` or `.rpm`, or `zuno` from the AUR on Arch. All three run on your system's
+WebKitGTK (rendering) and GStreamer (playback) rather than bundling their own.
+
+<details>
+<summary>🔇 No sound, or "YouTube player error 5"</summary>
+
+Most distros don't install the codecs YouTube needs by default:
+
+```bash
+# Debian, Ubuntu, Mint
+sudo apt install gstreamer1.0-libav gstreamer1.0-plugins-base gstreamer1.0-plugins-good
+
+# Fedora (gstreamer1-libav needs RPM Fusion enabled)
+sudo dnf install gstreamer1-libav gstreamer1-plugins-base gstreamer1-plugins-good
+
+# Arch — installed automatically with the AUR package
+sudo pacman -S gst-libav gst-plugins-base gst-plugins-good
+```
+
+Confirm they registered:
+
+```bash
+gst-inspect-1.0 | grep -E 'avdec_aac|avdec_h264'
+```
+
+</details>
+
+<details>
+<summary>⬜ A blank grey window</summary>
+
+A WebKitGTK rendering problem under Wayland, most often on Nvidia. Launch from a terminal
+with one of:
+
+```bash
+WEBKIT_DISABLE_DMABUF_RENDERER=1 zuno
+WEBKIT_DISABLE_COMPOSITING_MODE=1 zuno
+GDK_BACKEND=x11 zuno
+```
+
+Launching from an app menu instead? Add the same variable to the `Exec` line of
+`zuno.desktop` (typically `/usr/share/applications/zuno.desktop`, or
+`~/.local/share/applications/zuno.desktop` for a user install):
+
+```
+Exec=env WEBKIT_DISABLE_DMABUF_RENDERER=1 zuno
+```
+
+</details>
+
+<details>
+<summary>⚠️ An EGL error on launch</summary>
+
+Preload the system Wayland client library:
+
+```bash
+LD_PRELOAD=/usr/lib/libwayland-client.so ~/Downloads/zuno*.AppImage
+```
+
+In Gear Lever, add `LD_PRELOAD=/usr/lib/libwayland-client.so` to Zuno's environment variables.
+
+</details>
+
+#### 🪵 Anything else
+
+Open **Settings → Library → Application log**, reproduce the problem, and attach the log to
+an issue along with your desktop environment, display server (X11 or Wayland) and distro —
+those three narrow down a Linux bug faster than anything else. The log also lives at
+`~/.local/share/com.zuno.desktop/logs/current.log`.
+
+### macOS notes
+
+#### "Apple is not able to verify that it is free from malware"
+
+The macOS builds aren't signed with an Apple Developer ID, so Gatekeeper blocks them on first
+launch. This isn't a malware finding — it means the binary is unsigned. Drag Zuno to
+Applications, then either:
+
+- open **System Settings → Privacy & Security**, scroll to the message about Zuno, and click
+  **Open Anyway**, or
+- clear the quarantine flag yourself:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Zuno.app
+```
+
+Build from source instead if you'd rather not trust a prebuilt, unsigned binary.
+
+#### A Keychain prompt on sign-in
+
+Zuno stores one encryption key in its own Keychain entry and encrypts your YouTube Music
+session with it before writing anything to the app data directory. Choose **Always Allow** to
+avoid repeated prompts — or **Deny** if you don't intend to sign in to YouTube Music.
+
+<br />
+
+## For developers
 
 ### Prerequisites
 
-- Node.js 20+
-- Rust 1.75+ (for desktop)
-- pnpm or npm
+- Node.js LTS and npm
+- [Rust and Cargo](https://rustup.rs/)
+- C++ build tools (MSVC on Windows)
+- Microsoft Edge WebView2 Runtime (Windows)
 
-### Installation
+The Tauri CLI ships in the project's dev dependencies — no global install needed.
+
+### Install, run, build
 
 ```bash
-# Clone the repository
-git clone https://github.com/Pant0x/Amber-Music-Platform.git
-cd Amber-Music-Platform
-
-# Install dependencies
 npm install
-
-# Copy environment variables
-cp .env.example .env.local
-# Edit .env.local with your credentials
-
-# Start development servers
-npm run dev          # Web (Next.js) - http://localhost:3000
-npm run tauri:dev    # Desktop (Tauri)
+npm run tauri dev
+npm run tauri build
 ```
 
-### Environment Variables
+### Architecture
 
-See `.env.example` for all required variables:
+The `docs/` folder documents the codebase:
 
-- **Supabase**: Project URL, anon key, service role key
-- **YouTube API**: API key for search/player
-- **Spotify**: Client ID/secret for playlist import
-- **Genius**: Client ID/secret for lyrics
-- **Admin**: Username/password for admin dashboard
+- [`docs/architecture.md`](docs/architecture.md) — system overview and module map
+- [`docs/frontend.md`](docs/frontend.md) — React structure, styling tokens, icon conventions
+- [`docs/backend.md`](docs/backend.md) — Rust commands and the IPC surface
 
-## Building
+### Contributing
 
-### Web (Vercel)
+Contributions are welcome. Fork the repo, branch, test locally, and open a pull request
+describing what changed and why. For larger changes, open an issue first so the approach can
+be discussed.
 
-```bash
-npm run build        # Production build
-npm run start        # Start production server
-vercel deploy        # Deploy to Vercel
-```
+By contributing you agree to the [Contributor License Agreement](CLA.md).
 
-### Desktop (Tauri)
-
-```bash
-# Development
-npm run tauri:dev
-
-# Production builds
-npm run tauri:build:win   # Windows (NSIS installer + portable)
-npm run tauri:build       # Current platform (macOS/Linux/Windows)
-
-# Output locations:
-# Windows: src-tauri/target/release/bundle/nsis/Amber Music Setup *.exe
-# Windows: src-tauri/target/release/bundle/portable/AmberMusic.exe
-# macOS: src-tauri/target/release/bundle/dmg/Amber Music *.dmg
-# Linux: src-tauri/target/release/bundle/appimage/Amber Music *.AppImage
-```
-
-## Project Structure
-
-```
-├── src/
-│   ├── app/                    # Next.js App Router pages
-│   │   ├── (auth)/            # Auth pages (sign-in, sign-up, callback)
-│   │   ├── api/               # API routes
-│   │   ├── globals.css        # Global styles (Tailwind v4)
-│   │   ├── layout.tsx         # Root layout
-│   │   ├── page.tsx           # Home page
-│   │   └── providers.tsx      # Context providers
-│   ├── components/
-│   │   ├── providers/         # Theme, Player, Toast providers
-│   │   └── ui/                # Shared UI components
-│   ├── lib/
-│   │   ├── api/               # API client (calls Vercel APIs)
-│   │   ├── supabase*.ts       # Supabase clients
-│   │   └── utils.ts           # Utility functions
-│   ├── store/
-│   │   ├── slices/            # Zustand store slices
-│   │   └── usePlayerStore.ts  # Main store hook
-│   ├── ui/                    # Zuno UI components (adapted)
-│   │   ├── components/        # UI components
-│   │   ├── pages/             # Page components
-│   │   └── styles/            # Component styles
-│   └── emails/                # Email templates
-├── src-tauri/                 # Tauri (Rust) desktop app
-│   ├── src/
-│   │   ├── main.rs            # Entry point
-│   │   ├── lib.rs             # Commands & logic
-│   │   ├── audio.rs           # Audio engine
-│   │   ├── equalizer.rs       # Equalizer
-│   │   ├── discord_rpc.rs     # Discord Rich Presence
-│   │   └── ...                # Platform-specific modules
-│   ├── tauri.conf.json        # Tauri configuration
-│   └── Cargo.toml             # Rust dependencies
-├── public/                    # Static assets
-├── .github/workflows/         # CI/CD pipelines
-├── vercel.json                # Vercel configuration
-└── package.json               # npm scripts & dependencies
-```
-
-## API Routes
-
-| Route | Description |
-|-------|-------------|
-| `/api/search` | Search YouTube Music, Spotify |
-| `/api/youtube/resolve` | Resolve track to video ID |
-| `/api/youtube/next` | Get next recommended track |
-| `/api/youtube/playlist` | Get playlist details |
-| `/api/lyrics` | Get synced lyrics |
-| `/api/radio/start` | Generate radio from seed |
-| `/api/radio/more` | Radio pagination |
-| `/api/recommendations` | Personalized recommendations |
-| `/api/transfer/import` | Import playlist from URL |
-| `/api/transfer/save` | Save imported playlist |
-| `/api/artist/upload` | Artist track upload |
-| `/api/storage/upload` | File upload to Supabase |
-| `/api/devices` | Device sync |
-| `/api/files` | Local files management |
-| `/api/admin/*` | Admin dashboard |
-
-## Deployment
-
-### Vercel (Web)
-
-1. Connect repository to Vercel
-2. Configure environment variables
-3. Deploy automatically on push to main
-
-### GitHub Releases (Desktop)
-
-1. Tag a release: `git tag v1.0.0 && git push origin v1.0.0`
-2. GitHub Actions builds for all platforms
-3. Artifacts uploaded to GitHub Releases
-4. Tauri updater checks for updates automatically
-
-## Performance Optimizations
-
-- **Bundle Size**: Optimized with `opt-level = "z"` and LTO
-- **Memory**: Jemalloc allocator (optional), efficient caching
-- **Network**: HTTP/2, connection pooling, request deduplication
-- **Startup**: Lazy loading, code splitting, preloading
-- **Desktop**: Single-instance, background updates, tray minimization
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run lint/typecheck: `npm run lint && npm run typecheck`
-5. Submit a pull request
-
-## License
-
-MIT License - see LICENSE for details
+<br />
 
 ## Credits
 
-- Built on [Tauri](https://tauri.app/) and [Next.js](https://nextjs.org/)
-- YouTube Music integration via [youtubei.js](https://github.com/LuanRT/YouTube.js)
-- Inspired by [Zuno](https://github.com/noFAYZ/zuno) and [JustAnotherMusicClient](https://github.com/2latemc/JustAnotherMusicClient)
-- Icons from [Lucide](https://lucide.dev/)
+Zuno is a fork of **[JustAnotherMusicClient](https://github.com/2latemc/JustAnotherMusicClient)**
+by [2latemc](https://github.com/2latemc), used under the Apache 2.0 licence. The original
+project did the hard groundwork of getting YouTube Music working on the desktop.
+
+If you want to support the original author, they accept donations
+[on Ko-fi](https://ko-fi.com/totally2late).
+
+<br />
+
+## Legal
+
+**Zuno provides no downloading functionality.** It is a client for audio listening, with
+theming and interface additions.
+
+Zuno interacts with YouTube and YouTube Music. Access to those services remains governed by
+their own terms, policies, availability and regional restrictions.
+
+Zuno does not host or claim ownership of music, videos, artwork, metadata, or any other
+content supplied by third parties. Rights in that content remain with their respective
+owners.
+
+The project is not intended to circumvent access controls, geographic restrictions,
+advertising, paid service requirements, or content licensing, nor to enable unauthorised
+downloading, copying, redistribution or public performance of third-party content.
+
+YouTube and YouTube Music are trademarks of Google LLC. All other trademarks are the property
+of their respective owners. References to third-party products describe compatibility and
+integration only.
+
+- [YouTube Terms of Service](https://www.youtube.com/static?template=terms)
+- [YouTube API Services Terms of Service](https://developers.google.com/youtube/terms/api-services-terms-of-service)
+- [YouTube API Services Developer Policies](https://developers.google.com/youtube/terms/developer-policies)
+
+## Thanks to our contributors
+
+<a href="https://github.com/noFAYZ/zuno/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=noFAYZ/zuno" />
+</a>

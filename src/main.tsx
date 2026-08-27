@@ -1,75 +1,144 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { ErrorBoundary } from "@/ui/components/ErrorBoundary";
-import "@/app/globals.css";
-import { Providers } from "@/app/providers";
-import { App } from "@/ui/App";
+import App from "./ui/App";
+import { ErrorBoundary } from "./ui/components/ErrorBoundary";
+import "./ui/styles/global.css";
+import { logInternalError, logInternalInfo } from "./internal/logging";
+import { applyPaperPcMode, hydratePaperPcMode } from "./ui/settings/paperPcMode";
+import { applyTheme, hydrateTheme, watchSystemTheme } from "./ui/settings/theme";
+import {
+  applyNativeWindowControls,
+  hydrateWindowControlSettings,
+} from "./ui/settings/windowControls";
+import { hydrateMiniPlayerSettings } from "./ui/settings/miniPlayer";
+import { hydratePlayerControlSettings } from "./ui/settings/playerControls";
+import { hydrateQueuePanelSettings } from "./ui/settings/queuePanel";
+import { hydrateTraySettings } from "./ui/settings/tray";
+import { hydrateMediaSessionSettings } from "./ui/settings/mediaSession";
+import { hydrateAudioQualitySettings } from "./internal/audioQuality";
+import { hydrateAudioEngineMode } from "./ui/settings/audioEngine";
+import { hydrateEqualizer } from "./ui/settings/equalizer";
+import { hydrateHiddenPlaylists } from "./ui/settings/hiddenPlaylists";
+import { hydrateOutputDevice } from "./ui/settings/audioOutputDevice";
+import { hydrateYouTubeAccountSettings } from "./ui/settings/youtubeAccount";
+import { notifyLocalPlaylistsChanged, syncLocalAudioWatcher } from "./player/localPlaylists";
+import { listen } from "@tauri-apps/api/event";
+import { hydrateLastFmSettings } from "./ui/settings/lastfm";
+import { hydrateDiscordSettings } from "./ui/settings/discord";
+import { hydrateSidebarSettings } from "./ui/settings/sidebarMode";
+import { hydrateKeyboardShortcuts } from "./ui/settings/keyboardShortcuts";
+import {
+  hydrateMainWindowGeometry,
+  restoreMainWindowGeometry,
+} from "./ui/settings/mainWindowGeometry";
+import { applyPlatformAttributes, detectTilingWindowManager } from "./ui/platform";
+import { hydrateArtworkCache } from "./internal/artworkCache";
+import { DiscordRpcService } from "./player/DiscordRPC";
+import { hydratePlaybackSettings } from "./player/playbackSettings";
+import { hydratePlayHistory } from "./player/playHistory";
+import { hydrateSessionRestoreSetting } from "./ui/settings/sessionRestore";
+import { hydrateToolbarItemSettings } from "./ui/settings/toolbarItems";
+import { hydrateHomeSectionSettings } from "./ui/settings/homeSections";
+import { applyRenderEffects, hydrateRenderEffects } from "./ui/settings/renderEffects";
+import { startMemoryReport } from "./internal/memoryReport";
 
-// Detect if running in Tauri
-const isTauri = typeof window !== "undefined" && "__TAURI__" in window;
+logInternalInfo("main.bootstrap start");
+// Before React mounts: a resolution restored after first paint is a resolution that already
+// let its image flash the fallback icon.
+hydrateArtworkCache();
+applyPlatformAttributes();
+void detectTilingWindowManager();
+// Before React mounts: a late theme apply shows a flash of the wrong palette.
+applyTheme();
+watchSystemTheme();
+applyPaperPcMode();
+applyRenderEffects();
+// One line a minute in the app log, so "the renderer is using 220 MB" can be split into heap,
+// DOM, images and subframes instead of guessed at. Settings → Troubleshooting → Open log.
+startMemoryReport();
+void applyNativeWindowControls();
+void hydrateMainWindowGeometry().then(restoreMainWindowGeometry).catch((error) => {
+  logInternalError("mainWindowGeometry.restore failed", error);
+});
+void Promise.all([
+  hydratePaperPcMode(),
+  hydrateRenderEffects(),
+  hydrateTheme(),
+  hydrateWindowControlSettings(),
+  hydrateMediaSessionSettings(),
+  hydrateMiniPlayerSettings(),
+  hydratePlayerControlSettings(),
+  hydrateQueuePanelSettings(),
+  hydrateTraySettings(),
+  hydrateAudioQualitySettings(),
+  hydrateAudioEngineMode(),
+  // Rust starts flat every launch, so the stored curve has to be pushed back down.
+  hydrateEqualizer(),
+  hydrateHiddenPlaylists(),
+  // Same reason: a fresh Rust process opens the OS default device until told otherwise.
+  hydrateOutputDevice(),
+  hydrateYouTubeAccountSettings(),
+  hydrateLastFmSettings(),
+  hydrateDiscordSettings(),
+  hydrateSidebarSettings(),
+  hydrateKeyboardShortcuts(),
+  hydrateToolbarItemSettings(),
+  hydrateHomeSectionSettings(),
+  hydratePlaybackSettings(),
+  hydratePlayHistory(),
+  // Read synchronously from local storage at boot, so this only backfills a machine whose
+  // local storage was cleared — it takes effect from the next launch.
+  hydrateSessionRestoreSetting(),
+]).catch((error) => {
+  logInternalError("settings hydration failed", error);
+});
 
-async function bootstrap() {
-  // Pre-hydration: Apply theme immediately to prevent flash
-  if (typeof window !== "undefined") {
-    const theme = localStorage.getItem("theme") || "system";
-    const root = document.documentElement;
-    root.classList.remove("light", "dark");
-    if (theme === "system") {
-      root.classList.add(window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-    } else {
-      root.classList.add(theme);
-    }
-  }
-
-  // Initialize Tauri-specific features
-  if (isTauri) {
-    try {
-      const { listen } = await import("@tauri-apps/api/event");
-      const { DiscordRpcService } = await import("@/player/DiscordRPC");
-      const { hydratePlaybackSettings } = await import("@/player/playbackSettings");
-      const { hydratePlayHistory } = await import("@/player/playHistory");
-      const { syncLocalAudioWatcher, notifyLocalPlaylistsChanged } = await import("@/player/localPlaylists");
-
-      // Initialize Discord RPC
-      void DiscordRpcService.init().catch(console.error);
-
-      // Hydrate settings
-      await Promise.all([
-        hydratePlaybackSettings(),
-        hydratePlayHistory(),
-      ]).catch(console.error);
-
-      // Local files watcher
-      syncLocalAudioWatcher();
-      void listen("local-audio-changed", () => notifyLocalPlaylistsChanged());
-    } catch (error) {
-      console.error("Tauri initialization failed:", error);
-    }
-  }
-
-  // Global error handlers
-  window.addEventListener("error", (event) => {
-    console.error("window.error", event.error ?? event.message, {
-      filename: event.filename,
-      lineno: event.lineno,
-      colno: event.colno,
-    });
+// Initialize Discord RPC (non-blocking)
+logInternalInfo("[Discord RPC] Initializing Discord RPC service");
+try {
+  void DiscordRpcService.init().catch((error) => {
+    logInternalError("[Discord RPC] initialization error", error);
   });
-
-  window.addEventListener("unhandledrejection", (event) => {
-    console.error("window.unhandledrejection", event.reason);
-  });
-
-  // Render the app
-  ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-    <React.StrictMode>
-      <ErrorBoundary label="Amber Music">
-        <Providers>
-          <App />
-        </Providers>
-      </ErrorBoundary>
-    </React.StrictMode>
-  );
+} catch (error) {
+  logInternalError("[Discord RPC] failed to initialize", error);
 }
 
-bootstrap();
+window.addEventListener("error", (event) => {
+  logInternalError("window.error", event.error ?? event.message, {
+    filename: event.filename,
+    lineno: event.lineno,
+    colno: event.colno,
+  });
+});
+
+window.addEventListener("unhandledrejection", (event) => {
+  logInternalError("window.unhandledrejection", event.reason);
+});
+
+import { SupabaseProvider } from "./lib/supabase-provider";
+
+/*
+ * The outermost boundary. Nothing below it can be recovered from selectively, so its only
+ * job is to make sure a render error leaves something on screen with a button on it rather
+ * than a blank window — a desktop shell has no address bar to reload from.
+ */
+ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+  <React.StrictMode>
+    <ErrorBoundary label="Zuno">
+      <SupabaseProvider>
+        <App />
+      </SupabaseProvider>
+    </ErrorBoundary>
+  </React.StrictMode>,
+);
+
+/*
+ * Local folders are watched for the whole session. The event carries no detail on purpose —
+ * a rescan is cheap and precisely diffing renames, temp files and write-then-replace editors
+ * would be far more code for the same visible result.
+ */
+if (typeof window !== "undefined" && ("__TAURI_INTERNALS__" in window || "__TAURI__" in window)) {
+  syncLocalAudioWatcher();
+  void listen("local-audio-changed", () => notifyLocalPlaylistsChanged());
+}
+

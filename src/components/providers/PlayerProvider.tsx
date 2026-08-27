@@ -54,8 +54,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     audio.addEventListener("pause", handlePause);
     audio.addEventListener("error", handleError);
 
-    if (lastOutputDevice && audio.setSinkId) {
-      audio.setSinkId(lastOutputDevice).catch(console.error);
+    if (lastOutputDevice && typeof (audio as any).setSinkId === "function") {
+      (audio as any).setSinkId(lastOutputDevice).catch(() => {});
     }
 
     return () => {
@@ -115,7 +115,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const audio = audioRef.current;
-    if (audio) {
+    if (audio && Math.abs(audio.currentTime - progress) > 1.5) {
       audio.currentTime = progress;
     }
   }, [progress]);

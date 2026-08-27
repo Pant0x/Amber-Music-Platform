@@ -336,7 +336,7 @@ export async function tauriFetch(input: RequestInfo | URL, init?: TauriFetchInit
       || proxyResponse.status === 304
       ? null
       : bodyBytes;
-    return new Response(responseBody, {
+    return new Response(responseBody as unknown as BodyInit, {
       status: proxyResponse.status,
       headers: proxyResponse.headers,
     });

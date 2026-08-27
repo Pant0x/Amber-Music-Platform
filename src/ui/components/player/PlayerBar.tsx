@@ -1,203 +1,238 @@
-"use client";
-
-import { useRef, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  Play,
-  Pause,
-  SkipBack,
-  SkipForward,
-  Shuffle,
-  Repeat,
-  Volume2,
-  VolumeX,
-  Heart,
-  ListMusic,
-  Mic,
-  Expand,
-} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { SpinnerSteps } from "@/components/motion/loader";
 import { cn } from "@/lib/utils";
-import { usePlaybackStore, useUIStore, useLyricsStore } from "@/store/usePlayerStore";
-import { formatDuration } from "@/lib/utils";
+import { PlayActiveIcon, QueuePanelIcon } from "@/ui/icons";
+import { tauriFetch } from "../../../datasource/youtube/tauriFetch";
+import { TrackInfo } from "./TrackInfo";
+import { PlaybackControls } from "./PlaybackControls";
+import { SeekBar } from "./SeekBar";
+import { DownloadButton } from "./DownloadButton";
+import { PlaybackOptions } from "./PlaybackOptions";
+import { VolumeControl } from "./VolumeControl";
+import { LyricsButton } from "./LyricsButton";
+import {
+  useCompactPlayerBar,
+  useExtraPlayerControlsAlwaysVisible,
+} from "../../settings/playerControls";
 
-export function PlayerBar() {
-  const {
-    currentTrack,
-    isPlaying,
-    volume,
-    progress,
-    duration,
-    shuffle,
-    repeat,
-    togglePlay,
-    nextTrack,
-    prevTrack,
-    setVolume,
-    setProgress,
-    setShuffle,
-    setRepeat,
-  } = usePlaybackStore();
-  const { lyricsOpen, setLyricsOpen, rightPanelOpen, setRightPanelOpen } = useUIStore();
-  const { currentLyrics, offset } = useLyricsStore();
-  const progressRef = useRef<HTMLInputElement>(null);
-  const volumeRef = useRef<HTMLInputElement>(null);
+interface PlayerBarProps {
+  onToggleLyrics: () => void;
+  onToggleQueue: () => void;
+  isQueueOpen: boolean;
+  onConnectionRestored: () => Promise<void>;
+  handlePlayerBarClick:()=>void;
+}
 
-  const handleProgressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value);
-    setProgress(value);
-  };
+/*
+ * Two endpoints so one being blocked does not read as "offline", and both answer 204 with an
+ * empty body. This used to lead with `https://music.youtube.com/`, which is 380 KB of HTML
+ * fetched only to prove the network exists — and `allSettled` requests both, so every check
+ * paid for it. gstatic keeps the "can we reach Google" signal at zero bytes.
+ */
+const CONNECTION_CHECK_URLS = [
+  "https://www.gstatic.com/generate_204",
+  "https://cp.cloudflare.com/generate_204",
+];
 
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value);
-    setVolume(value);
-  };
+export function PlayerBar({ onToggleLyrics, onToggleQueue, isQueueOpen, onConnectionRestored,handlePlayerBarClick }: PlayerBarProps) {
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
+  const [isCheckingConnection, setIsCheckingConnection] = useState(false);
+ 
+  const connectionCheckRef = useRef<Promise<boolean> | null>(null);
+  const wasOfflineRef = useRef(!navigator.onLine);
+  const recoveryStartedRef = useRef(false);
+  const failedChecksRef = useRef(0);
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === " ") {
-      e.preventDefault();
-      togglePlay();
+  const updateConnectionState = useCallback((connected: boolean) => {
+    if (connected) failedChecksRef.current = 0;
+    setIsOnline(connected);
+
+    if (!connected) {
+      wasOfflineRef.current = true;
+      return;
     }
-    if (e.key === "ArrowRight") nextTrack();
-    if (e.key === "ArrowLeft") prevTrack();
-  };
+
+    if (wasOfflineRef.current && !recoveryStartedRef.current) {
+      recoveryStartedRef.current = true;
+      void onConnectionRestored();
+    }
+  }, [onConnectionRestored]);
+
+  const checkConnection = useCallback(async () => {
+    if (connectionCheckRef.current) return connectionCheckRef.current;
+
+    const check = (async () => {
+      if (!navigator.onLine) {
+        failedChecksRef.current += 1;
+        if (failedChecksRef.current >= 2) {
+          updateConnectionState(false);
+        } else {
+          window.setTimeout(() => void checkConnection(), 1500);
+        }
+        return false;
+      }
+
+      const checks = await Promise.allSettled(
+        CONNECTION_CHECK_URLS.map((url) =>
+          tauriFetch(url, {
+            cache: "no-store",
+            method: "GET",
+          })
+        ),
+      );
+      const connected = checks.some((result) => result.status === "fulfilled");
+      if (connected) {
+        updateConnectionState(true);
+      } else {
+        failedChecksRef.current += 1;
+        if (failedChecksRef.current >= 2) {
+          updateConnectionState(false);
+        } else {
+          window.setTimeout(() => void checkConnection(), 1500);
+        }
+      }
+      return connected;
+    })();
+
+    connectionCheckRef.current = check;
+    try {
+      return await check;
+    } finally {
+      connectionCheckRef.current = null;
+    }
+  }, [updateConnectionState]);
 
   useEffect(() => {
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [togglePlay, nextTrack, prevTrack]);
+    const handleOnline = () => void checkConnection();
+    const handleOffline = () => void checkConnection();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") void checkConnection();
+    };
 
-  if (!currentTrack) {
-    return (
-      <div className="flex h-16 items-center justify-center border-t border-border-primary bg-bg-secondary/80 backdrop-blur-xl">
-        <p className="text-text-muted">No track playing</p>
-      </div>
-    );
-  }
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    void checkConnection();
 
-  const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [checkConnection, updateConnectionState]);
+
+  useEffect(() => {
+    if (isOnline) return;
+
+    const retryTimer = window.setInterval(() => {
+      void checkConnection();
+    }, 5000);
+
+    return () => window.clearInterval(retryTimer);
+  }, [checkConnection, isOnline]);
+
+  const reconnect = async () => {
+    setIsCheckingConnection(true);
+
+    try {
+      await checkConnection();
+    } finally {
+      setIsCheckingConnection(false);
+    }
+  };
+
+  const extraControlsAlwaysVisible = useExtraPlayerControlsAlwaysVisible();
+  const compactPlayerBar = useCompactPlayerBar();
+
+
 
   return (
-    <div className="flex h-16 items-center gap-4 border-t border-border-primary bg-bg-secondary/80 backdrop-blur-xl px-4">
-      {/* Track Info */}
-      <div className="flex items-center gap-3 min-w-0 flex-1" style={{ minWidth: 0 }}>
-        <div className="relative h-12 w-12 flex-shrink-0 rounded-lg overflow-hidden">
-          <img
-            src={currentTrack.thumbnailUrl}
-            alt={currentTrack.title}
-            className="h-full w-full object-cover"
-            loading="lazy"
-          />
-          {isPlaying && (
-            <motion.div
-              className="absolute inset-0 flex items-center justify-center bg-black/50"
-              animate={{ opacity: [1, 0.5, 1] }}
-              transition={{ duration: 1, repeat: Infinity }}
+    <>
+      <AnimatePresence>
+        {!isOnline && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="flex shrink-0 items-center justify-center gap-3 overflow-hidden bg-muted px-2 py-1  text-sm text-foreground"
+            role="status"
+            aria-live="polite"
+          >
+            <span>You don't have an internet connection</span>
+            <button
+              type="button"
+              className="flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors hover:bg-card disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={() => void reconnect()}
+              disabled={isCheckingConnection}
+              aria-label="Reconnect to the internet"
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500">
-                <Pause className="h-5 w-5 text-black" />
+              {isCheckingConnection ? (
+                <SpinnerSteps   size={24}  />
+              ) : (
+                <PlayActiveIcon size={14} aria-hidden="true" />
+              )}
+              <span>{isCheckingConnection ? "Checking" : "Reconnect"}</span>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div
+        className="group/playerbar flex shrink-0 flex-col gap-1 bg-background px-4 pb-3 pt-2"
+        onClick={handlePlayerBarClick}
+      >
+        {/* Expanded: the seek bar spans the full bar above everything. */}
+        {!compactPlayerBar && <SeekBar />}
+
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4">
+          <div className="min-w-0">
+            <TrackInfo />
+          </div>
+
+          {/* Compact: the seek bar tucks under the controls, in the centre column only, so
+              the bar keeps one row of height and the transport stays the anchor. */}
+          <div className="flex flex-col items-center gap-1">
+            <PlaybackControls extraControlsAlwaysVisible={extraControlsAlwaysVisible} />
+            {compactPlayerBar && (
+              <div className="w-full min-w-[22rem]">
+                <SeekBar />
               </div>
-            </motion.div>
-          )}
-        </div>
-        <div className="min-w-0">
-          <p className="font-medium text-text-primary truncate">{currentTrack.title}</p>
-          <p className="text-sm text-text-muted truncate">{currentTrack.channelTitle}</p>
-        </div>
-      </div>
+            )}
+          </div>
 
-      {/* Controls */}
-      <div className="flex flex-col items-center gap-2 flex-1">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => setShuffle(!shuffle)}
-            className={cn("btn-ghost h-8 w-8 p-0", shuffle && "text-amber-500")}
-            aria-label="Shuffle"
-          >
-            <Shuffle className="h-5 w-5" />
-          </button>
-          <button onClick={prevTrack} className="btn-ghost h-10 w-10 p-0" aria-label="Previous">
-            <SkipBack className="h-6 w-6" />
-          </button>
-          <button
-            onClick={togglePlay}
-            className="btn-primary h-12 w-12 p-0 rounded-full"
-            aria-label={isPlaying ? "Pause" : "Play"}
-          >
-            {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ml-1" />}
-          </button>
-          <button onClick={nextTrack} className="btn-ghost h-10 w-10 p-0" aria-label="Next">
-            <SkipForward className="h-6 w-6" />
-          </button>
-          <button
-            onClick={() => setRepeat(repeat === "off" ? "all" : repeat === "all" ? "one" : "off")}
-            className={cn("btn-ghost h-8 w-8 p-0", repeat !== "off" && "text-amber-500")}
-            aria-label={`Repeat: ${repeat}`}
-          >
-            <Repeat className={cn("h-5 w-5", repeat === "one" && "text-amber-500")} />
-          </button>
-        </div>
-        <div className="flex items-center gap-2 w-full max-w-md">
-          <span className="text-xs text-text-muted w-10 text-right">{formatDuration(progress)}</span>
-          <input
-            ref={progressRef}
-            type="range"
-            min={0}
-            max={duration || 100}
-            value={progress}
-            onChange={handleProgressChange}
-            className="flex-1 h-2 appearance-none bg-bg-tertiary rounded-full cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-amber-500 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-amber-500"
-            style={{
-              background: `linear-gradient(to right, #f59e0b ${progressPercent}%, #333 ${progressPercent}%)`,
-            }}
-            aria-label="Seek"
-          />
-          <span className="text-xs text-text-muted w-10">{formatDuration(duration)}</span>
-        </div>
-      </div>
+          <div className="flex min-w-0 items-center justify-end gap-1">
+            <div
+              className={cn(
+                "flex items-center gap-1 transition-opacity",
+                !extraControlsAlwaysVisible &&
+                  "opacity-0 focus-within:opacity-100 group-hover/playerbar:opacity-100",
+              )}
+            >
+              <LyricsButton onToggle={onToggleLyrics} />
 
-      {/* Right Side */}
-      <div className="flex items-center gap-2 min-w-0" style={{ minWidth: 200 }}>
-        <button
-          onClick={() => setLyricsOpen(!lyricsOpen)}
-          className={cn("btn-ghost h-8 w-8 p-0", lyricsOpen && "text-amber-500")}
-          aria-label="Lyrics"
-        >
-          <Mic className="h-5 w-5" />
-        </button>
-        <button
-          onClick={() => setRightPanelOpen(!rightPanelOpen)}
-          className={cn("btn-ghost h-8 w-8 p-0", rightPanelOpen && "text-amber-500")}
-          aria-label="Queue"
-        >
-          <ListMusic className="h-5 w-5" />
-        </button>
-        <div className="relative">
-          <input
-            ref={volumeRef}
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={volume}
-            onChange={handleVolumeChange}
-            className="w-24 h-2 appearance-none bg-bg-tertiary rounded-full cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-amber-500"
-            aria-label="Volume"
-          />
-          <button
-            onClick={() => setVolume(volume > 0 ? 0 : 0.8)}
-            className="absolute left-0 top-1/2 -translate-y-1/2 ml-2 text-text-muted hover:text-text-primary"
-            aria-label={volume > 0 ? "Mute" : "Unmute"}
-          >
-            {volume > 0 ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
-          </button>
+              <button
+                type="button"
+                className={cn(
+                  "flex size-8 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  isQueueOpen
+                    ? "bg-card text-primary"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+                onClick={onToggleQueue}
+                aria-label={isQueueOpen ? "Close queue" : "Open queue"}
+                title={isQueueOpen ? "Close queue" : "Open queue"}
+              >
+                <QueuePanelIcon size={18} />
+              </button>
+            </div>
+
+            <DownloadButton />
+            <PlaybackOptions />
+            <VolumeControl />
+          </div>
         </div>
-        <button
-          className="btn-ghost h-8 w-8 p-0"
-          aria-label="Expand player"
-        >
-          <Expand className="h-5 w-5" />
-        </button>
       </div>
-    </div>
+    </>
   );
 }

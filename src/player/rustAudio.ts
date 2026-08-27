@@ -41,7 +41,10 @@ let unlisten: Promise<UnlistenFn[]> | null = null;
  * end. Which engine owns `ended` is decided by `setEndedListener`, and only the playback owner
  * ever sets it.
  */
+const isTauri = typeof window !== "undefined" && ("__TAURI_INTERNALS__" in window || "__TAURI__" in window);
+
 function ensureListening(): Promise<UnlistenFn[]> {
+  if (!isTauri) return Promise.resolve([]);
   if (!unlisten) {
     unlisten = Promise.all([
       listen<PositionEvent>("native-audio-position", (event) => {
@@ -77,6 +80,7 @@ export async function load(
   fallbackDurationSec: number,
   standby = false,
 ): Promise<number> {
+  if (!isTauri) return fallbackDurationSec;
   await ensureListening();
   const duration = await invoke<number>("native_audio_load", {
     trackId,
@@ -93,10 +97,12 @@ export async function load(
 }
 
 export function play(): Promise<void> {
+  if (!isTauri) return Promise.resolve();
   return invoke("native_audio_play");
 }
 
 export function pause(): Promise<void> {
+  if (!isTauri) return Promise.resolve();
   return invoke("native_audio_pause");
 }
 
@@ -104,6 +110,7 @@ export async function stop(): Promise<void> {
   positionSec = 0;
   durationSec = 0;
   positionTrackId = null;
+  if (!isTauri) return;
   await invoke("native_audio_stop");
 }
 
@@ -111,14 +118,17 @@ export async function seek(seconds: number): Promise<void> {
   // Written through immediately so the progress bar does not snap back to the old position for
   // the up-to-250 ms before Rust's next event confirms the move.
   positionSec = Math.max(0, seconds);
+  if (!isTauri) return;
   await invoke("native_audio_seek", { positionSec: positionSec });
 }
 
 export function setVolume(volume: number, muted: boolean): Promise<void> {
+  if (!isTauri) return Promise.resolve();
   return invoke("native_audio_set_volume", { volume, muted });
 }
 
 export function setRate(rate: number): Promise<void> {
+  if (!isTauri) return Promise.resolve();
   return invoke("native_audio_set_rate", { rate });
 }
 
@@ -126,6 +136,7 @@ export type OutputDevice = { id: string; name: string; isDefault: boolean };
 
 /** Devices cpal can currently see. Cheap — does not open a device or touch the audio thread. */
 export function listOutputDevices(): Promise<OutputDevice[]> {
+  if (!isTauri) return Promise.resolve([]);
   return invoke<OutputDevice[]>("native_audio_list_output_devices");
 }
 
@@ -135,23 +146,28 @@ export function listOutputDevices(): Promise<OutputDevice[]> {
  * caller reloads the current track the same way a dead stream recovers elsewhere in this file.
  */
 export function setOutputDevice(id: string | null): Promise<void> {
+  if (!isTauri) return Promise.resolve();
   return invoke("native_audio_set_output_device", { id });
 }
 
 export function transition(trackId: string, fadeMs: number): Promise<boolean> {
+  if (!isTauri) return Promise.resolve(false);
   return invoke<boolean>("native_audio_transition", { trackId, fadeMs });
 }
 
 export function hasStandby(trackId: string): Promise<boolean> {
+  if (!isTauri) return Promise.resolve(false);
   return invoke<boolean>("native_audio_has_standby", { trackId });
 }
 
 export function dropStandby(): Promise<void> {
+  if (!isTauri) return Promise.resolve();
   return invoke("native_audio_drop_standby");
 }
 
 /** Stops and clears the active deck only. See `Command::DropActive` on the Rust side. */
 export function dropActive(): Promise<void> {
+  if (!isTauri) return Promise.resolve();
   return invoke("native_audio_drop_active");
 }
 
@@ -166,6 +182,7 @@ export function dropActive(): Promise<void> {
  * Rust engine, because the server is lazy and was never started.
  */
 export function releaseMediaServer(): Promise<number> {
+  if (!isTauri) return Promise.resolve(0);
   return invoke<number>("media_server_release");
 }
 

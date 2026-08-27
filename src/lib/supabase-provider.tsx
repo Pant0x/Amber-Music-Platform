@@ -21,13 +21,27 @@ interface SupabaseContextType {
 
 const SupabaseContext = createContext<SupabaseContextType | null>(null);
 
+function getEnvVar(name: string, fallback: string = ""): string {
+  if (typeof process !== "undefined" && process?.env && process.env[name]) {
+    return process.env[name]!;
+  }
+  try {
+    // @ts-ignore
+    if (typeof import.meta !== "undefined" && import.meta?.env && import.meta.env[name]) {
+      // @ts-ignore
+      return import.meta.env[name] as string;
+    }
+  } catch {}
+  return fallback;
+}
+
+const supabaseUrl = getEnvVar("NEXT_PUBLIC_SUPABASE_URL", "https://placeholder.supabase.co");
+const supabaseAnonKey = getEnvVar("NEXT_PUBLIC_SUPABASE_ANON_KEY", "placeholder");
+
+export const supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey);
+
 export function SupabaseProvider({ children }: { children: ReactNode }) {
-  const [supabase] = useState(() =>
-    createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co",
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder"
-    )
-  );
+  const [supabase] = useState(() => supabaseClient);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -130,7 +144,20 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
 export function useSupabase() {
   const context = useContext(SupabaseContext);
   if (!context) {
-    throw new Error("useSupabase must be used within a SupabaseProvider");
+    return {
+      supabase: supabaseClient,
+      user: null,
+      session: null,
+      loading: false,
+      signIn: async () => ({ data: { user: null, session: null }, error: null }),
+      signUp: async () => ({ data: { user: null, session: null }, error: null }),
+      signInWithOAuth: async () => ({ error: null }),
+      signOut: async () => {},
+      resetPassword: async () => ({ error: null }),
+      updatePassword: async () => ({ error: null }),
+      sendOtp: async () => ({ error: null }),
+      verifyOtp: async () => ({ error: null }),
+    };
   }
   return context;
 }

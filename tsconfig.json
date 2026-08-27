@@ -1,76 +1,27 @@
 {
   "compilerOptions": {
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    "allowJs": true,
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
     "skipLibCheck": true,
-    "strict": false,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
+
+    /* Bundler mode */
     "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "paths": { "@/*": ["src/*"] },
+    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "noEmit": true,
     "jsx": "react-jsx",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "paths": {
-      "@/*": [
-        "./src/*"
-      ]
-    },
-    "baseUrl": ".",
-    "noUncheckedIndexedAccess": false,
-    "noImplicitAny": false,
-    "noImplicitReturns": false,
-    "noFallthroughCasesInSwitch": false,
+
+    /* Linting */
+    "strict": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "target": "ES2017"
+    "noFallthroughCasesInSwitch": false
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "src-tauri",
-    "src/player",
-    "src/datasource",
-    "src/internal",
-    "src/ui/settings",
-    "src/mini.tsx",
-    "src/main.tsx",
-    "src/ui/components/player/DownloadButton.tsx",
-    "src/ui/components/player/LyricsButton.tsx",
-    "src/ui/components/player/MiniEqualizer.tsx",
-    "src/ui/components/player/PlaybackControls.tsx",
-    "src/ui/components/player/PlayerBar.tsx",
-    "src/ui/components/player/QueuePanel.tsx",
-    "src/ui/components/DownloadsPanel.tsx",
-    "src/ui/components/TagEditor.tsx",
-    "src/ui/components/TrackArtwork.tsx",
-    "src/ui/components/TrackRow.tsx",
-    "src/ui/components/MusicTabs.tsx",
-    "src/ui/components/DownloadsPanel.tsx",
-    "src/ui/pages/HistoryPage.tsx",
-    "src/ui/components/AccountSwitcher.tsx",
-    "src/ui/components/ExternalLinkButton.tsx",
-    "src/ui/components/GoogleSignInButton.tsx",
-    "src/ui/components/MediaHeader.tsx",
-    "src/ui/components/HomeDestinations.tsx",
-    "src/ui/components/SearchBar.tsx",
-    "src/ui/components/SelectionBar.tsx",
-    "src/ui/components/TagEditor.tsx"
-  ]
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }

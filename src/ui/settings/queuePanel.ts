@@ -1,37 +1,45 @@
-// Queue Panel Settings
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { useSyncExternalStore } from "react";
+import {
+  hydrateLocalBooleanSetting,
+  readLocalBooleanSetting,
+  writeLocalBooleanSetting,
+} from "../../internal/durableLocalSetting";
 
-interface QueuePanelSettings {
-  collapsed: boolean;
-  showArtwork: boolean;
-  showDuration: boolean;
-  showArtist: boolean;
-  setCollapsed: (collapsed: boolean) => void;
-  setShowArtwork: (show: boolean) => void;
-  setShowDuration: (show: boolean) => void;
-  setShowArtist: (show: boolean) => void;
+/**
+ * Collapsed shows the queue as a narrow rail of artwork, the way the sidebar does with icons.
+ * It defaults to collapsed: the queue is mostly something you glance at, and the full list
+ * costs 340px of page width to answer a question ("what's next?") that a stack of covers
+ * answers just as well.
+ */
+const QUEUE_PANEL_COLLAPSED_STORAGE_KEY = "queue-panel-collapsed";
+const CHANGE_EVENT = "queue-panel-change";
+
+function readQueuePanelCollapsed() {
+  return readLocalBooleanSetting(QUEUE_PANEL_COLLAPSED_STORAGE_KEY, true);
 }
 
-export const useQueuePanelSettings = create<QueuePanelSettings>()(
-  persist(
-    (set) => ({
-      collapsed: false,
-      showArtwork: true,
-      showDuration: true,
-      showArtist: true,
-      setCollapsed: (collapsed) => set({ collapsed }),
-      setShowArtwork: (showArtwork) => set({ showArtwork }),
-      setShowDuration: (showDuration) => set({ showDuration }),
-      setShowArtist: (showArtist) => set({ showArtist }),
-    }),
-    {
-      name: "amber-queue-panel",
-      storage: createJSONStorage(() => localStorage),
-    }
-  )
-);
+function subscribe(callback: () => void) {
+  window.addEventListener(CHANGE_EVENT, callback);
+  window.addEventListener("storage", callback);
+
+  return () => {
+    window.removeEventListener(CHANGE_EVENT, callback);
+    window.removeEventListener("storage", callback);
+  };
+}
+
+export function setQueuePanelCollapsed(collapsed: boolean) {
+  writeLocalBooleanSetting(QUEUE_PANEL_COLLAPSED_STORAGE_KEY, collapsed, CHANGE_EVENT);
+}
+
+export function toggleQueuePanelCollapsed() {
+  setQueuePanelCollapsed(!readQueuePanelCollapsed());
+}
+
+export async function hydrateQueuePanelSettings() {
+  await hydrateLocalBooleanSetting(QUEUE_PANEL_COLLAPSED_STORAGE_KEY, true, CHANGE_EVENT);
+}
 
 export function useQueuePanelCollapsed() {
-  return useQueuePanelSettings((s) => s.collapsed);
+  return useSyncExternalStore(subscribe, readQueuePanelCollapsed, () => true);
 }

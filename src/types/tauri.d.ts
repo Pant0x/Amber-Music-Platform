@@ -2,50 +2,95 @@ declare module "@tauri-apps/api" {
   export const invoke: any;
   export const event: any;
   export const window: any;
+  export function isTauri(): boolean;
+}
+
+declare module "@tauri-apps/api/app" {
+  export function getVersion(): Promise<string>;
+  export function getName(): Promise<string>;
+  export function getTauriVersion(): Promise<string>;
 }
 
 declare module "@tauri-apps/api/core" {
-  export const invoke: any;
+  export function invoke<T = any>(cmd: string, args?: any): Promise<T>;
+  export function isTauri(): boolean;
 }
 
 declare module "@tauri-apps/api/event" {
-  export const emit: any;
-  export const listen: any;
+  export type UnlistenFn = () => void;
+  export function emit<T = any>(event: string, payload?: T): Promise<void>;
+  export function listen<T = any>(event: string, handler: (event: any) => void): Promise<UnlistenFn>;
+  export function once<T = any>(event: string, handler: (event: any) => void): Promise<UnlistenFn>;
 }
 
 declare module "@tauri-apps/api/window" {
-  export const getCurrentWindow: any;
-  export const currentMonitor: any;
-  export const primaryMonitor: any;
-  export const availableMonitors: any;
+  export function getCurrentWindow(): any;
+  export function currentMonitor(): Promise<any>;
+  export function primaryMonitor(): Promise<any>;
+  export function availableMonitors(): Promise<any[]>;
+  export function cursorPosition(): Promise<any>;
   export const WebviewWindow: any;
+  export class LogicalSize {
+    width: number;
+    height: number;
+    constructor(width: number, height: number);
+  }
+  export class PhysicalPosition {
+    x: number;
+    y: number;
+    constructor(x: number, y: number);
+  }
 }
 
 declare module "@tauri-apps/api/dpi" {
-  export const PhysicalPosition: any;
+  export class PhysicalPosition {
+    x: number;
+    y: number;
+    constructor(x: number, y: number);
+  }
+  export class PhysicalSize {
+    width: number;
+    height: number;
+    constructor(width: number, height: number);
+  }
+  export class LogicalSize {
+    width: number;
+    height: number;
+    constructor(width: number, height: number);
+  }
+}
+
+declare module "@tauri-apps/api/webviewWindow" {
+  export class WebviewWindow {
+    constructor(label: string, options?: any);
+    static getByLabel(label: string): any;
+  }
 }
 
 declare module "@tauri-apps/plugin-autostart" {
-  export const enable: any;
-  export const disable: any;
-  export const isEnabled: any;
-  export const setAutoStart: any;
+  export function enable(): Promise<void>;
+  export function disable(): Promise<void>;
+  export function isEnabled(): Promise<boolean>;
+  export function setAutoStart(enabled: boolean): Promise<void>;
 }
 
 declare module "@tauri-apps/plugin-dialog" {
-  export const open: any;
-  export const save: any;
+  export function open(options?: any): Promise<any>;
+  export function save(options?: any): Promise<any>;
 }
 
 declare module "@tauri-apps/plugin-opener" {
-  export const open: any;
+  export function open(path: string): Promise<void>;
+  export function openUrl(url: string): Promise<void>;
 }
 
 declare module "@tauri-apps/plugin-process" {
-  export const exit: any;
-  export const relaunch: any;
+  export function exit(code?: number): Promise<void>;
+  export function relaunch(): Promise<void>;
 }
 
 declare module "@tauri-apps/plugin-updater" {
-  export const check: any;
+  export type DownloadEvent = any;
+  export type Update = any;
+  export function check(): Promise<any>;
 }

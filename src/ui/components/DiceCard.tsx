@@ -1,30 +1,47 @@
-"use client";
-
-import { motion } from "framer-motion";
-import { Dices, Play } from "lucide-react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { usePlaybackStore } from "@/store/usePlayerStore";
+import { ShuffleActiveIcon } from "@/ui/icons";
+import type { Track } from "../../datasource/types";
+import { PickCard } from "./PickCard";
 
-export function DiceCard() {
-  const { setQueue } = usePlaybackStore();
+interface DiceCardProps {
+  tracks: Track[];
+  isSpinning?: boolean;
+  onClick?: () => void;
+}
 
-  const handleRoll = () => {
-    // Trigger random play
-    console.log("Roll the dice!");
-  };
+export function DiceCard({ tracks, isSpinning = false, onClick }: DiceCardProps) {
+  const [previewIndex, setPreviewIndex] = useState(0);
 
+  useEffect(() => {
+    if (!isSpinning || tracks.length === 0) return;
+    const intervalId = window.setInterval(() => {
+      setPreviewIndex((index) => (index + 1) % tracks.length);
+    }, 90);
+    return () => window.clearInterval(intervalId);
+  }, [isSpinning, tracks.length]);
+
+  const preview = tracks[previewIndex % Math.max(1, tracks.length)];
+
+  /*
+   * Shares PickCard's shell so the surprise tile is a peer of the picks rather than a
+   * differently-shaped outlier in the same row. Only the badge differs: a shuffle mark that
+   * is always visible (this card's whole purpose) and spins while it is choosing, where a
+   * track card reveals a play button on hover.
+   */
   return (
-    <motion.button
-      onClick={handleRoll}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      className="card-hover flex flex-col items-center gap-3 p-6 text-center aspect-square"
-    >
-      <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-amber-500/20">
-        <Dices className="h-8 w-8 text-amber-500" />
-      </div>
-      <span className="font-medium text-text-primary">Surprise Me</span>
-      <p className="text-sm text-text-muted">Play something random</p>
-    </motion.button>
+    <PickCard
+      artworkUrl={preview?.artworkUrl}
+      title="Surprise me"
+      subtitle="Pick something for me"
+      disabled={tracks.length === 0 || isSpinning}
+      onSelect={onClick}
+      accessory={
+        <ShuffleActiveIcon
+          size={22}
+          className={cn(isSpinning && "motion-safe:animate-spin")}
+        />
+      }
+    />
   );
 }

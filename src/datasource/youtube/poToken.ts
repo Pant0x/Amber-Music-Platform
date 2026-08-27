@@ -43,7 +43,7 @@ let cached: Promise<CachedMinter> | null = null;
  * service being asked to certify that a browser is present. The WebView is real Chromium, so it
  * fingerprints as one.
  */
-const attestationFetch: typeof fetch = (...args) => globalThis.fetch(...args);
+const attestationFetch: typeof fetch = (input: RequestInfo | URL, init?: RequestInit) => globalThis.fetch(input, init);
 
 async function attest(): Promise<CachedMinter> {
   const challenge = await getChallenge({ requestKey: REQUEST_KEY, fetchFunction: attestationFetch });

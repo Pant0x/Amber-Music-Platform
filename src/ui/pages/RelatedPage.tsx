@@ -1,24 +1,83 @@
-"use client";
+import { useEffect, useState } from "react";
+import { SpinnerSteps } from "@/components/motion/loader";
+import type { Album, Artist, BrowseShelf, Playlist, Track } from "../../datasource/types";
+import { libraryController, type PlayerControllerActions } from "../../player/playerStore";
+import { BrowseShelves } from "../components/BrowseShelves";
+import { TrackArtwork } from "../components/TrackArtwork";
 
-import { motion } from "framer-motion";
-import { Music, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+/**
+ * "Related" for a track: similar artists, playlists it appears on, more from the same album.
+ *
+ * A different endpoint from the up-next queue the player already uses. Up-next is what plays
+ * after this song; this is what to listen to *instead*, which is a browsing question and so
+ * gets a page rather than a rail in the queue.
+ */
+export function RelatedPage({
+  track,
+  playerController,
+  onOpenAlbum,
+  onOpenArtist,
+  onOpenPlaylist,
+}: {
+  track: Track;
+  playerController: PlayerControllerActions;
+  onOpenAlbum: (album: Album) => void;
+  onOpenArtist: (artist: Artist) => void;
+  onOpenPlaylist: (playlist: Playlist) => void;
+}) {
+  const [shelves, setShelves] = useState<BrowseShelf[] | null>(null);
 
-export function RelatedPage() {
+  useEffect(() => {
+    let active = true;
+    setShelves(null);
+    void libraryController.getRelated(track)
+      .then((fetched) => {
+        if (active) setShelves(fetched);
+      })
+      .catch(() => {
+        // getRelated already answers [] for a track with no related tab; this covers the rest.
+        if (active) setShelves([]);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [track]);
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-6"
-    >
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-text-primary">Related</h1>
-      </div>
-      <div className="card p-8 text-center">
-        <Music className="mx-auto h-16 w-16 text-text-muted mb-4" />
-        <h2 className="text-xl font-medium text-text-primary mb-2">Related Content</h2>
-        <p className="text-text-muted">Related songs, artists, and playlists will appear here</p>
-      </div>
-    </motion.div>
+    <div className="flex flex-col gap-8">
+      <header className="flex items-center gap-4">
+        <TrackArtwork
+          className="size-16 shrink-0 rounded-xl object-cover"
+          size={64}
+          artworkUrl={track.artworkUrl}
+        />
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Related to
+          </span>
+          <h1 className="truncate text-2xl font-semibold text-foreground">{track.title}</h1>
+          <span className="truncate text-sm text-muted-foreground">{track.artist}</span>
+        </div>
+      </header>
+
+      {!shelves ? (
+        <div className="grid place-items-center py-16" role="status" aria-label="Loading">
+          <SpinnerSteps size={30} color="currentColor" />
+        </div>
+      ) : shelves.length === 0 ? (
+        <p className="px-2 py-10 text-center text-sm text-muted-foreground">
+          YouTube Music has nothing related for this track.
+        </p>
+      ) : (
+        <BrowseShelves
+          shelves={shelves}
+          playerController={playerController}
+          onOpenAlbum={onOpenAlbum}
+          onOpenArtist={onOpenArtist}
+          onOpenPlaylist={onOpenPlaylist}
+        />
+      )}
+    </div>
   );
 }

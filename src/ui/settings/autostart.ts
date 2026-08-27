@@ -1,12 +1,17 @@
-// Autostart Settings
-export function setAutostartEnabled(enabled: boolean) {
-  if (typeof window !== "undefined" && "__TAURI__" in window) {
-    import("@tauri-apps/plugin-autostart").then((mod: any) => {
-      if (enabled) {
-        (mod.enable || mod.setAutoStart)?.().catch(console.error);
-      } else {
-        (mod.disable || mod.setAutoStart)?.().catch(console.error);
-      }
-    });
+import {
+  disable,
+  enable,
+  isEnabled,
+} from "@tauri-apps/plugin-autostart";
+
+export function getAutostartEnabled() {
+  return isEnabled();
+}
+
+export async function setAutostartEnabled(enabled: boolean) {
+  if (enabled) {
+    await enable();
+  } else {
+    await disable();
   }
 }

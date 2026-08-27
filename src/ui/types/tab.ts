@@ -1,62 +1,41 @@
-// Tab Types
-export type TabView =
-  | "home"
-  | "explore"
-  | "library"
-  | "liked"
-  | "playlists"
-  | "artists"
-  | "albums"
-  | "files"
-  | "search"
-  | "settings"
-  | "transfer"
-  | "artistDashboard"
-  | "album"
-  | "artist"
-  | "playlist"
-  | "related"
-  | "history";
+import type { Album, Artist, Playlist, SearchResults, Track } from "../../datasource/types";
+
+export type TabView = "home" | "album" | "artist" | "playlist" | "related" | "search" | "history" | "browse" | "library" | "settings";
+export type NavigableTabView = Exclude<TabView, "settings">;
+
+export interface TabViewState {
+  title?: string;
+  view: NavigableTabView;
+  album?: Album;
+  artist?: Artist;
+  playlist?: Playlist;
+  /** The track a "related" view is about. */
+  relatedTrack?: Track;
+  searchQuery?: string;
+  searchResults?: Track[];
+  mixedSearchResults?: SearchResults;
+  searchLoading?: boolean;
+}
+
+export interface TabNavigationHistory {
+  back: TabViewState[];
+  forward: TabViewState[];
+}
 
 export interface Tab {
   id: string;
-  title: string;
+  /** Which Browse tab to open on. Only meaningful when `view` is "browse". */
+  browseTab?: string;
+  title?: string;
   view: TabView;
-  album?: any;
-  artist?: any;
-  playlist?: any;
-  relatedTrack?: any;
+  album?: Album;
+  artist?: Artist;
+  playlist?: Playlist;
+  relatedTrack?: Track;
   searchQuery?: string;
-  searchResults?: any[];
-  mixedSearchResults?: any[];
+  searchResults?: Track[];
+  mixedSearchResults?: SearchResults;
   searchLoading?: boolean;
-  scrollPosition?: number;
-  createdAt: number;
+  isQueueOpen?: boolean;
+  navigationHistory?: TabNavigationHistory;
 }
-
-export interface TabViewState {
-  title: string;
-  view: TabView;
-  album?: any;
-  artist?: any;
-  playlist?: any;
-  relatedTrack?: any;
-  searchQuery?: string;
-  searchResults?: any[];
-  mixedSearchResults?: any[];
-  searchLoading?: boolean;
-}
-
-export const TAB_SHORTCUT_ACTIONS: string[] = [
-  "tab1",
-  "tab2",
-  "tab3",
-  "tab4",
-  "tab5",
-  "tab6",
-  "tab7",
-  "tab8",
-  "tab9",
-];
-
-export const MAX_NAVIGATION_HISTORY = 50;

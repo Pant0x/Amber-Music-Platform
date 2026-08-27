@@ -7,17 +7,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Dependencies
 node_modules
-.pnp
-.pnp.js
-
-# Build outputs
 dist
 dist-ssr
-.next
-out
-build
+.vite
 *.local
 
 # Editor directories and files
@@ -36,44 +29,42 @@ build
 *.VC.db
 *.VC.VC.opendb
 
+.docs
+
 # Tooling caches
 .eslintcache
-.turbo
 
-# Rust
-/target
-**/*.rs.bk
-Cargo.lock
+# Rust application lockfiles should be committed for reproducible builds.
 
-# Tauri
-src-tauri/target
-src-tauri/**/*.rs.bk
+outputs/*
+.codex/*
 
-# Environment files
-.env
-.env.*
-!.env.example
+# Crash droppings from the Git-for-Windows shell.
+*.stackdump
 
-# Secrets
-*.pem
-*.p12
-*.pfx
+# Updater signing keys. `tauri signer generate -w ~/...` does not expand `~` on
+# Windows and drops a literal `~/` folder in the repo root — this makes sure a
+# private key landing here can never be committed.
+~/
 *.key
 !**/*.key.pub
 
-# IDE
-*.swp
-*.swo
-*~
+# Secrets. `*.local` above already covers `.env.local`, but not a plain `.env` —
+# which is the one people actually create in a hurry.
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.pfx
 
-# OS
-Thumbs.db
-ehthumbs.db
-Desktop.ini
+# Reference dumps and working images kept in docs/ for local use only. The committed
+# documentation (architecture.md, backend.md, frontend.md, solarIcons.md) and the README's
+# screenshots stay tracked — this covers the scratch material that accumulates beside them.
+docs/*.txt
+docs/*.webp
+docs/zuno.PNG
 
-# Testing
-coverage
-.nyc_output
-
-# Misc
+.next
 *.tsbuildinfo
+src-tauri/target

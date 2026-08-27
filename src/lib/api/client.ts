@@ -12,7 +12,13 @@ async function request<T>(
 ): Promise<T> {
   const { params, cache = "no-store", next, headers, ...fetchOptions } = options;
 
-  const url = new URL(`${API_BASE}/api${endpoint}`);
+  const baseUrl =
+    API_BASE ||
+    (typeof window !== "undefined" && window.location?.origin
+      ? window.location.origin
+      : "http://localhost:3000");
+  const path = endpoint.startsWith("/") ? `/api${endpoint}` : `/api/${endpoint}`;
+  const url = new URL(path, baseUrl);
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
       url.searchParams.append(key, value);

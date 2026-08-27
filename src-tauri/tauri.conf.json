@@ -1,19 +1,19 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Amber Music",
-  "version": "1.0.0",
-  "identifier": "com.pant0x.ambermusic",
+  "productName": "Zuno",
+  "version": "1.4.0",
+  "identifier": "com.zuno.desktop",
   "build": {
     "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:3000",
+    "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "npm run build",
-    "frontendDist": "../.next/standalone"
+    "frontendDist": "../dist"
   },
   "app": {
     "macOSPrivateApi": true,
     "windows": [
       {
-        "title": "Amber Music",
+        "title": "Zuno",
         "decorations": false,
         "transparent": true,
         "shadow": false,
@@ -24,7 +24,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:; connect-src 'self' https: wss:; img-src 'self' data: blob: https:; media-src 'self' https: blob:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:;"
+      "csp": null
     }
   },
   "bundle": {
@@ -47,19 +47,14 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ],
-    "windows": {
-      "certificateThumbprint": null,
-      "digestAlgorithm": "sha256",
-      "timestampUrl": "http://timestamp.digicert.com"
-    }
+    ]
   },
   "plugins": {
     "updater": {
-      "pubkey": "RWQVQ077AyQURpnul1dLOkUns/ghayI4/JRGAD+KmtrUWLUN5HRoYZ5v",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDMyMDQ0MjEzQjkxMThGQ0MKUldUTWp4RzVFMElFTXZGMmxnOC84VXlUTkZyaStyQzFkcXd6UVczeGNBNkVuWWU3MjdIM2JLVkgK",
       "endpoints": [
-        "https://github.com/Pant0x/Amber-Music-Platform/releases/latest/download/latest.json",
-        "https://raw.githubusercontent.com/Pant0x/Amber-Music-Platform/updater-channel/latest.json"
+        "https://github.com/noFAYZ/zuno/releases/latest/download/latest.json",
+        "https://raw.githubusercontent.com/noFAYZ/zuno/updater-channel/latest.json"
       ]
     }
   }

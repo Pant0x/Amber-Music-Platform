@@ -1,51 +1,87 @@
-// App Settings
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { invoke } from "@tauri-apps/api/core";
+import { logInternalWarn } from "./logging";
 
-interface AppSettingsState {
-  settings: Record<string, any>;
-  get: (key: string) => any;
-  set: (key: string, value: any) => void;
-  remove: (key: string) => void;
-  clear: () => void;
-}
+const isTauri = typeof window !== "undefined" && ("__TAURI_INTERNALS__" in window || "__TAURI__" in window);
 
-export const useAppSettings = create<AppSettingsState>()(
-  persist(
-    (set, get) => ({
-      settings: {},
-      get: (key) => get().settings[key],
-      set: (key, value) =>
-        set((state) => ({
-          settings: { ...state.settings, [key]: value },
-        })),
-      remove: (key) =>
-        set((state) => {
-          const newSettings = { ...state.settings };
-          delete newSettings[key];
-          return { settings: newSettings };
-        }),
-      clear: () => set({ settings: {} }),
-    }),
-    {
-      name: "amber-app-settings",
-      storage: createJSONStorage(() => localStorage),
+function getInvokeErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "object" && error !== null) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message;
+
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return Object.prototype.toString.call(error);
     }
-  )
-);
-
-export function getAppSetting(key: string) {
-  return useAppSettings.getState().settings[key];
+  }
+  return String(error);
 }
 
-export function setAppSetting(key: string, value: any) {
-  useAppSettings.getState().set(key, value);
+export async function getAppSetting<T>(key: string): Promise<T | null> {
+  if (!isTauri) {
+    try {
+      const item = localStorage.getItem(`amber_setting_${key}`);
+      return item ? JSON.parse(item) : null;
+    } catch {
+      return null;
+    }
+  }
+  try {
+    return await invoke<T | null>("app_setting_get", { key });
+  } catch (error) {
+    logInternalWarn("appSetting.get failed", {
+      key,
+      error: getInvokeErrorMessage(error),
+    });
+    return null;
+  }
 }
 
-export function removeAppSetting(key: string) {
-  useAppSettings.getState().remove(key);
+export async function setAppSetting<T>(key: string, value: T): Promise<void> {
+  if (!isTauri) {
+    try {
+      localStorage.setItem(`amber_setting_${key}`, JSON.stringify(value));
+    } catch {}
+    return;
+  }
+  try {
+    await invoke("app_setting_set", { key, value });
+  } catch (error) {
+    logInternalWarn("appSetting.set failed", {
+      key,
+      error: getInvokeErrorMessage(error),
+    });
+  }
 }
 
-export function clearAppSettings() {
-  useAppSettings.getState().clear();
+export async function removeAppSetting(key: string): Promise<void> {
+  if (!isTauri) {
+    try {
+      localStorage.removeItem(`amber_setting_${key}`);
+    } catch {}
+    return;
+  }
+  try {
+    await invoke("app_setting_remove", { key });
+  } catch (error) {
+    logInternalWarn("appSetting.remove failed", {
+      key,
+      error: getInvokeErrorMessage(error),
+    });
+  }
+}
+
+export async function clearAppSettings(): Promise<void> {
+  if (!isTauri) {
+    return;
+  }
+  try {
+    await invoke("app_settings_clear");
+  } catch (error) {
+    logInternalWarn("appSettings.clear failed", {
+      error: getInvokeErrorMessage(error),
+    });
+    throw error;
+  }
 }

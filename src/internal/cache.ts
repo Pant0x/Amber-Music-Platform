@@ -1,80 +1,59 @@
-// Cache Management
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { invoke } from "@tauri-apps/api/core";
+import { clearArtworkCache } from "./artworkCache";
+import { logInternalWarn } from "./logging";
 
-interface CacheEntry<T> {
-  data: T;
-  timestamp: number;
-  expiresAt?: number;
+export const DEFAULT_CACHE_SIZE_GB = 4;
+
+export interface CacheStats {
+  maxBytes: number;
+  usedBytes: number;
+  entryCount: number;
 }
 
-interface CacheState {
-  cache: Map<string, CacheEntry<any>>;
-  get: <T>(key: string) => T | null;
-  set: <T>(key: string, data: T, ttl?: number) => void;
-  remove: (key: string) => void;
-  clear: () => void;
-  clearExpired: () => void;
+interface CacheWriteResult {
+  changed: boolean;
 }
 
-export const useCache = create<CacheState>()(
-  persist(
-    (set, get) => ({
-      cache: new Map(),
-      get: <T>(key: string) => {
-        const entry = get().cache.get(key);
-        if (!entry) return null;
-        if (entry.expiresAt && Date.now() > entry.expiresAt) {
-          get().cache.delete(key);
-          return null;
-        }
-        return entry.data as T;
-      },
-      set: <T>(key: string, data: T, ttl?: number) =>
-        set((state) => {
-          const newCache = new Map(state.cache);
-          newCache.set(key, {
-            data,
-            timestamp: Date.now(),
-            expiresAt: ttl ? Date.now() + ttl : undefined,
-          });
-          return { cache: newCache };
-        }),
-      remove: (key) =>
-        set((state) => {
-          const newCache = new Map(state.cache);
-          newCache.delete(key);
-          return { cache: newCache };
-        }),
-      clear: () => set({ cache: new Map() }),
-      clearExpired: () =>
-        set((state) => {
-          const newCache = new Map(state.cache);
-          const now = Date.now();
-          for (const [key, entry] of newCache) {
-            if (entry.expiresAt && now > entry.expiresAt) {
-              newCache.delete(key);
-            }
-          }
-          return { cache: newCache };
-        }),
-    }),
-    {
-      name: "amber-cache",
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({}),
-    }
-  )
-);
-
-export function clearCache() {
-  useCache.getState().clear();
+export async function getCachedJson<T>(key: string): Promise<T | null> {
+  try {
+    const value = await invoke<string | null>("cache_get", { key });
+    return value === null ? null : JSON.parse(value) as T;
+  } catch (error) {
+    logInternalWarn("cache.get failed", {
+      key,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
 }
 
-export function getCachedJson<T>(key: string): T | null {
-  return useCache.getState().get<T>(key);
+export async function setCachedJson<T>(key: string, value: T): Promise<boolean> {
+  try {
+    const result = await invoke<CacheWriteResult>("cache_set", {
+      key,
+      value: JSON.stringify(value),
+    });
+    return result.changed;
+  } catch (error) {
+    logInternalWarn("cache.set failed", {
+      key,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return false;
+  }
 }
 
-export function setCachedJson<T>(key: string, data: T, ttl?: number): void {
-  useCache.getState().set(key, data, ttl);
+export function getCacheStats(): Promise<CacheStats> {
+  return invoke<CacheStats>("cache_stats");
+}
+
+export function setCacheMaxBytes(maxBytes: number): Promise<CacheStats> {
+  return invoke<CacheStats>("cache_set_max_bytes", { maxBytes });
+}
+
+export function clearCache(): Promise<CacheStats> {
+  // The in-memory artwork map holds object URLs; clearing the on-disk cache without it
+  // would leave the UI serving blobs the user just asked to delete.
+  clearArtworkCache();
+  return invoke<CacheStats>("cache_clear");
 }

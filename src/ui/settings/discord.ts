@@ -1,74 +1,39 @@
-// Discord Settings
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { useSyncExternalStore } from "react";
+import {
+  hydrateLocalBooleanSetting,
+  readLocalBooleanSetting,
+  writeLocalBooleanSetting,
+} from "../../internal/durableLocalSetting";
 
-interface DiscordSettings {
-  enabled: boolean;
-  showPlayback: boolean;
-  showTimestamps: boolean;
-  setEnabled: (enabled: boolean) => void;
-  setShowPlayback: (show: boolean) => void;
-  setShowTimestamps: (show: boolean) => void;
+const STORAGE_KEY = "discord-presence-enabled";
+const CHANGE_EVENT = "discord-settings-change";
+
+function readDiscordPresenceEnabled() {
+  return readLocalBooleanSetting(STORAGE_KEY, true);
 }
 
-export const useDiscordSettings = create<DiscordSettings>()(
-  persist(
-    (set) => ({
-      enabled: true,
-      showPlayback: true,
-      showTimestamps: true,
-      setEnabled: (enabled) => set({ enabled }),
-      setShowPlayback: (showPlayback) => set({ showPlayback }),
-      setShowTimestamps: (showTimestamps) => set({ showTimestamps }),
-    }),
-    {
-      name: "amber-discord",
-      storage: createJSONStorage(() => localStorage),
-    }
-  )
-);
+function subscribe(callback: () => void) {
+  window.addEventListener(CHANGE_EVENT, callback);
+  window.addEventListener("storage", callback);
 
-export class DiscordRpcService {
-  private static instance: DiscordRpcService;
-  private clientId = "your-discord-client-id";
-  private connected = false;
+  return () => {
+    window.removeEventListener(CHANGE_EVENT, callback);
+    window.removeEventListener("storage", callback);
+  };
+}
 
-  static getInstance() {
-    if (!DiscordRpcService.instance) {
-      DiscordRpcService.instance = new DiscordRpcService();
-    }
-    return DiscordRpcService.instance;
-  }
+export function setDiscordPresenceEnabled(enabled: boolean) {
+  writeLocalBooleanSetting(STORAGE_KEY, enabled, CHANGE_EVENT);
+}
 
-  static async init() {
-    const { enabled } = useDiscordSettings.getState();
-    if (!enabled) return;
+export function getDiscordPresenceEnabled() {
+  return readDiscordPresenceEnabled();
+}
 
-    // Initialize Discord RPC
-    console.log("Discord RPC initialized");
-  }
+export async function hydrateDiscordSettings() {
+  await hydrateLocalBooleanSetting(STORAGE_KEY, true, CHANGE_EVENT);
+}
 
-  static async setActivity(
-    state?: string,
-    details?: string,
-    largeImage?: string,
-    largeText?: string,
-    smallImage?: string,
-    smallText?: string,
-    startTimestamp?: number,
-    endTimestamp?: number
-  ) {
-    const { enabled, showPlayback, showTimestamps } = useDiscordSettings.getState();
-    if (!enabled) return;
-
-    console.log("Setting Discord activity:", details, state);
-  }
-
-  static async clearActivity() {
-    console.log("Clearing Discord activity");
-  }
-
-  static status() {
-    return { connected: false };
-  }
+export function useDiscordPresenceEnabled() {
+  return useSyncExternalStore(subscribe, readDiscordPresenceEnabled, () => true);
 }
