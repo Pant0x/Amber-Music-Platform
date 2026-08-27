@@ -101,6 +101,15 @@
   ::-webkit-scrollbar-corner {
     background: transparent;
   }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @utility glass {
@@ -164,18 +173,6 @@
   to { opacity: 1; transform: scale(1); }
 }
 
-@utility hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-@layer base {
-  .hide-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-/* Component utilities */
 @utility btn {
   display: inline-flex;
   align-items: center;
@@ -189,29 +186,10 @@
   outline: none;
 }
 
-@utility btn:focus-visible {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-amber-500) 50%, transparent);
-  outline-offset: 2px;
-  outline-color: var(--color-bg-primary);
-}
-
-@utility btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 @utility btn-primary {
   @apply btn;
   background-color: var(--color-amber-500);
   color: var(--color-text-inverse);
-}
-
-@utility btn-primary:hover {
-  background-color: var(--color-amber-400);
-}
-
-@utility btn-primary:active {
-  background-color: var(--color-amber-600);
 }
 
 @utility btn-secondary {
@@ -220,39 +198,15 @@
   color: var(--color-text-primary);
 }
 
-@utility btn-secondary:hover {
-  background-color: var(--color-bg-hover);
-}
-
-@utility btn-secondary:active {
-  background-color: var(--color-bg-active);
-}
-
 @utility btn-ghost {
   @apply btn;
   background-color: transparent;
-}
-
-@utility btn-ghost:hover {
-  background-color: var(--color-bg-hover);
-}
-
-@utility btn-ghost:active {
-  background-color: var(--color-bg-active);
 }
 
 @utility btn-danger {
   @apply btn;
   background-color: color-mix(in srgb, var(--color-error) 20%, transparent);
   color: var(--color-error);
-}
-
-@utility btn-danger:hover {
-  background-color: color-mix(in srgb, var(--color-error) 30%, transparent);
-}
-
-@utility btn-danger:active {
-  background-color: color-mix(in srgb, var(--color-error) 40%, transparent);
 }
 
 @utility input {
@@ -266,16 +220,6 @@
   transition: all var(--transition-fast);
 }
 
-@utility input::placeholder {
-  color: var(--color-text-muted);
-}
-
-@utility input:focus {
-  border-color: var(--color-amber-500);
-  outline: none;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-amber-500) 20%, transparent);
-}
-
 @utility card {
   @apply glass;
   border-radius: var(--radius-xl);
@@ -283,18 +227,8 @@
   transition: all var(--transition-fast);
 }
 
-@utility card:hover {
-  border-color: var(--color-border-secondary);
-  border-opacity: 0.5;
-}
-
 @utility card-hover {
   @apply card;
-}
-
-@utility card-hover:hover {
-  background-color: var(--color-bg-hover);
-  box-shadow: var(--shadow-lg);
 }
 
 @utility sidebar-item {
@@ -307,11 +241,6 @@
   font-weight: 500;
   color: var(--color-text-secondary);
   transition: all var(--transition-fast);
-}
-
-@utility sidebar-item:hover {
-  background-color: var(--color-bg-hover);
-  color: var(--color-text-primary);
 }
 
 @utility sidebar-item-active {
@@ -330,11 +259,122 @@
   transition: all var(--transition-fast);
 }
 
-@utility track-row:hover {
-  background-color: var(--color-bg-hover);
-}
-
 @utility track-row-playing {
   @apply track-row;
   background-color: color-mix(in srgb, var(--color-amber-500) 5%, transparent);
+}
+
+@layer components {
+  .btn:focus-visible {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-amber-500) 50%, transparent);
+    outline-offset: 2px;
+    outline-color: var(--color-bg-primary);
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-primary:hover {
+    background-color: var(--color-amber-400);
+  }
+
+  .btn-primary:active {
+    background-color: var(--color-amber-600);
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--color-bg-hover);
+  }
+
+  .btn-secondary:active {
+    background-color: var(--color-bg-active);
+  }
+
+  .btn-ghost:hover {
+    background-color: var(--color-bg-hover);
+  }
+
+  .btn-ghost:active {
+    background-color: var(--color-bg-active);
+  }
+
+  .btn-danger:hover {
+    background-color: color-mix(in srgb, var(--color-error) 30%, transparent);
+  }
+
+  .btn-danger:active {
+    background-color: color-mix(in srgb, var(--color-error) 40%, transparent);
+  }
+
+  .input::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  .input:focus {
+    border-color: var(--color-amber-500);
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-amber-500) 20%, transparent);
+  }
+
+  .card:hover {
+    border-color: var(--color-border-secondary);
+    border-opacity: 0.5;
+  }
+
+  .card-hover:hover {
+    background-color: var(--color-bg-hover);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .sidebar-item:hover {
+    background-color: var(--color-bg-hover);
+    color: var(--color-text-primary);
+  }
+
+  .track-row:hover {
+    background-color: var(--color-bg-hover);
+  }
+}
+
+@utility animate-fade-in {
+  animation: fadeIn var(--transition-normal) ease-out;
+}
+
+@utility animate-slide-up {
+  animation: slideUp var(--transition-normal) ease-out;
+}
+
+@utility animate-slide-down {
+  animation: slideDown var(--transition-normal) ease-out;
+}
+
+@utility animate-scale-in {
+  animation: scaleIn var(--transition-fast) ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@utility hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
