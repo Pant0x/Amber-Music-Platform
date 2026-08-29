@@ -4,7 +4,7 @@ use serde_json::json;
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-const DISCORD_CLIENT_ID: &str = "1515682467154100344";
+const DISCORD_CLIENT_ID: &str = "1539365956156137592";
 const GITHUB_REPO: &str = "https://github.com/Pant0x/Amber-Music-Platform";
 const ACTIVITY_NAME: &str = "Amber";
 
