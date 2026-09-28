@@ -68,3 +68,7 @@ docs/amber.PNG
 # Mobile APK builds
 APK/
 *.apk
+
+# Local binaries
+*.exe
+
