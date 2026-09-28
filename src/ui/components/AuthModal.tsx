@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import { supabase } from "../../lib/supabaseClient";
 import { signInWithOAuthPopup } from "../../lib/oauthService";
 import { libraryController } from "../../player/playerStore";
-import { useClerkAuth } from "../../lib/clerkClient";
 import { MailIcon, LockIcon, UserIcon, DiscordIcon, GoogleIcon, CloseIcon, EyeIcon, EyeClosedIcon } from "@/ui/icons";
 import loadingVideo from "../../../assets/img/Loading.mp4";
 import { Loader } from "@/components/motion/loader";
@@ -291,27 +290,16 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
     }
   };
 
-  const { signInWithGoogle, isAvailable: isClerkAvailable } = useClerkAuth();
-
   const handleGoogleAuth = async () => {
     setBusy(true);
     setError(null);
     setSuccessMessage(null);
 
     try {
-      if (isClerkAvailable) {
-        await signInWithGoogle();
+      await libraryController.signIn();
+      if (libraryController.getState().status === "ready") {
         onAuthSuccess?.();
         onClose();
-      } else {
-        // Fallback to Supabase Google OAuth if configured, or notify user
-        if (supabase) {
-          await signInWithOAuthPopup("google");
-          onAuthSuccess?.();
-          onClose();
-        } else {
-          throw new Error("Google authentication is not configured yet.");
-        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Google sign-in failed.");
