@@ -1306,6 +1306,8 @@ export default function App() {
           onNavigateBack={handleNavigateBack}
           onNavigateForward={handleNavigateForward}
           onNavigatePlaylist={handleNavigatePlaylist}
+          isMaximized={isWindowMaximizedOrFullscreen}
+          isLyricsOpen={playerUIState.isLyricsOpen}
         />
       )}
 

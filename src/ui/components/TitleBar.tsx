@@ -1,10 +1,9 @@
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { invoke } from "@tauri-apps/api/core";
 import { cn } from "@/lib/utils";
 import { Tooltip } from "@/components/motion/tooltip";
 import { LoginIcon, SettingsIcon } from "@/ui/icons";
-import { logInternalError, logInternalInfo, logInternalWarn } from "../../internal/logging";
+import { logInternalError } from "../../internal/logging";
 import {
   isLinux,
   isTilingWindowManager,
@@ -13,7 +12,6 @@ import {
 import {
   useForceWindowControls,
   useNativeWindowControls,
-  useWindowsStyleWindowControls,
 } from "../settings/windowControls";
 import { libraryController, useLibraryState } from "../../player/playerStore";
 import { AccountAvatar, AccountSwitcher, GoogleAccountSwitcher } from "./AccountSwitcher";
@@ -24,7 +22,10 @@ import { useToolbarItemVisible } from "../settings/toolbarItems";
 import { AuthModal } from "./AuthModal";
 import appIcon from "../../../assets/img/logo2-noBG.png";
 import { SearchBar } from "./SearchBar";
+import { WindowControls } from "./WindowControls";
 import type { Playlist } from "../../datasource/types";
+
+export { WindowControls };
 
 interface TitleBarProps {
   sidebarWidth: number;
@@ -39,14 +40,12 @@ interface TitleBarProps {
   onNavigateBack?: () => void;
   onNavigateForward?: () => void;
   onNavigatePlaylist?: (playlist: Playlist) => void;
+  isMaximized?: boolean;
+  isLyricsOpen?: boolean;
 }
 
 const ACCOUNT_PANEL_ITEM =
   "flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left text-sm text-foreground transition-colors hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring";
-
-/** macOS-style traffic lights vs Windows-style square controls. */
-const WINDOW_BUTTON_BASE =
-  "flex items-center justify-center text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 export function TitleBar({
   sidebarWidth: _sidebarWidth,
@@ -61,6 +60,8 @@ export function TitleBar({
   onNavigateBack = () => {},
   onNavigateForward = () => {},
   onNavigatePlaylist,
+  isMaximized: isMaximizedProp,
+  isLyricsOpen = false,
 }: TitleBarProps) {
   const appWindow = getCurrentWindow();
   const libraryState = useLibraryState();
@@ -79,7 +80,6 @@ export function TitleBar({
   const [isAccountPanelOpen, setIsAccountPanelOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const nativeWindowControls = useNativeWindowControls();
-  const windowsStyleWindowControls = useWindowsStyleWindowControls();
   const forceWindowControls = useForceWindowControls();
   // On Linux, window management belongs to the compositor. Tiling compositors (niri, sway,
   // hyprland, …) have no minimize at all and draw nothing, so app buttons would be dead
@@ -101,6 +101,27 @@ export function TitleBar({
   } | null>(null);
   const suppressHomeClickRef = useRef(false);
 
+  const [internalIsMax, setInternalIsMax] = useState(false);
+  const isMax = isMaximizedProp !== undefined ? isMaximizedProp : internalIsMax;
+
+  useEffect(() => {
+    let active = true;
+    appWindow.isMaximized().then((m) => {
+      if (active) setInternalIsMax(m);
+    }).catch(() => {});
+
+    const unlisten = appWindow.onResized(() => {
+      appWindow.isMaximized().then((m) => {
+        if (active) setInternalIsMax(m);
+      }).catch(() => {});
+    });
+
+    return () => {
+      active = false;
+      void unlisten.then((fn) => fn?.());
+    };
+  }, [appWindow]);
+
   const handleAuthSuccess = () => {
     setIsAuthModalOpen(false);
     setIsAccountPanelOpen(false);
@@ -115,26 +136,16 @@ export function TitleBar({
     }
   };
 
-  const handleMinimize = async () => {
-    try {
-      if (await appWindow.isFullscreen()) {
-        await appWindow.setFullscreen(false);
-        await new Promise((resolve) => window.setTimeout(resolve, 250));
-      }
-
-      await appWindow.minimize();
-    } catch (error) {
-      logInternalError("TitleBar.minimize failed", error);
-    }
-  };
 
   const handleToggleMaximize = async () => {
     try {
-      const isMax = await appWindow.isMaximized();
-      if (isMax) {
+      const maximized = await appWindow.isMaximized();
+      if (maximized) {
         await appWindow.unmaximize();
+        setInternalIsMax(false);
       } else {
         await appWindow.maximize();
+        setInternalIsMax(true);
       }
     } catch (error) {
       logInternalError("TitleBar.maximize failed", error);
@@ -147,7 +158,7 @@ export function TitleBar({
   };
 
   return (
-    <div className="relative z-30 flex h-[var(--titlebar-height)] shrink-0 items-stretch bg-shell">
+    <div className={cn("relative z-30 flex h-[var(--titlebar-height)] shrink-0 items-stretch", isLyricsOpen ? "bg-black" : "bg-shell")}>
       <button
         type="button"
         className={cn(
@@ -212,6 +223,7 @@ export function TitleBar({
         data-tauri-drag-region=""
         className="flex min-w-0 flex-1 items-center justify-center cursor-default select-none h-full"
         aria-label="Drag window"
+        onDoubleClick={() => void handleToggleMaximize()}
       />
 
       {/* Mathematically Centered Search Bar across entire window width */}
@@ -375,67 +387,7 @@ export function TitleBar({
       )}
 
       {showCustomWindowControls && (
-        <div
-          className={cn(
-            "flex shrink-0 items-center",
-            windowsStyleWindowControls ? "gap-0" : "gap-1.5 px-3",
-          )}
-          aria-label="Window controls"
-        >
-          <button
-            type="button"
-            aria-label="Minimize"
-            className={cn(
-              WINDOW_BUTTON_BASE,
-              windowsStyleWindowControls
-                ? "h-full w-12 hover:bg-card"
-                : "size-3 rounded-full bg-muted-foreground/40 hover:bg-muted-foreground",
-            )}
-            onClick={() => void handleMinimize()}
-          >
-            {windowsStyleWindowControls && <span aria-hidden="true">&#8211;</span>}
-          </button>
-          <button
-            type="button"
-            aria-label="Maximize"
-            className={cn(
-              WINDOW_BUTTON_BASE,
-              windowsStyleWindowControls
-                ? "h-full w-12 hover:bg-card"
-                : "size-3 rounded-full bg-muted-foreground/40 hover:bg-muted-foreground",
-            )}
-            onClick={() => void handleToggleMaximize()}
-          >
-            {windowsStyleWindowControls && <span aria-hidden="true">□</span>}
-          </button>
-          <button
-            type="button"
-            aria-label="Close"
-            className={cn(
-              WINDOW_BUTTON_BASE,
-              windowsStyleWindowControls
-                ? "h-full w-12 hover:bg-destructive hover:text-destructive-foreground"
-                : "size-3 rounded-full bg-muted-foreground/40 hover:bg-primary",
-            )}
-            onClick={() => {
-              logInternalInfo("TitleBar.close clicked");
-              try {
-                window.dispatchEvent(new Event("beforeunload"));
-              } catch {}
-              void invoke("quit_app")
-                .then(() => {
-                  logInternalInfo("TitleBar.close quit_app invoked");
-                })
-                .catch((error) => {
-                  logInternalError("TitleBar.close quit_app failed", error);
-                  logInternalWarn("TitleBar.close fallback to appWindow.close");
-                  void appWindow.close();
-                });
-            }}
-          >
-            {windowsStyleWindowControls && <span aria-hidden="true">&#10005;</span>}
-          </button>
-        </div>
+        <WindowControls isMaximized={isMax} />
       )}
     </div>
   );

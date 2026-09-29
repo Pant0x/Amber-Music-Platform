@@ -34,6 +34,7 @@ import { TRANSLATION_OFF, useLyricsTranslationLang } from "../settings/lyricsTra
 import { useLyricsDuetMode, useLyricsAdlibsMode } from "../settings/lyricsEnhancements";
 import { translateLines } from "../../datasource/translate";
 import { VideoPlayerView } from "../components/player/VideoPlayerView";
+import { WindowControls } from "../components/WindowControls";
 import { getMediaCounterpart } from "../../datasource/youtube/videoService";
 import {
   LyricLineView,
@@ -72,6 +73,21 @@ const DEPTH = [
   { opacity: 0.12, blur: 0 },
 ];
 
+const STATIC_DEPTH_STYLES = DEPTH.map((d, i) => {
+  if (i === 0) {
+    return {
+      opacity: 1,
+      filter: "none",
+      transform: "scale(1.035) translateZ(0)",
+    };
+  }
+  return {
+    opacity: d.opacity,
+    filter: d.blur ? `blur(${d.blur}px)` : undefined,
+    transform: "scale(0.985) translateZ(0)",
+  };
+});
+
 /*
  * Type scale, driven by the container's width so opening the queue panel reflows it rather
  * than overflowing. The Tailwind size classes on the elements are a floor, not decoration:
@@ -94,6 +110,113 @@ const ARROW_KEYS = ["ArrowDown", "ArrowUp", "Home", "End"];
 
 interface LyricsViewProps {
   onClose: () => void;
+}
+
+function FullscreenLyricsMiniPlayer({
+  track,
+  isPlaying,
+}: {
+  track: Track;
+  isPlaying: boolean;
+}) {
+  const [playbackTime, setPlaybackTime] = useState(() => playerController.getCurrentTime());
+  const [showRemainingTime, setShowRemainingTime] = useState(true);
+  const pendingSeekRef = useRef<{ target: number; at: number } | null>(null);
+
+  useEffect(() => {
+    const updateTime = () => {
+      const raw = playerController.getCurrentTime();
+      const pending = pendingSeekRef.current;
+      if (pending) {
+        if (performance.now() - pending.at < 800 && Math.abs(raw - pending.target) > 0.75) {
+          setPlaybackTime(pending.target);
+          return;
+        }
+        pendingSeekRef.current = null;
+      }
+      setPlaybackTime(raw);
+    };
+
+    updateTime();
+    if (!isPlaying) return;
+
+    const interval = window.setInterval(updateTime, 200);
+    return () => window.clearInterval(interval);
+  }, [isPlaying]);
+
+  return (
+    <div className="w-full max-w-[380px] mt-6 flex flex-col gap-2.5">
+      <div className="flex min-w-0 flex-col mb-1 text-center lg:text-left">
+        <span className="truncate text-lg font-bold text-white tracking-tight">{track.title}</span>
+        <span className="truncate text-sm text-white/70">
+          <ArtistLinks artists={track.artists} fallback={track.artist} />
+        </span>
+      </div>
+
+      <div className="flex items-center justify-between text-xs text-white/60 tabular-nums font-medium">
+        <span>{formatMinutesSeconds(playbackTime)}</span>
+        <button
+          type="button"
+          onClick={() => setShowRemainingTime((prev) => !prev)}
+          className="hover:text-white transition-colors cursor-pointer select-none font-medium tabular-nums focus-visible:outline-none"
+          title={showRemainingTime ? "Click to show total length" : "Click to show remaining time"}
+          aria-label={showRemainingTime ? "Click to show total length" : "Click to show remaining time"}
+        >
+          {showRemainingTime
+            ? `-${formatMinutesSeconds(Math.max(0, (track.durationSec || 0) - playbackTime))}`
+            : formatMinutesSeconds(track.durationSec || 0)}
+        </button>
+      </div>
+
+      <input
+        type="range"
+        min={0}
+        max={track.durationSec || 100}
+        step="any"
+        value={playbackTime}
+        onChange={(e) => {
+          const t = parseFloat(e.target.value);
+          pendingSeekRef.current = { target: t, at: performance.now() };
+          setPlaybackTime(t);
+          void playerController.seekTo(t);
+        }}
+        className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/20 focus-visible:outline-none transition-all [&::-webkit-slider-runnable-track]:h-1.5 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_right,#ffffff_var(--slider-progress),rgba(255,255,255,0.25)_var(--slider-progress))] [&::-webkit-slider-thumb]:size-3.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:-mt-1 [&::-webkit-slider-thumb]:shadow-[0_0_12px_rgba(255,255,255,0.9)]"
+        style={{
+          "--slider-progress": `${track.durationSec && track.durationSec > 0 ? (playbackTime / track.durationSec) * 100 : 0}%`,
+        } as React.CSSProperties}
+        aria-label="Seek track"
+      />
+
+      <div className="flex items-center justify-center gap-5 mt-2 text-white">
+        <button
+          type="button"
+          onClick={() => void playerController.skipToPrevious()}
+          className="flex size-10 items-center justify-center rounded-full hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+          aria-label="Previous track"
+        >
+          <SkipPreviousIcon size={22} />
+        </button>
+
+        <button
+          type="button"
+          onClick={() => void playerController.togglePlayPause()}
+          className="flex size-11 items-center justify-center rounded-full bg-white text-black shadow-lg hover:scale-105 active:scale-95 transition-transform cursor-pointer"
+          aria-label={isPlaying ? "Pause" : "Play"}
+        >
+          {isPlaying ? <PauseActiveIcon size={20} fill="currentColor" /> : <PlayActiveIcon size={20} fill="currentColor" className="ml-0.5" />}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => void playerController.skipToNext()}
+          className="flex size-10 items-center justify-center rounded-full hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+          aria-label="Next track"
+        >
+          <SkipNextIcon size={22} />
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export function LyricsView({ onClose }: LyricsViewProps) {
@@ -146,6 +269,7 @@ export function LyricsView({ onClose }: LyricsViewProps) {
   const handleSwitchMediaMode = useCallback(async (mode: "song" | "video") => {
     if (!track || mode === mediaMode) return;
     if (mode === "video") {
+      playerController.pause();
       playerController.silenceAudioEngine();
       playerUIStore.setLyricsMediaMode("video");
     } else {
@@ -188,8 +312,6 @@ export function LyricsView({ onClose }: LyricsViewProps) {
     });
   };
   void toggleSplitMode;
-  const [currentPlaybackTime, setCurrentPlaybackTime] = useState(0);
-  const [showRemainingTime, setShowRemainingTime] = useState(true);
 
   const handleClose = () => {
     playerUIStore.setLyricsFullscreen(false);
@@ -247,23 +369,6 @@ export function LyricsView({ onClose }: LyricsViewProps) {
 
   const pendingSeekRef = useRef<{ target: number; at: number } | null>(null);
 
-  useEffect(() => {
-    const updateTime = () => {
-      const engineTime = playerController.getCurrentTime();
-      const pending = pendingSeekRef.current;
-      if (pending) {
-        if (performance.now() - pending.at < 800 && Math.abs(engineTime - pending.target) > 0.75) {
-          setCurrentPlaybackTime(pending.target);
-          return;
-        }
-        pendingSeekRef.current = null;
-      }
-      setCurrentPlaybackTime(engineTime);
-    };
-    updateTime();
-    const interval = window.setInterval(updateTime, 100);
-    return () => window.clearInterval(interval);
-  }, []);
 
   const scrollerRef = useRef<HTMLDivElement>(null);
   const lineRefs = useRef<Array<HTMLElement | null>>([]);
@@ -404,6 +509,8 @@ export function LyricsView({ onClose }: LyricsViewProps) {
     return () => observer.disconnect();
   }, [scrollToLine]);
 
+  const hasFinishedRef = useRef(false);
+
   useEffect(() => {
     if (!isSynced) {
       setActiveIndex(-1);
@@ -413,6 +520,14 @@ export function LyricsView({ onClose }: LyricsViewProps) {
     let current = -1;
     const sample = () => {
       const rawEngineTime = playerController.getCurrentTime();
+      const duration = durationRef.current || 0;
+      if (duration > 5 && rawEngineTime >= duration - 1.2 && !hasFinishedRef.current) {
+        hasFinishedRef.current = true;
+        scrollerRef.current?.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+      } else if (rawEngineTime < 2) {
+        hasFinishedRef.current = false;
+      }
+
       const pending = pendingSeekRef.current;
       let engineTime = rawEngineTime;
       if (pending) {
@@ -422,7 +537,6 @@ export function LyricsView({ onClose }: LyricsViewProps) {
           pendingSeekRef.current = null;
         }
       }
-      setCurrentPlaybackTime(engineTime);
       const autoIntro = lyrics?.autoIntroOffsetSec ?? 0;
       const time = engineTime - autoIntro + offset;
       const currentLines = linesRef.current;
@@ -431,11 +545,20 @@ export function LyricsView({ onClose }: LyricsViewProps) {
       /* Committing every frame would re-render the whole column sixty times a second for a
          value that flips a few times a minute. Only the flip is worth a render. */
       if (next !== current) {
-        if (current >= 0 && lineRefs.current[current]) {
-          setLineSweepState(lineRefs.current[current]!, "sung");
-        }
         current = next;
         setActiveIndex(next);
+
+        // Keep past lines at 100% (sung) and future lines at 0% (unsung)
+        const lineCount = currentLines.length;
+        for (let i = 0; i < lineCount; i++) {
+          const el = lineRefs.current[i];
+          if (!el) continue;
+          if (i < next) {
+            setLineSweepState(el, "sung");
+          } else if (i > next) {
+            setLineSweepState(el, "unsung");
+          }
+        }
       }
 
       if (reduce || next < 0) return;
@@ -503,21 +626,10 @@ export function LyricsView({ onClose }: LyricsViewProps) {
   }, [lyrics, translationLang, track?.id]);
 
   // When a track finishes, loops, or a fresh track is loaded, scroll smoothly back to the top
-  const hasFinishedRef = useRef(false);
   useEffect(() => {
     hasFinishedRef.current = false;
     scrollerRef.current?.scrollTo({ top: 0, behavior: "auto" });
   }, [track?.id, lyrics]);
-
-  useEffect(() => {
-    const duration = track?.durationSec || 0;
-    if (duration > 5 && currentPlaybackTime >= duration - 1.2 && !hasFinishedRef.current) {
-      hasFinishedRef.current = true;
-      scrollerRef.current?.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
-    } else if (currentPlaybackTime < 2) {
-      hasFinishedRef.current = false;
-    }
-  }, [currentPlaybackTime, track?.durationSec, reduce]);
 
   useEffect(() => {
     if (activeIndex < 0) {
@@ -564,8 +676,13 @@ export function LyricsView({ onClose }: LyricsViewProps) {
     const autoIntro = lyrics?.autoIntroOffsetSec ?? 0;
     const target = Math.max(0, start + autoIntro - offset);
     pendingSeekRef.current = { target, at: performance.now() };
-    setCurrentPlaybackTime(target);
     setActiveIndex(index);
+    for (let i = 0; i < lines.length; i++) {
+      const el = lineRefs.current[i];
+      if (!el) continue;
+      if (i < index) setLineSweepState(el, "sung");
+      else if (i > index) setLineSweepState(el, "unsung");
+    }
     void playerController.seekTo(target);
   };
 
@@ -675,8 +792,31 @@ export function LyricsView({ onClose }: LyricsViewProps) {
         {isSynced && activeIndex >= 0 ? lines[activeIndex]?.text ?? "" : ""}
       </p>
 
-      {/* Top Header: Transparent Black Bar hosting Song / Video Switcher - Hidden in Fullscreen Mode */}
-      {!isFullscreen && (
+      {/* Top Header: In Fullscreen mode, show sleek floating bar with Exit Fullscreen button & Window Controls */}
+      {isFullscreen ? (
+        <header className="shrink-0 z-40 flex items-center justify-between px-6 py-2.5 bg-black/50 backdrop-blur-md border-b border-white/10 shadow-sm pointer-events-auto w-full select-none" data-tauri-drag-region>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="flex items-center gap-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white/90 hover:text-white px-3.5 py-1.5 text-xs font-bold border border-white/15 transition-all shadow-sm cursor-pointer"
+              title="Exit fullscreen (Esc)"
+            >
+              <span>✕ Exit Fullscreen</span>
+            </button>
+          </div>
+
+          <div className="flex flex-col items-center max-w-md truncate pointer-events-none">
+            <span className="text-xs font-bold text-white/90 truncate">{track?.title}</span>
+            <span className="text-[11px] text-white/60 truncate">{track?.artist}</span>
+          </div>
+
+          <div className="flex items-center justify-end">
+            <WindowControls />
+          </div>
+        </header>
+      ) : (
+        /* Normal Mode Top Header: Song / Video Switcher */
         <header className="shrink-0 z-30 flex items-center justify-center py-2.5 bg-black/60 backdrop-blur-md border-b border-white/10 shadow-sm pointer-events-auto w-full">
           <div className="flex items-center rounded-full bg-black/60 backdrop-blur-sm p-1 border border-white/15 text-xs font-semibold text-white/80 shadow-md select-none">
             <button
@@ -729,77 +869,7 @@ export function LyricsView({ onClose }: LyricsViewProps) {
 
                 {/* Mini Player Under Artwork */}
                 {track && (
-                  <div className="w-full max-w-[380px] mt-6 flex flex-col gap-2.5">
-                    <div className="flex min-w-0 flex-col mb-1 text-center lg:text-left">
-                      <span className="truncate text-lg font-bold text-white tracking-tight">{track.title}</span>
-                      <span className="truncate text-sm text-white/70">
-                        <ArtistLinks artists={track.artists} fallback={track.artist} />
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs text-white/60 tabular-nums font-medium">
-                      <span>{formatMinutesSeconds(currentPlaybackTime)}</span>
-                      <button
-                        type="button"
-                        onClick={() => setShowRemainingTime((prev) => !prev)}
-                        className="hover:text-white transition-colors cursor-pointer select-none font-medium tabular-nums focus-visible:outline-none"
-                        title={showRemainingTime ? "Click to show total length" : "Click to show remaining time"}
-                        aria-label={showRemainingTime ? "Click to show total length" : "Click to show remaining time"}
-                      >
-                        {showRemainingTime
-                          ? `-${formatMinutesSeconds(Math.max(0, (track.durationSec || 0) - currentPlaybackTime))}`
-                          : formatMinutesSeconds(track.durationSec || 0)}
-                      </button>
-                    </div>
-
-                    <input
-                      type="range"
-                      min={0}
-                      max={track.durationSec || 100}
-                      step="any"
-                      value={currentPlaybackTime}
-                      onChange={(e) => {
-                        const t = parseFloat(e.target.value);
-                        pendingSeekRef.current = { target: t, at: performance.now() };
-                        setCurrentPlaybackTime(t);
-                        void playerController.seekTo(t);
-                      }}
-                      className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/20 focus-visible:outline-none transition-all [&::-webkit-slider-runnable-track]:h-1.5 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_right,#ffffff_var(--slider-progress),rgba(255,255,255,0.25)_var(--slider-progress))] [&::-webkit-slider-thumb]:size-3.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:-mt-1 [&::-webkit-slider-thumb]:shadow-[0_0_12px_rgba(255,255,255,0.9)]"
-                      style={{
-                        "--slider-progress": `${(track.durationSec && track.durationSec > 0) ? (currentPlaybackTime / track.durationSec) * 100 : 0}%`,
-                      } as React.CSSProperties}
-                      aria-label="Seek track"
-                    />
-
-                    <div className="flex items-center justify-center gap-5 mt-2 text-white">
-                      <button
-                        type="button"
-                        onClick={() => void playerController.skipToPrevious()}
-                        className="flex size-10 items-center justify-center rounded-full hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
-                        aria-label="Previous track"
-                      >
-                        <SkipPreviousIcon size={22} />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => void playerController.togglePlayPause()}
-                        className="flex size-11 items-center justify-center rounded-full bg-white text-black shadow-lg hover:scale-105 active:scale-95 transition-transform cursor-pointer"
-                        aria-label={isPlaying ? "Pause" : "Play"}
-                      >
-                        {isPlaying ? <PauseActiveIcon size={20} fill="currentColor" /> : <PlayActiveIcon size={20} fill="currentColor" className="ml-0.5" />}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => void playerController.skipToNext()}
-                        className="flex size-10 items-center justify-center rounded-full hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
-                        aria-label="Next track"
-                      >
-                        <SkipNextIcon size={22} />
-                      </button>
-                    </div>
-                  </div>
+                  <FullscreenLyricsMiniPlayer track={track} isPlaying={isPlaying} />
                 )}
               </div>
             )}
@@ -857,11 +927,11 @@ export function LyricsView({ onClose }: LyricsViewProps) {
                         const duetInfo = duetProcessedLines[index];
                         const displayText = duetInfo?.displayText ?? line.text;
                         const alignment = duetInfo?.alignment ?? "left";
+                        const lineActive = index === activeIndex;
                         const dist = activeIndex < 0
                           ? 1
-                          : Math.min(DEPTH.length - 1, Math.abs(index - activeIndex));
-                        const depth = DEPTH[Math.min(dist, DEPTH.length - 1)];
-                        const lineActive = index === activeIndex;
+                          : Math.min(STATIC_DEPTH_STYLES.length - 1, Math.abs(index - activeIndex));
+                        const depthStyle = STATIC_DEPTH_STYLES[lineActive ? 0 : dist];
 
                         return isSynced ? (
                           <LyricLineView
@@ -869,13 +939,10 @@ export function LyricsView({ onClose }: LyricsViewProps) {
                             index={index}
                             text={displayText}
                             isActive={lineActive}
+                            isPast={activeIndex >= 0 && index < activeIndex}
                             alignment={alignment}
                             enableAdlibs={isAdlibsMode}
-                            depthStyle={{
-                              opacity: lineActive ? 1 : depth.opacity,
-                              filter: lineActive ? "none" : depth.blur ? `blur(${depth.blur}px)` : undefined,
-                              transform: lineActive ? "scale(1.035) translateZ(0)" : "scale(0.985) translateZ(0)",
-                            }}
+                            depthStyle={depthStyle}
                             reduceMotion={reduce}
                             translation={translations?.[index] || undefined}
                             tabbable={index === tabbableIndex}
@@ -943,7 +1010,7 @@ export function LyricsView({ onClose }: LyricsViewProps) {
               videoId={activeVideoId}
               track={track}
               initialTime={playerController.getCurrentTime()}
-              initialPlaying={isPlaying}
+              initialPlaying={false}
             />
           )}
         </div>
@@ -997,22 +1064,19 @@ export function LyricsView({ onClose }: LyricsViewProps) {
                   )}
 
                   {lines.map((line, index) => {
+                    const lineActive = index === activeIndex;
                     const dist = activeIndex < 0
                       ? 1
-                      : Math.min(DEPTH.length - 1, Math.abs(index - activeIndex));
-                    const depth = DEPTH[Math.min(dist, DEPTH.length - 1)];
-                    const lineActive = index === activeIndex;
+                      : Math.min(STATIC_DEPTH_STYLES.length - 1, Math.abs(index - activeIndex));
+                    const depthStyle = STATIC_DEPTH_STYLES[lineActive ? 0 : dist];
                     return isSynced ? (
                       <LyricLineView
                         key={`${index}:${line.text}`}
                         index={index}
                         text={line.text}
                         isActive={lineActive}
-                        depthStyle={{
-                          opacity: lineActive ? 1 : depth.opacity,
-                          filter: lineActive ? "none" : depth.blur ? `blur(${depth.blur}px)` : undefined,
-                          transform: lineActive ? "scale(1.035) translateZ(0)" : "scale(0.985) translateZ(0)",
-                        }}
+                        isPast={activeIndex >= 0 && index < activeIndex}
+                        depthStyle={depthStyle}
                         reduceMotion={reduce}
                         translation={translations?.[index] || undefined}
                         tabbable={index === tabbableIndex}

@@ -30,6 +30,7 @@ export interface LyricLineViewProps {
   /** Caller passes duet-processed display text; raw text when duet mode is off. */
   text: string;
   isActive: boolean;
+  isPast?: boolean;
   /**
    * 0..1 karaoke fill, painted as `--sweep`. Omitted when the parent paints the var itself
    * on every frame (fullscreen rAF loop) — the sweep *class* still comes from `sweepEnabled`.
@@ -148,6 +149,7 @@ export const LyricLineView = memo(function LyricLineView({
   index,
   text,
   isActive,
+  isPast = false,
   sweep01,
   sweepEnabled = true,
   enableAdlibs = true,
@@ -282,7 +284,7 @@ export const LyricLineView = memo(function LyricLineView({
           return <span key={item.id}>{item.text}</span>;
         }
 
-        let state: "sung" | "unsung" | "active" = "unsung";
+        let state: "sung" | "unsung" | "active" | undefined;
         let wordSweepStyle: CSSProperties | undefined;
 
         if (sweep01 !== undefined && sweeps) {
@@ -297,6 +299,9 @@ export const LyricLineView = memo(function LyricLineView({
             const frac = (sweep01 - item.start) / Math.max(0.0001, item.end - item.start);
             wordSweepStyle = { "--w-sweep": `${(frac * 100).toFixed(1)}%` } as CSSProperties;
           }
+        } else if (!isActive) {
+          state = isPast ? "sung" : "unsung";
+          wordSweepStyle = { "--w-sweep": isPast ? "100%" : "0%" } as CSSProperties;
         }
 
         return (
@@ -345,7 +350,7 @@ export const LyricLineView = memo(function LyricLineView({
           "group relative text-pretty font-bold leading-[1.16] tracking-[-0.035em] max-w-[88%] synced-line lyrics-lyricsContent-lyric",
           alignClass,
           isArabic && "font-arabic tracking-normal font-black leading-snug",
-          "transition-all duration-400 ease-[cubic-bezier(0.25,1,0.5,1)] will-change-[transform,opacity,filter]",
+          "transition-[transform,opacity,filter] duration-350 ease-[cubic-bezier(0.25,1,0.5,1)] will-change-[transform,opacity]",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer",
           isActive && "is-active lyrics-lyricsContent-active",
           sweeps ? "lyric-sweep font-black" : "text-foreground font-semibold",
@@ -381,7 +386,7 @@ export const LyricLineView = memo(function LyricLineView({
         style={sweepStyle}
         className={cn(
           "cursor-pointer font-bold leading-snug tracking-tight select-text text-2xl sm:text-3xl lg:text-[34px] origin-center max-w-[92%] mx-auto block",
-          "transition-all duration-350 ease-[cubic-bezier(0.25,1,0.5,1)] will-change-[transform,opacity,filter]",
+          "transition-[transform,opacity,filter] duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] will-change-[transform,opacity]",
           isArabic && "font-arabic tracking-normal font-black leading-snug",
           isActive && !adlibLine && "lyric-sweep text-white scale-[1.05] opacity-100 [text-shadow:0_0_12px_rgba(255,255,255,0.4)]",
           isActive && adlibLine && "text-white italic scale-[1.03] opacity-100",
@@ -396,7 +401,7 @@ export const LyricLineView = memo(function LyricLineView({
 
   if (size === "preview") {
     const rowClass = cn(
-      "transition-all duration-300 leading-normal select-text w-full will-change-[transform,opacity,filter] preview-lyric-row",
+      "transition-[transform,opacity,filter] duration-300 leading-normal select-text w-full will-change-[transform,opacity] preview-lyric-row",
       isArabic
         ? "font-arabic tracking-normal font-bold text-right origin-right"
         : "text-left origin-left",

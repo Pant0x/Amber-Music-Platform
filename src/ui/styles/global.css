@@ -758,8 +758,7 @@ html[data-fx-off~="marquee"] .animate-marquee-vertical {
   display: inline-block;
   color: inherit;
   filter: inherit;
-  transition: color 120ms ease;
-  will-change: background-size, color;
+  will-change: transform;
 }
 
 .lyric-sweep .lyric-word[data-state="sung"],

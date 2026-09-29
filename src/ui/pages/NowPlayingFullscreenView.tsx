@@ -32,6 +32,7 @@ import {
   updateLineWordsSweep,
 } from "../components/lyrics/LyricLineView";
 import { VideoPlayerView } from "../components/player/VideoPlayerView";
+import { WindowControls } from "../components/WindowControls";
 import { getMediaCounterpart } from "../../datasource/youtube/videoService";
 import { CoverAmbienceCanvas } from "../components/CoverAmbienceCanvas";
 import {
@@ -153,6 +154,7 @@ export function NowPlayingFullscreenView({ onClose }: NowPlayingFullscreenViewPr
   const handleSwitchMediaMode = useCallback(async (mode: "song" | "video") => {
     if (!track || mode === mediaMode) return;
     if (mode === "video") {
+      playerController.pause();
       playerController.silenceAudioEngine();
       setMediaMode("video");
     } else {
@@ -587,9 +589,9 @@ export function NowPlayingFullscreenView({ onClose }: NowPlayingFullscreenViewPr
         </button>
       </div>
 
-      {/* Right Action: Balance spacer matching Left Back button width to keep Media Switcher centered */}
-      <div className="flex items-center justify-end min-w-[100px]">
-        <div className="w-8" />
+      {/* Right Action: In-app Window Controls */}
+      <div className="flex items-center justify-end">
+        <WindowControls />
       </div>
     </header>
 
@@ -606,7 +608,7 @@ export function NowPlayingFullscreenView({ onClose }: NowPlayingFullscreenViewPr
               videoId={activeVideoId}
               track={track}
               initialTime={playerController.getCurrentTime()}
-              initialPlaying={isPlaying}
+              initialPlaying={false}
             />
           )}
         </div>
@@ -655,6 +657,7 @@ export function NowPlayingFullscreenView({ onClose }: NowPlayingFullscreenViewPr
                           index={idx}
                           text={line.text}
                           isActive={idx === activeLyricIndex}
+                          isPast={activeLyricIndex >= 0 && idx < activeLyricIndex}
                           size="song"
                           forceAdlibLine={isAdlibLine(line.text)}
                           emptyStyle="note"

@@ -1,7 +1,7 @@
 {
   "name": "amber",
   "private": true,
-  "version": "1.0.3",
+  "version": "1.0.4",
   "author": "Panto",
   "type": "module",
   "scripts": {

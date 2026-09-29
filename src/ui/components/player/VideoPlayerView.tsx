@@ -157,7 +157,7 @@ export function VideoPlayerView({
                 try {
                   event.target.playVideo();
                 } catch {}
-              } else if (pendingActionRef.current === "pause") {
+              } else {
                 try {
                   event.target.pauseVideo();
                 } catch {}

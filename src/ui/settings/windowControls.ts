@@ -11,10 +11,26 @@ import {
 const WINDOWS_STYLE_STORAGE_KEY = "windows-style-window-controls";
 const NATIVE_CONTROLS_STORAGE_KEY = "native-window-controls";
 const FORCE_CONTROLS_STORAGE_KEY = "force-window-controls-on-tiling-wm";
+const IN_APP_CONTROLS_MIGRATED_KEY = "amber:in-app-controls-v1";
 const CHANGE_EVENT = "window-controls-change";
 
-function readBooleanSetting(key: string) {
-  return readLocalBooleanSetting(key, false);
+function ensureInAppControlsDefault() {
+  if (typeof window === "undefined") return;
+  try {
+    if (!localStorage.getItem(IN_APP_CONTROLS_MIGRATED_KEY)) {
+      localStorage.setItem(IN_APP_CONTROLS_MIGRATED_KEY, "true");
+      localStorage.setItem(NATIVE_CONTROLS_STORAGE_KEY, "false");
+      if (isWindows) {
+        localStorage.setItem(WINDOWS_STYLE_STORAGE_KEY, "true");
+      }
+    }
+  } catch {}
+}
+
+ensureInAppControlsDefault();
+
+function readBooleanSetting(key: string, defaultValue = false) {
+  return readLocalBooleanSetting(key, defaultValue);
 }
 
 function writeBooleanSetting(key: string, enabled: boolean) {
@@ -32,19 +48,20 @@ function subscribe(callback: () => void) {
 }
 
 function readWindowsStyleWindowControls() {
-  return readBooleanSetting(WINDOWS_STYLE_STORAGE_KEY);
+  ensureInAppControlsDefault();
+  return readBooleanSetting(WINDOWS_STYLE_STORAGE_KEY, isWindows);
 }
 
 function readNativeWindowControls() {
-  // Default: OS native on Windows (like Spotify), custom on macOS/Linux
-  return readLocalBooleanSetting(NATIVE_CONTROLS_STORAGE_KEY, isWindows);
+  ensureInAppControlsDefault();
+  return readLocalBooleanSetting(NATIVE_CONTROLS_STORAGE_KEY, false);
 }
 
 function readForceWindowControls() {
   // Default off: tiling compositors hide the app-drawn buttons by default (see
   // TitleBar's showCustomWindowControls). This is the opt-in escape hatch for anyone
   // who still wants a close/minimize button under a tiling WM.
-  return readBooleanSetting(FORCE_CONTROLS_STORAGE_KEY);
+  return readBooleanSetting(FORCE_CONTROLS_STORAGE_KEY, false);
 }
 
 function emitWindowControlsChange() {
@@ -77,13 +94,14 @@ export async function applyNativeWindowControls(enabled = readNativeWindowContro
 }
 
 export async function hydrateWindowControlSettings() {
+  ensureInAppControlsDefault();
   await Promise.all([
-    hydrateLocalBooleanSetting(WINDOWS_STYLE_STORAGE_KEY, false, CHANGE_EVENT),
+    hydrateLocalBooleanSetting(WINDOWS_STYLE_STORAGE_KEY, isWindows, CHANGE_EVENT),
     hydrateLocalBooleanSetting(
       NATIVE_CONTROLS_STORAGE_KEY,
-      isWindows,
+      false,
       CHANGE_EVENT,
-      () => applyNativeWindowControls(),
+      () => applyNativeWindowControls(false),
     ),
     hydrateLocalBooleanSetting(FORCE_CONTROLS_STORAGE_KEY, false, CHANGE_EVENT),
   ]);
