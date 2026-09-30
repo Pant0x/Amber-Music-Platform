@@ -87,8 +87,16 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
       } else if (event === "SIGNED_IN" && session) {
         onAuthSuccess?.();
         onClose();
-        if (isTauri() && libraryController.getState().status !== "ready") {
-          void libraryController.signIn().catch(() => {});
+        if (libraryController.getState().status !== "ready") {
+          void libraryController.recoverConnection().then(() => {
+            if (libraryController.getState().status !== "ready") {
+              if (isTauri()) {
+                void libraryController.signIn().catch(() => {});
+              } else {
+                window.dispatchEvent(new CustomEvent("opentune:open-connect-library-modal"));
+              }
+            }
+          });
         }
       }
     });
@@ -323,8 +331,16 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
       if (session) {
         onAuthSuccess?.();
         onClose();
-        if (isTauri() && libraryController.getState().status !== "ready") {
-          void libraryController.signIn().catch(() => {});
+        if (libraryController.getState().status !== "ready") {
+          void libraryController.recoverConnection().then(() => {
+            if (libraryController.getState().status !== "ready") {
+              if (isTauri()) {
+                void libraryController.signIn().catch(() => {});
+              } else {
+                window.dispatchEvent(new CustomEvent("opentune:open-connect-library-modal"));
+              }
+            }
+          });
         }
       }
     } catch (err) {
