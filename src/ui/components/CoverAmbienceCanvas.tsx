@@ -69,10 +69,10 @@ export const CoverAmbienceCanvas = memo(function CoverAmbienceCanvas({
     };
 
     // All orbs derive purely from the artwork's authentic color palette and tones
-    const c1 = `rgba(${pPrimary.r}, ${pPrimary.g}, ${pPrimary.b}, ${0.72 * intensity})`;
-    const c2 = `rgba(${pSecondary.r}, ${pSecondary.g}, ${pSecondary.b}, ${0.64 * intensity})`;
-    const c3 = `rgba(${pTertiary.r}, ${pTertiary.g}, ${pTertiary.b}, ${0.58 * intensity})`;
-    const c4 = `rgba(${pDark.r}, ${pDark.g}, ${pDark.b}, ${0.68 * intensity})`;
+    const c1 = `rgba(${pPrimary.r}, ${pPrimary.g}, ${pPrimary.b}, ${0.78 * intensity})`;
+    const c2 = `rgba(${pSecondary.r}, ${pSecondary.g}, ${pSecondary.b}, ${0.72 * intensity})`;
+    const c3 = `rgba(${pTertiary.r}, ${pTertiary.g}, ${pTertiary.b}, ${0.66 * intensity})`;
+    const c4 = `rgba(${pDark.r}, ${pDark.g}, ${pDark.b}, ${0.74 * intensity})`;
 
     return { c1, c2, c3, c4 };
   }, [dominant.rgb, dominant.palette, intensity]);
@@ -109,7 +109,7 @@ export const CoverAmbienceCanvas = memo(function CoverAmbienceCanvas({
       {/* Dynamic Ambient Mesh Blobs (Cover Ambience) */}
       {isEnabled && (
         <div
-          className="absolute inset-0 filter blur-[65px] saturate-[2.4] opacity-95 [transform:translate3d(0,0,0)] [backface-visibility:hidden]"
+          className="absolute inset-0 filter blur-[60px] saturate-[2.6] opacity-100 [transform:translate3d(0,0,0)] [backface-visibility:hidden]"
         >
           {/* Top-Left Orb */}
           <div
@@ -158,7 +158,7 @@ export const CoverAmbienceCanvas = memo(function CoverAmbienceCanvas({
       )}
 
       {/* Scrim Overlay for optimal contrast & legibility */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/20 to-black/45 backdrop-brightness-[0.94]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/35" />
     </div>
   );
 });
