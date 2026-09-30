@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "../../lib/supabaseClient";
 import { libraryController, useLibraryState } from "../../player/playerStore";
 import { useAuthProfile } from "../../lib/authProfile";
+import { safeOpenUrl } from "../platform";
 
 interface ConnectLibraryModalProps {
   isOpen: boolean;
@@ -70,13 +71,12 @@ export function ConnectLibraryModal({ isOpen, onClose }: ConnectLibraryModalProp
           navigator.clipboard.writeText(cleanCode).catch(() => {});
         }
 
-        // Direct our pre-opened popup to Google!
+        // Open in user's default browser on desktop (Chrome, Edge, Brave)!
+        void safeOpenUrl(targetUrl);
+
+        // Direct our pre-opened popup if present
         if (popupRef.current && !popupRef.current.closed) {
           popupRef.current.location.href = targetUrl;
-        } else {
-          try {
-            window.open(targetUrl, "_blank");
-          } catch {}
         }
       }
     };
@@ -177,10 +177,7 @@ export function ConnectLibraryModal({ isOpen, onClose }: ConnectLibraryModalProp
       if (typeof navigator !== "undefined" && navigator.clipboard) {
         navigator.clipboard.writeText(cleanCode).catch(() => {});
       }
-      const popup = window.open(url, "opentune_google_auth", "width=500,height=650");
-      if (popup) {
-        popupRef.current = popup;
-      }
+      void safeOpenUrl(url);
     }
   };
 

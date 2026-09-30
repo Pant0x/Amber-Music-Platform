@@ -561,7 +561,7 @@ export class YouTubeMusicDataSource extends DataSource {
       ...this.getSessionOptions(retrievePlayer),
       client_type: ClientType.MUSIC,
     });
-    if (!isTauri() && !this.musicCookie) {
+    if (!this.musicCookie) {
       try {
         let oauthTokens: any = null;
         if (typeof localStorage !== "undefined") {
@@ -602,7 +602,7 @@ export class YouTubeMusicDataSource extends DataSource {
           ...this.getSessionOptions(false),
           client_type: ClientType.WEB,
         });
-        if (!isTauri() && !this.musicCookie) {
+        if (!this.musicCookie) {
           try {
             let oauthTokens: any = null;
             if (typeof localStorage !== "undefined") {
@@ -3353,8 +3353,10 @@ export class YouTubeMusicDataSource extends DataSource {
             }).catch(() => {});
           }
         }
-      } else {
-        // Web mode: load from localStorage or Supabase user profile
+      }
+
+      if (!this.musicCookie) {
+        // Load from localStorage or Supabase user profile
         let cookie: string | null = null;
         if (typeof localStorage !== "undefined") {
           cookie = localStorage.getItem("opentune_ytm_cookie");
@@ -3377,7 +3379,7 @@ export class YouTubeMusicDataSource extends DataSource {
           // Check for stored OAuth tokens
           let oauthTokens: any = null;
           try {
-            const raw = localStorage.getItem("opentune_ytm_oauth");
+            const raw = typeof localStorage !== "undefined" ? localStorage.getItem("opentune_ytm_oauth") : null;
             if (raw) oauthTokens = JSON.parse(raw);
           } catch {}
           if (!oauthTokens && supabase) {
@@ -3473,101 +3475,94 @@ export class YouTubeMusicDataSource extends DataSource {
     onPrompt: (prompt: AuthPrompt) => void,
     onStage?: (stage: AuthStage) => void,
   ): Promise<void> {
-    if (!isTauri()) {
-      logInternalInfo("YouTubeMusicDataSource.signIn web oauth start");
-      const client = await this.getMusicClient();
-      return new Promise<void>((resolve, reject) => {
-        client.session.once("auth", async (data: any) => {
-          logInternalInfo("YouTubeMusicDataSource.signIn web oauth success", data);
-          try {
-            if (data?.credentials && typeof localStorage !== "undefined") {
-              localStorage.setItem("opentune_ytm_oauth", JSON.stringify(data.credentials));
-            }
-            if (supabase && data?.credentials) {
-              void supabase.auth.updateUser({
-                data: { yt_music_oauth: data.credentials },
-              }).catch(() => {});
-            }
-          } catch {}
-          this.applyDelegationContext(client);
-          resolve();
-        });
-
-        client.session.once("auth-error", (err: any) => {
-          logInternalError("YouTubeMusicDataSource.signIn web oauth error", err);
-          reject(err);
-        });
-
-        client.session.once("auth-pending", (data: any) => {
-          logInternalInfo("YouTubeMusicDataSource.signIn web auth-pending", data);
-          const prompt: AuthPrompt = {
-            verificationUrl: data.verification_url || "https://www.google.com/device",
-            userCode: data.user_code,
-            expiresInSec: data.expires_in || 1800,
-          };
-          onPrompt(prompt);
-          onStage?.("browser");
-          if (typeof window !== "undefined") {
-            window.dispatchEvent(
-              new CustomEvent("opentune:google-device-code", {
-                detail: prompt,
-              }),
-            );
-          }
-        });
-
-        client.session.signIn().catch((err: any) => {
-          logInternalError("YouTubeMusicDataSource.signIn web session.signIn error", err);
-          reject(err);
-        });
-      });
-    }
     logInternalInfo("YouTubeMusicDataSource.signIn start");
+    const client = await this.getMusicClient();
+    return new Promise<void>((resolve, reject) => {
+      client.session.once("auth", async (data: any) => {
+        logInternalInfo("YouTubeMusicDataSource.signIn oauth success", data);
+        try {
+          if (data?.credentials && typeof localStorage !== "undefined") {
+            localStorage.setItem("opentune_ytm_oauth", JSON.stringify(data.credentials));
+          }
+          if (supabase && data?.credentials) {
+            void supabase.auth.updateUser({
+              data: { yt_music_oauth: data.credentials },
+            }).catch(() => {});
+          }
+        } catch {}
+        this.applyDelegationContext(client);
+        resolve();
+      });
+
+      client.session.once("auth-error", (err: any) => {
+        logInternalError("YouTubeMusicDataSource.signIn oauth error", err);
+        reject(err);
+      });
+
+      client.session.once("auth-pending", (data: any) => {
+        logInternalInfo("YouTubeMusicDataSource.signIn auth-pending", data);
+        const prompt: AuthPrompt = {
+          verificationUrl: data.verification_url || "https://www.google.com/device",
+          userCode: data.user_code,
+          expiresInSec: data.expires_in || 1800,
+        };
+        onPrompt(prompt);
+        onStage?.("browser");
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("opentune:google-device-code", {
+              detail: prompt,
+            }),
+          );
+        }
+      });
+
+      client.session.signIn().catch((err: any) => {
+        logInternalError("YouTubeMusicDataSource.signIn session.signIn error", err);
+        reject(err);
+      });
+    });
+  }
+
+  async signInWithWebview(
+    onPrompt: (prompt: AuthPrompt) => void,
+    onStage?: (stage: AuthStage) => void,
+  ): Promise<void> {
+    if (!isTauri()) return this.signIn(onPrompt, onStage);
+    logInternalInfo("YouTubeMusicDataSource.signInWithWebview start");
     onPrompt({
       verificationUrl: "https://music.youtube.com/",
       userCode: "Browser sign-in",
       expiresInSec: 300,
     });
-    // Unbounded: this resolves when the person finishes signing in, not on a timer.
     onStage?.("browser");
     const { cookie, accountChanged, slotId } = await invoke<SignInResult>("sign_in_youtube_music");
     this.musicCookie = cookie;
     onStage?.("session");
-    logInternalInfo("YouTubeMusicDataSource.signIn command completed", {
+    logInternalInfo("YouTubeMusicDataSource.signInWithWebview command completed", {
       credentialBytes: cookie.length,
       accountChanged,
     });
 
-    /*
-     * The same account signing in again is a renewal, not a new session, so it is treated as
-     * one: the cached library stays, the chosen channel stays, and only the clients holding the
-     * old cookie are rebuilt. Clearing regardless is what turned every lapsed session into a
-     * full resync behind the sign-in overlay — for an account whose cache was still correct.
-     *
-     * This is also "add another Google account" — the Rust side stores whatever account this
-     * turns out to be as an *additional* slot rather than replacing one, so from here on out the
-     * only difference between a first sign-in, a lapsed-session renewal, and adding a second
-     * account is this one flag.
-     */
     if (!accountChanged) {
       this.resetMusicClients();
       await this.getMusicClient();
       void this.captureAccountProfile(slotId);
-      logInternalInfo("YouTubeMusicDataSource.signIn success (session renewed)");
+      logInternalInfo("YouTubeMusicDataSource.signInWithWebview success (session renewed)");
       return;
     }
 
     try {
       await clearCache();
     } catch (error) {
-      logInternalWarn("YouTubeMusicDataSource.signIn cache clear failed", {
+      logInternalWarn("YouTubeMusicDataSource.signInWithWebview cache clear failed", {
         error: error instanceof Error ? error.message : String(error),
       });
     }
     this.resetMusicSessionSelection();
     await this.getMusicClient();
     void this.captureAccountProfile(slotId);
-    logInternalInfo("YouTubeMusicDataSource.signIn success");
+    logInternalInfo("YouTubeMusicDataSource.signInWithWebview success");
   }
 
   /**
