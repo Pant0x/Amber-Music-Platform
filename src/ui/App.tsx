@@ -110,9 +110,9 @@ import {
 } from "./settings/keyboardShortcuts";
 import { persistMainWindowGeometry } from "./settings/mainWindowGeometry";
 import { hydratePlaybackSettings } from "../player/playbackSettings";
-const ONBOARDING_COMPLETE_KEY = "amber:onboarding-complete";
+const ONBOARDING_COMPLETE_KEY = "opentune:onboarding-complete";
 const ONBOARDING_COMPLETE_SETTING_KEY = "onboardingComplete";
-const KEYCHAIN_NOTICE_COMPLETE_KEY = "amber:keychain-notice-complete";
+const KEYCHAIN_NOTICE_COMPLETE_KEY = "opentune:keychain-notice-complete";
 const MOUSE_BACK_BUTTON = 3;
 const MOUSE_FORWARD_BUTTON = 4;
 /** How often the session is written purely to keep the restored playback position fresh. */
@@ -169,7 +169,7 @@ function getNavigationKey(state: AppViewState): string {
 
 function readLocalOnboardingComplete(): boolean {
   try {
-    return localStorage.getItem(ONBOARDING_COMPLETE_KEY) === "true";
+    return (localStorage.getItem(ONBOARDING_COMPLETE_KEY) ?? localStorage.getItem("amber:onboarding-complete")) === "true";
   } catch {
     return false;
   }

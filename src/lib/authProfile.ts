@@ -11,11 +11,11 @@ export interface UserProfile {
   isDiscordConnected: boolean;
 }
 
-const LOCAL_PROFILE_KEY = "amber_user_profile";
+const LOCAL_PROFILE_KEY = "opentune_user_profile";
 
 function getLocalProfile(): UserProfile | null {
   try {
-    const raw = localStorage.getItem(LOCAL_PROFILE_KEY);
+    const raw = localStorage.getItem(LOCAL_PROFILE_KEY) ?? localStorage.getItem("amber_user_profile");
     if (!raw) return null;
     return JSON.parse(raw);
   } catch {

@@ -147,7 +147,7 @@ export interface FeedNotification {
 /**
  * Where a pasted YouTube link points, once resolved.
  *
- * Deliberately narrow: these are the four things Amber can open. A link to anything else
+ * Deliberately narrow: these are the four things OpenTune can open. A link to anything else
  * resolves to null so the caller can fall back to treating the text as a search.
  */
 export type ResolvedLink =
@@ -202,7 +202,7 @@ export type BrowseTarget =
   | BrowseSurface
   | { browseId: string; title: string; params?: string };
 
-/** The browse destinations Amber knows how to open. */
+/** The browse destinations OpenTune knows how to open. */
 export type BrowseSurface = "home" | "explore" | "charts" | "moods" | "podcasts";
 
 export interface SearchResults {

@@ -9,9 +9,10 @@ import { libraryController, playerController } from "../../player/playerStore";
 import { logInternalError } from "../../internal/logging";
 import { FloatingPanel } from "./FloatingPanel";
 
-const DISMISSED_STORAGE_KEY = "amber-dismissed-notifications";
-const SEEN_STORAGE_KEY = "amber-seen-notifications-v2";
-const LAST_SEEN_AT_KEY = "amber_notifications_last_seen_at";
+const DISMISSED_STORAGE_KEY = "opentune-dismissed-notifications";
+const SEEN_STORAGE_KEY = "opentune-seen-notifications-v2";
+const LAST_SEEN_AT_KEY = "opentune_notifications_last_seen_at";
+const CLEARED_AT_KEY = "opentune_notifications_cleared_at";
 const UNSEEN_POLL_MS = 60_000;
 
 let cachedNotifications: FeedNotification[] | null = null;
@@ -256,7 +257,7 @@ export function NotificationsPanel({ signedIn }: { signedIn: boolean }) {
       setUnseen(0);
       return;
     }
-    const clearedAt = Number(localStorage.getItem("amber_notifications_cleared_at") || 0);
+    const clearedAt = Number(localStorage.getItem(CLEARED_AT_KEY) || localStorage.getItem("amber_notifications_cleared_at") || 0);
     void libraryController.getNotifications()
       .then((fetched) => {
         const sorted = sortNotificationsNewestFirst(fetched);
@@ -307,7 +308,7 @@ export function NotificationsPanel({ signedIn }: { signedIn: boolean }) {
           setNotifications(sorted);
           const currentDismissed = getDismissedIds();
           const currentSeen = getSeenIds();
-          const clearedAt = Number(localStorage.getItem("amber_notifications_cleared_at") || 0);
+          const clearedAt = Number(localStorage.getItem(CLEARED_AT_KEY) || localStorage.getItem("amber_notifications_cleared_at") || 0);
           if (open) {
             markCurrentAsSeen(sorted);
           } else {
@@ -336,7 +337,7 @@ export function NotificationsPanel({ signedIn }: { signedIn: boolean }) {
 
   if (!signedIn) return null;
 
-  const clearedAt = Number(localStorage.getItem("amber_notifications_cleared_at") || 0);
+  const clearedAt = Number(localStorage.getItem(CLEARED_AT_KEY) || localStorage.getItem("amber_notifications_cleared_at") || 0);
 
   const visibleNotifications = sortNotificationsNewestFirst(
     (notifications ?? []).filter(
@@ -362,7 +363,7 @@ export function NotificationsPanel({ signedIn }: { signedIn: boolean }) {
     void libraryController.clearNotifications();
     const now = Date.now();
     try {
-      localStorage.setItem("amber_notifications_cleared_at", now.toString());
+      localStorage.setItem(CLEARED_AT_KEY, now.toString());
       localStorage.setItem(LAST_SEEN_AT_KEY, now.toString());
     } catch {}
     setDismissedIds((prev) => {

@@ -213,7 +213,7 @@ export function ArtistView({
   // Blocked artists (Don't play this artist)
   const [blockedArtists, setBlockedArtists] = useState<string[]>(() => {
     try {
-      const stored = localStorage.getItem("amber_blocked_artists");
+      const stored = localStorage.getItem("opentune_blocked_artists") ?? localStorage.getItem("amber_blocked_artists");
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
@@ -407,7 +407,7 @@ export function ArtistView({
     }
     setBlockedArtists(next);
     try {
-      localStorage.setItem("amber_blocked_artists", JSON.stringify(next));
+      localStorage.setItem("opentune_blocked_artists", JSON.stringify(next));
     } catch {}
   };
 

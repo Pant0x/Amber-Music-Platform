@@ -12,13 +12,13 @@ import {
 const WINDOWS_STYLE_STORAGE_KEY = "windows-style-window-controls";
 const NATIVE_CONTROLS_STORAGE_KEY = "native-window-controls";
 const FORCE_CONTROLS_STORAGE_KEY = "force-window-controls-on-tiling-wm";
-const IN_APP_CONTROLS_MIGRATED_KEY = "amber:in-app-controls-v1";
+const IN_APP_CONTROLS_MIGRATED_KEY = "opentune:in-app-controls-v1";
 const CHANGE_EVENT = "window-controls-change";
 
 function ensureInAppControlsDefault() {
   if (typeof window === "undefined") return;
   try {
-    if (!localStorage.getItem(IN_APP_CONTROLS_MIGRATED_KEY)) {
+    if (!localStorage.getItem(IN_APP_CONTROLS_MIGRATED_KEY) && !localStorage.getItem("amber:in-app-controls-v1")) {
       localStorage.setItem(IN_APP_CONTROLS_MIGRATED_KEY, "true");
       localStorage.setItem(NATIVE_CONTROLS_STORAGE_KEY, "false");
       if (isWindows) {

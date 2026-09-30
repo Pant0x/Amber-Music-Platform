@@ -228,7 +228,7 @@ jobs:
         run: |
           set -euo pipefail
           # Located rather than hardcoded: the executable is named from the Cargo package
-          # (`Amber`), which Tauri may rename to `productName` during bundling. Globbing the
+          # (`opentune`), which Tauri may rename to `productName` during bundling. Globbing the
           # one top-level exe survives either, and fails loudly if that assumption breaks.
           portable_exe=$(find src-tauri/target/release -maxdepth 1 -type f -name '*.exe' | head -n 1)
           if [ -z "$portable_exe" ]; then
@@ -343,8 +343,8 @@ jobs:
     needs: [prepare, release]
     runs-on: ubuntu-latest
     # `winget-releaser` only *bumps* a package that already exists in microsoft/winget-pkgs; it
-    # cannot create one. `Pant0x.Amber` has never been submitted, so every run so far has stopped
-    # at "Package Pant0x.Amber does not exist in the winget-pkgs repository" — nothing to do with
+    # cannot create one. `Pant0x.OpenTune` has never been submitted, so every run so far has stopped
+    # at "Package Pant0x.OpenTune does not exist in the winget-pkgs repository" — nothing to do with
     # the release itself, which published fine each time.
     #
     # The initial submission is a one-off PR to microsoft/winget-pkgs; the manifest for it lives
@@ -372,7 +372,7 @@ jobs:
       - uses: vedantmgoyal9/winget-releaser@main
         if: steps.release_metadata.outputs.prerelease == 'false'
         with:
-          identifier: Pant0x.Amber
+          identifier: Pant0x.OpenTune
           release-tag: ${{ env.RELEASE_TAG }}
           installers-regex: '_x64-setup\.exe$'
           token: ${{ secrets.WINGET_TOKEN }}

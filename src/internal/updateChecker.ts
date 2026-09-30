@@ -95,7 +95,7 @@ export async function checkForUpdates(): Promise<UpdateInfo | null> {
       msg.includes("NotFound") ||
       msg.includes("release JSON from the remote")
     ) {
-      // No release published to Pant0x/Amber-Music-Platform yet. Treat gracefully as up-to-date.
+      // No release published to Pant0x/OpenTune yet. Treat gracefully as up-to-date.
       return null;
     }
     logInternalError("updateChecker.checkForUpdates failed", error);

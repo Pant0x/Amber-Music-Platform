@@ -21,7 +21,7 @@ export const DEFAULT_QUEUE_PANEL_WIDTH = 352;
 export const MIN_QUEUE_PANEL_WIDTH = 290;
 export const MAX_QUEUE_PANEL_WIDTH = 352;
 
-const QUEUE_PANEL_WIDTH_STORAGE_KEY = "amber:queue-panel-width";
+const QUEUE_PANEL_WIDTH_STORAGE_KEY = "opentune:queue-panel-width";
 const QUEUE_PANEL_WIDTH_CHANGE_EVENT = "queue-panel-width-change";
 
 export function isQueuePanelWidth(value: unknown): value is number {
@@ -29,7 +29,8 @@ export function isQueuePanelWidth(value: unknown): value is number {
 }
 
 export function readQueuePanelWidth(): number {
-  const parsed = readLocalJsonSetting(QUEUE_PANEL_WIDTH_STORAGE_KEY, isQueuePanelWidth);
+  const parsed = readLocalJsonSetting(QUEUE_PANEL_WIDTH_STORAGE_KEY, isQueuePanelWidth)
+    ?? readLocalJsonSetting("amber:queue-panel-width", isQueuePanelWidth);
   if (parsed === null) return DEFAULT_QUEUE_PANEL_WIDTH;
   return Math.round(
     Math.max(MIN_QUEUE_PANEL_WIDTH, Math.min(MAX_QUEUE_PANEL_WIDTH, parsed)),

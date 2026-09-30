@@ -1,6 +1,6 @@
 # AUR packaging
 
-`Amber` repackages the published `.deb`. Edit it here, not in the AUR repo — this is what the
+`opentune` repackages the published `.deb`. Edit it here, not in the AUR repo — this is what the
 workflow pushes.
 
 ## Publishing
@@ -13,7 +13,7 @@ Requires the repository secret **`AUR_SSH_PRIVATE_KEY`**.
 To publish without cutting a release:
 
 ```
-Actions → AUR → Run workflow → version: 1.2.1
+Actions → AUR → Run workflow → version: 1.0.8
 ```
 
 ## Editing by hand
@@ -32,4 +32,4 @@ Bump `pkgrel` instead of `pkgver` when only the packaging changed. The workflow 
 
 - The GStreamer deps are load-bearing: without `gst-libav` playback fails with
   `GStreamer element appsink not found`.
-- `conflicts=('Amber-bin')` — the community `Amber-bin` package installs the same files.
+- `conflicts=('amber' 'amber-bin' 'opentune-bin')` — conflicts with existing/legacy packages.

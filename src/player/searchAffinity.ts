@@ -6,9 +6,9 @@ import {
 } from "../datasource/searchNormalize";
 import { playerController } from "./playerStore";
 
-const SEARCH_SELECTIONS_KEY = "amber_search_selections_v1";
-const ARTIST_AFFINITY_KEY = "amber_artist_search_affinities_v1";
-const FOLLOWED_ARTISTS_KEY = "amber_followed_artists";
+const SEARCH_SELECTIONS_KEY = "opentune_search_selections_v1";
+const ARTIST_AFFINITY_KEY = "opentune_artist_search_affinities_v1";
+const FOLLOWED_ARTISTS_KEY = "opentune_followed_artists";
 
 /**
  * Normalizes text for lenient matching: removes hyphens, underscores,
@@ -81,7 +81,7 @@ function getFollowedArtists(): Set<string> {
   const set = new Set<string>();
   if (typeof localStorage === "undefined") return set;
   try {
-    const raw = localStorage.getItem(FOLLOWED_ARTISTS_KEY);
+    const raw = localStorage.getItem(FOLLOWED_ARTISTS_KEY) ?? localStorage.getItem("amber_followed_artists");
     if (raw) {
       const arr = JSON.parse(raw);
       if (Array.isArray(arr)) {

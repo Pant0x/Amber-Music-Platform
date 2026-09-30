@@ -18,7 +18,7 @@ interface ExportedTrack {
 }
 
 interface ExportedPlaylist {
-  format: "amber-playlist";
+  format: "opentune-playlist" | "amber-playlist";
   version: number;
   title: string;
   owner?: string;
@@ -49,7 +49,7 @@ function sanitizeFileName(name: string): string {
 /**
  * Writes a playlist to disk as JSON, or as M3U when that extension is chosen.
  *
- * JSON is the lossless option and the one that round-trips back into Amber, because it keeps
+ * JSON is the lossless option and the one that round-trips back into OpenTune, because it keeps
  * the YouTube video ids. M3U is offered because everything else on the machine can read it,
  * but it only carries file paths — so it is useful for local playlists and near-useless for
  * YouTube ones, which is why the caller is told what was actually written.
@@ -60,9 +60,9 @@ export async function exportPlaylist(
 ): Promise<{ path: string; format: "json" | "m3u"; written: number } | null> {
   const path = await saveDialog({
     title: `Export ${playlist.title}`,
-    defaultPath: `${sanitizeFileName(playlist.title)}.amber.json`,
+    defaultPath: `${sanitizeFileName(playlist.title)}.opentune.json`,
     filters: [
-      { name: "Amber playlist", extensions: ["json"] },
+      { name: "OpenTune playlist", extensions: ["json"] },
       { name: "M3U playlist", extensions: ["m3u", "m3u8"] },
     ],
   });
@@ -88,7 +88,7 @@ export async function exportPlaylist(
   }
 
   const payload: ExportedPlaylist = {
-    format: "amber-playlist",
+    format: "opentune-playlist",
     version: FORMAT_VERSION,
     title: playlist.title,
     owner: playlist.owner,
@@ -114,12 +114,14 @@ export interface ImportedPlaylist {
   artworkUrl?: string;
 }
 
-function parseAmberJson(contents: string): ImportedPlaylist | null {
+function parsePlaylistJson(contents: string): ImportedPlaylist | null {
   const parsed: unknown = JSON.parse(contents);
   if (!parsed || typeof parsed !== "object") return null;
 
   const candidate = parsed as Partial<ExportedPlaylist>;
-  if (candidate.format !== "amber-playlist" || !Array.isArray(candidate.tracks)) return null;
+  if ((candidate.format !== "opentune-playlist" && candidate.format !== "amber-playlist") || !Array.isArray(candidate.tracks)) {
+    return null;
+  }
 
   const tracks: Track[] = candidate.tracks
     .filter((entry): entry is ExportedTrack => Boolean(entry?.id))
@@ -195,18 +197,18 @@ export async function importPlaylistFile(): Promise<ImportedPlaylist | null> {
 
   const contents = await invoke<string>("read_text_file", { path });
   const fileName = path.split(/[\\/]/).pop() ?? "Imported playlist";
-  const baseTitle = fileName.replace(/\.(amber\.)?(json|m3u8?)$/i, "");
+  const baseTitle = fileName.replace(/\.(opentune\.|amber\.)?(json|m3u8?)$/i, "");
 
   if (/\.m3u8?$/i.test(path)) {
     return parseM3u(contents, baseTitle);
   }
 
   try {
-    const parsed = parseAmberJson(contents);
+    const parsed = parsePlaylistJson(contents);
     if (!parsed) throw new Error("unrecognised");
     return parsed;
   } catch {
-    throw new Error("That file is not an Amber playlist export.");
+    throw new Error("That file is not an OpenTune playlist export.");
   }
 }
 
@@ -416,4 +418,4 @@ export async function importSpotifyPlaylist(spotifyUrl: string): Promise<Importe
  * Kept behind one deliberately awkward name so it reads as a test seam rather than as API —
  * the dialog and file I/O around these are Tauri calls that cannot run under node.
  */
-export const __parseForTest = { parseAmberJson, parseM3u, sanitizeFileName };
+export const __parseForTest = { parsePlaylistJson, parseAmberJson: parsePlaylistJson, parseM3u, sanitizeFileName };

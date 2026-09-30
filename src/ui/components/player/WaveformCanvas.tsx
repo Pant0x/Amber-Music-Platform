@@ -68,7 +68,7 @@ export const WaveformCanvas = memo(function WaveformCanvas({
       const barWidth = Math.max(1.5, (cachedWidth - totalGap) / numBars);
       const centerY = cachedHeight / 2;
 
-      // Primary theme color fallback (Amber Brand Red)
+      // Primary theme color fallback (OpenTune Brand Red)
       const activeFill = color || "#ff0033";
       const inactiveFill = inactiveColor || "rgba(255, 255, 255, 0.22)";
 

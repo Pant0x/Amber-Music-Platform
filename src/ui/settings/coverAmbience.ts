@@ -1,11 +1,11 @@
 import { useSyncExternalStore } from "react";
 
-const STORAGE_KEY = "amber_cover_ambience";
-const EVENT_NAME = "amber-cover-ambience-changed";
+const STORAGE_KEY = "opentune_cover_ambience";
+const EVENT_NAME = "opentune-cover-ambience-changed";
 
 function readSetting(): boolean {
   try {
-    const val = localStorage.getItem(STORAGE_KEY);
+    const val = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem("amber_cover_ambience");
     return val !== "false";
   } catch {
     return true;

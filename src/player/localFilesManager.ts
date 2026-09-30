@@ -10,8 +10,8 @@ import {
   LOCAL_ARTWORK_PREFIX,
 } from "./localPlaylists";
 
-const LOCAL_FOLDER_STORAGE_KEY = "amber-local-music-folder-v1";
-const LOCAL_FOLDER_CHANGE_EVENT = "amber-local-folder-changed";
+const LOCAL_FOLDER_STORAGE_KEY = "opentune-local-music-folder-v1";
+const LOCAL_FOLDER_CHANGE_EVENT = "opentune-local-folder-changed";
 
 interface LocalAudioFile {
   path: string;
@@ -30,7 +30,7 @@ function notify() {
 
 export function getLocalMusicFolder(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem(LOCAL_FOLDER_STORAGE_KEY) || null;
+  return localStorage.getItem(LOCAL_FOLDER_STORAGE_KEY) || localStorage.getItem("amber-local-music-folder-v1") || null;
 }
 
 export function setLocalMusicFolder(folderPath: string | null): void {

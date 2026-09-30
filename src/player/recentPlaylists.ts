@@ -1,11 +1,11 @@
-const STORAGE_KEY = "amber:recent-playlists";
-const CHANGE_EVENT = "amber:recent-playlists-changed";
+const STORAGE_KEY = "opentune:recent-playlists";
+const CHANGE_EVENT = "opentune:recent-playlists-changed";
 
 type RecentPlaylistMap = Record<string, number>;
 
 function loadRecentPlaylists(): RecentPlaylistMap {
   try {
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}");
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem("amber:recent-playlists") ?? "{}");
     if (!stored || typeof stored !== "object" || Array.isArray(stored)) return {};
 
     const recentPlaylists: RecentPlaylistMap = {};

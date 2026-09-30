@@ -5,10 +5,10 @@ import { getAppSetting, setAppSetting } from "../internal/appSettings";
 import type { Track } from "../datasource/types";
 import { getVideoArtworkFallback } from "../datasource/youtube/artwork";
 
-const STORAGE_KEY_V2 = "amber.app-session.v2";
-const STORAGE_KEY_V1 = "amber.app-session.v1";
-export const SETTING_KEY_V2 = "amber.app-session.v2";
-export const LAST_PLAYED_TRACK_STORAGE_KEY = "amber.last-played-track";
+const STORAGE_KEY_V2 = "opentune.app-session.v2";
+const STORAGE_KEY_V1 = "opentune.app-session.v1";
+export const SETTING_KEY_V2 = "opentune.app-session.v2";
+export const LAST_PLAYED_TRACK_STORAGE_KEY = "opentune.last-played-track";
 
 export interface AppSession {
   version: 2;

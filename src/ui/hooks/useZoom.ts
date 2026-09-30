@@ -1,13 +1,13 @@
 import { useEffect, useSyncExternalStore } from "react";
 
-const ZOOM_STORAGE_KEY = "amber-ui-zoom";
+const ZOOM_STORAGE_KEY = "opentune-ui-zoom";
 export const MIN_ZOOM = 0.5;
 export const MAX_ZOOM = 2.0;
 export const STEP = 0.05;
 
 function getStoredZoom(): number {
   try {
-    const raw = localStorage.getItem(ZOOM_STORAGE_KEY);
+    const raw = localStorage.getItem(ZOOM_STORAGE_KEY) ?? localStorage.getItem("amber-ui-zoom");
     if (raw) {
       const parsed = parseFloat(raw);
       if (!isNaN(parsed) && parsed >= MIN_ZOOM && parsed <= MAX_ZOOM) {

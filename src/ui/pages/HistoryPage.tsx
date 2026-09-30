@@ -67,7 +67,7 @@ export function HistoryPage({
   const [confirmClear, setConfirmClear] = useState(false);
   const [historyClearedAt, setHistoryClearedAt] = useState<number>(() => {
     try {
-      return Number(localStorage.getItem("amber_history_cleared_at") || 0);
+      return Number(localStorage.getItem("opentune_history_cleared_at") || localStorage.getItem("amber_history_cleared_at") || 0);
     } catch {
       return 0;
     }
@@ -183,7 +183,7 @@ export function HistoryPage({
               if (confirmClear) {
                 const now = Date.now();
                 try {
-                  localStorage.setItem("amber_history_cleared_at", now.toString());
+                  localStorage.setItem("opentune_history_cleared_at", now.toString());
                 } catch {}
                 setHistoryClearedAt(now);
                 clearPlayHistory();

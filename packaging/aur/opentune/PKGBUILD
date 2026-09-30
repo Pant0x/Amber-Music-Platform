@@ -1,11 +1,11 @@
 # Maintainer: Faizan Asad <m.faizanasad97@gmail.com>
 
-pkgname=amber
-pkgver=1.4.0
+pkgname=opentune
+pkgver=1.0.8
 pkgrel=1
 pkgdesc="YouTube Music as a focused desktop app — tabs, offline downloads, synced lyrics"
 arch=('x86_64')
-url="https://github.com/Pant0x/Amber-Music-Platform"
+url="https://github.com/Pant0x/OpenTune"
 license=('Apache-2.0')
 
 # Mapped from the .deb's own Depends: libwebkit2gtk-4.1-0, libgtk-3-0,
@@ -46,21 +46,26 @@ optdepends=(
   'libnotify: desktop notifications'
 )
 
-# Installs the same files as the community-maintained binary package, so the two cannot
-# be installed together.
-conflicts=('amber-bin')
+# Installs the same files as legacy or binary packages, so they cannot be installed together.
+conflicts=('amber' 'amber-bin' 'opentune-bin')
 
 # The binary is already stripped and relocation-sensitive; leave it alone.
 options=('!strip' '!emptydirs')
 
-source=("${pkgname}-${pkgver}.deb::${url}/releases/download/v${pkgver}/Amber_${pkgver}_amd64.deb")
-sha256sums=('3abc57c1accaaf3ef68a0aa37d3b9e6e81ad9ae1a5a8216a739efeb8578c05da')
+source=("${pkgname}-${pkgver}.deb::${url}/releases/download/v${pkgver}/OpenTune_${pkgver}_amd64.deb")
+sha256sums=('SKIP')
 
 package() {
   # bsdtar reads the ar archive and the inner tarball without needing dpkg installed.
   bsdtar -O -xf "${pkgname}-${pkgver}.deb" data.tar.gz | bsdtar -C "${pkgdir}" -xf -
 
-  install -Dm644 "${pkgdir}/usr/share/applications/Amber.desktop" \
-    "${pkgdir}/usr/share/applications/${pkgname}.desktop"
-  rm -f "${pkgdir}/usr/share/applications/Amber.desktop"
+  if [ -f "${pkgdir}/usr/share/applications/OpenTune.desktop" ]; then
+    install -Dm644 "${pkgdir}/usr/share/applications/OpenTune.desktop" \
+      "${pkgdir}/usr/share/applications/${pkgname}.desktop"
+    rm -f "${pkgdir}/usr/share/applications/OpenTune.desktop"
+  elif [ -f "${pkgdir}/usr/share/applications/Amber.desktop" ]; then
+    install -Dm644 "${pkgdir}/usr/share/applications/Amber.desktop" \
+      "${pkgdir}/usr/share/applications/${pkgname}.desktop"
+    rm -f "${pkgdir}/usr/share/applications/Amber.desktop"
+  fi
 }

@@ -21,8 +21,8 @@
 import { useSyncExternalStore } from "react";
 import { getAppSetting, setAppSetting } from "../internal/appSettings";
 
-const STORAGE_KEY = "amber_followed_artists";
-const TOUCHED_KEY = "amber:followed-artists-touched-at";
+const STORAGE_KEY = "opentune_followed_artists";
+const TOUCHED_KEY = "opentune:followed-artists-touched-at";
 
 /**
  * How long a local toggle stays authoritative over the remote subscription state. Generous,
@@ -43,7 +43,7 @@ function loadKeys(): Set<string> {
   }
 
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem("amber_followed_artists");
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {

@@ -6,10 +6,10 @@
 
 export const MINI_WINDOW_LABEL = "mini";
 
-export const PLAYBACK_SNAPSHOT_EVENT = "amber:playback-snapshot";
-export const LYRICS_SNAPSHOT_EVENT = "amber:lyrics-snapshot";
-export const MINI_COMMAND_EVENT = "amber:mini-command";
-export const MINI_READY_EVENT = "amber:mini-ready";
+export const PLAYBACK_SNAPSHOT_EVENT = "opentune:playback-snapshot";
+export const LYRICS_SNAPSHOT_EVENT = "opentune:lyrics-snapshot";
+export const MINI_COMMAND_EVENT = "opentune:mini-command";
+export const MINI_READY_EVENT = "opentune:mini-ready";
 
 export type MiniPlayerStatus = "idle" | "loading" | "playing" | "paused" | "error";
 

@@ -35,7 +35,7 @@ import {
 
 export type MiniMode = "compact" | "expanded" | "lyrics";
 
-const MODE_STORAGE_KEY = "amber_mini_mode";
+const MODE_STORAGE_KEY = "opentune_mini_mode";
 const MODE_SIZE: Record<MiniMode, { width: number; height: number }> = {
   compact: { width: 440, height: 82 },
   expanded: { width: 380, height: 540 },
@@ -44,7 +44,7 @@ const MODE_SIZE: Record<MiniMode, { width: number; height: number }> = {
 
 function readMode(): MiniMode {
   try {
-    const stored = localStorage.getItem(MODE_STORAGE_KEY);
+    const stored = localStorage.getItem(MODE_STORAGE_KEY) ?? localStorage.getItem("amber_mini_mode");
     if (stored === "compact" || stored === "expanded" || stored === "lyrics") return stored;
   } catch {}
   return "compact";

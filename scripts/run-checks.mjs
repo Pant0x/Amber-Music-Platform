@@ -39,7 +39,7 @@ if (checks.length === 0) {
   process.exit(1);
 }
 
-const outDir = mkdtempSync(join(tmpdir(), "Amber-checks-"));
+const outDir = mkdtempSync(join(tmpdir(), "OpenTune-checks-"));
 const failures = [];
 
 try {

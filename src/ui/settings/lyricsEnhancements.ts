@@ -1,12 +1,12 @@
 import { useSyncExternalStore } from "react";
 
-const DUET_STORAGE_KEY = "amber_lyrics_duet_mode";
-const ADLIB_STORAGE_KEY = "amber_lyrics_adlibs_mode";
-const EVENT_NAME = "amber-lyrics-enhancements-changed";
+const DUET_STORAGE_KEY = "opentune_lyrics_duet_mode";
+const ADLIB_STORAGE_KEY = "opentune_lyrics_adlibs_mode";
+const EVENT_NAME = "opentune-lyrics-enhancements-changed";
 
 function readDuetSetting(): boolean {
   try {
-    return localStorage.getItem(DUET_STORAGE_KEY) !== "false";
+    return (localStorage.getItem(DUET_STORAGE_KEY) ?? localStorage.getItem("amber_lyrics_duet_mode")) !== "false";
   } catch {
     return true;
   }
@@ -14,7 +14,7 @@ function readDuetSetting(): boolean {
 
 function readAdlibSetting(): boolean {
   try {
-    return localStorage.getItem(ADLIB_STORAGE_KEY) !== "false";
+    return (localStorage.getItem(ADLIB_STORAGE_KEY) ?? localStorage.getItem("amber_lyrics_adlibs_mode")) !== "false";
   } catch {
     return true;
   }

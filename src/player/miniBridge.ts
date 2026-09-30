@@ -25,7 +25,7 @@ import type {
 } from "../mini/protocol";
 
 /** The mini window closes itself through this, so the player layer never imports UI stores. */
-export const MINI_CLOSE_REQUEST_EVENT = "amber-mini-close-requested";
+export const MINI_CLOSE_REQUEST_EVENT = "opentune-mini-close-requested";
 
 function buildSnapshot(): MiniPlaybackSnapshot {
   const state = playerController.getState();

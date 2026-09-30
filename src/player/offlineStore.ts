@@ -16,14 +16,14 @@ import { getDownloadQuality, type AudioQuality } from "../internal/audioQuality"
 import { tauriFetch } from "../datasource/youtube/tauriFetch";
 import { revokeOfflineBlobUrl } from "./offlinePlayback";
 
-const MANIFEST_KEY = "amber.offline-manifest.v1";
-const MAX_BYTES_KEY = "amber.offline-max-bytes.v1";
+const MANIFEST_KEY = "opentune.offline-manifest.v1";
+const MAX_BYTES_KEY = "opentune.offline-max-bytes.v1";
 
 function getOfflineDir(): string {
   try {
-    return getDownloadLocation() || "amber/downloads";
+    return getDownloadLocation() || "opentune/downloads";
   } catch {
-    return "amber/downloads";
+    return "opentune/downloads";
   }
 }
 

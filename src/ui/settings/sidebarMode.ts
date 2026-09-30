@@ -25,7 +25,7 @@ export const SIDEBAR_EXPANDED_WIDTH = 281;
 export const SIDEBAR_MIN_EXPANDED_WIDTH = 214;
 export const SIDEBAR_MAX_EXPANDED_WIDTH = 281;
 
-const SIDEBAR_WIDTH_STORAGE_KEY = "amber:sidebar-width";
+const SIDEBAR_WIDTH_STORAGE_KEY = "opentune:sidebar-width";
 const SIDEBAR_WIDTH_CHANGE_EVENT = "sidebar-width-change";
 
 export function isSidebarWidth(value: unknown): value is number {
@@ -33,7 +33,8 @@ export function isSidebarWidth(value: unknown): value is number {
 }
 
 export function readSidebarWidth(): number {
-  const parsed = readLocalJsonSetting(SIDEBAR_WIDTH_STORAGE_KEY, isSidebarWidth);
+  const parsed = readLocalJsonSetting(SIDEBAR_WIDTH_STORAGE_KEY, isSidebarWidth)
+    ?? readLocalJsonSetting("amber:sidebar-width", isSidebarWidth);
   if (parsed === null) return SIDEBAR_EXPANDED_WIDTH;
   return Math.round(
     Math.max(SIDEBAR_MIN_EXPANDED_WIDTH, Math.min(SIDEBAR_MAX_EXPANDED_WIDTH, parsed)),

@@ -6395,7 +6395,7 @@ export class YouTubeMusicDataSource extends DataSource {
     const followedSet = new Set<string>();
     if (typeof localStorage !== "undefined") {
       try {
-        const rawFollows = localStorage.getItem("amber_followed_artists");
+        const rawFollows = localStorage.getItem("opentune_followed_artists") ?? localStorage.getItem("amber_followed_artists");
         if (rawFollows) {
           const parsed = JSON.parse(rawFollows);
           if (Array.isArray(parsed)) {
@@ -7512,7 +7512,7 @@ export class YouTubeMusicDataSource extends DataSource {
   }
 
   /**
-   * Browse ids for the surfaces Amber exposes.
+   * Browse ids for the surfaces OpenTune exposes.
    *
    * These are stable YouTube Music feed ids rather than anything we construct, which is why
    * they are literals: there is no endpoint that enumerates them.
@@ -8103,7 +8103,7 @@ export class YouTubeMusicDataSource extends DataSource {
   }
 
   /**
-   * Turns a pasted YouTube link into something Amber can open.
+   * Turns a pasted YouTube link into something OpenTune can open.
    *
    * Nearly every link names its target in the URL itself, so parseYouTubeLink answers offline
    * and the API is only consulted for the shapes it cannot: `@handles`, `/c/` vanity paths and

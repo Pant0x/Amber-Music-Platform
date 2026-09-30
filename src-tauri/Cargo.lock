@@ -90,8 +90,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "amber"
-version = "1.0.0"
+name = "opentune"
+version = "1.0.8"
 dependencies = [
  "aes-gcm",
  "base64 0.22.1",

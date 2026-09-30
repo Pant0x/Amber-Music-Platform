@@ -4,7 +4,7 @@ import { logInternalWarn } from "../internal/logging";
 import { getDownloadLocation } from "../ui/settings/downloadLocation";
 
 function getOfflineDir(): string {
-  try { return getDownloadLocation() || "amber/downloads"; } catch { return "amber/downloads"; }
+  try { return getDownloadLocation() || "opentune/downloads"; } catch { return "opentune/downloads"; }
 }
 
 /**

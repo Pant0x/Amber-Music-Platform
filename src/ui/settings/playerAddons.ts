@@ -6,16 +6,16 @@ import {
 } from "../../internal/durableLocalSetting";
 import { getAppSetting, setAppSetting } from "../../internal/appSettings";
 
-const EVENT_NAME = "amber-player-addons-changed";
+const EVENT_NAME = "opentune-player-addons-changed";
 
 const KEYS = {
-  volumeBadge: "amber_show_volume_badge",
-  waveSeekbar: "amber_wave_seekbar",
-  djTrackInfo: "amber_dj_track_info",
-  oneko: "amber_oneko_enabled",
+  volumeBadge: "opentune_show_volume_badge",
+  waveSeekbar: "opentune_wave_seekbar",
+  djTrackInfo: "opentune_dj_track_info",
+  oneko: "opentune_oneko_enabled",
   onekoVariant: "oneko:variant",
   onekoKuroneko: "oneko:kuroneko",
-  rewindButton: "amber_rewind_button",
+  rewindButton: "opentune_rewind_button",
 } as const;
 
 export type OnekoVariant = "classic" | "dog" | "tora" | "maia" | "vaporwave";

@@ -8,7 +8,7 @@ import { useTrackContextMenu } from "./TrackContextMenu";
 import { isMacOS, primaryModifierLabel } from "../platform";
 import { usePlaylistContextMenu } from "./PlaylistContextMenu";
 
-const RECENT_SEARCHES_KEY = "amber:recent-searches";
+const RECENT_SEARCHES_KEY = "opentune:recent-searches";
 const MAX_RECENT_SEARCHES = 5;
 
 function normalizeSearchText(value: string): string {
@@ -40,7 +40,7 @@ function searchMatchScore(value: string, query: string): number {
 
 function loadRecentSearches(): string[] {
   try {
-    const value = JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY) ?? "[]");
+    const value = JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY) ?? localStorage.getItem("amber:recent-searches") ?? "[]");
     return Array.isArray(value)
       ? value.filter((item): item is string => typeof item === "string").slice(0, MAX_RECENT_SEARCHES)
       : [];

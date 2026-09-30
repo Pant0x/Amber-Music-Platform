@@ -111,11 +111,11 @@ function isSignInCancellation(error: unknown): boolean {
 }
 
 /** Local mirror of dislikes: YouTube stores the rating but exposes no list to read it back. */
-const DISLIKED_TRACKS_STORAGE_KEY = "amber:disliked-tracks-v1";
+const DISLIKED_TRACKS_STORAGE_KEY = "opentune:disliked-tracks-v1";
 
 function readDislikedTrackIds(): Set<string> {
   try {
-    const raw = localStorage.getItem(DISLIKED_TRACKS_STORAGE_KEY);
+    const raw = localStorage.getItem(DISLIKED_TRACKS_STORAGE_KEY) ?? localStorage.getItem("amber:disliked-tracks-v1");
     const parsed: unknown = raw ? JSON.parse(raw) : null;
     return new Set(Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === "string") : []);
   } catch {

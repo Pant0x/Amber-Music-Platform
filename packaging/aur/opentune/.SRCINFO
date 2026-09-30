@@ -1,8 +1,8 @@
-pkgbase = amber
+pkgbase = opentune
 	pkgdesc = YouTube Music as a focused desktop app — tabs, offline downloads, synced lyrics
-	pkgver = 1.4.0
+	pkgver = 1.0.8
 	pkgrel = 1
-	url = https://github.com/Pant0x/Amber-Music-Platform
+	url = https://github.com/Pant0x/OpenTune
 	arch = x86_64
 	license = Apache-2.0
 	depends = webkit2gtk-4.1
@@ -15,10 +15,12 @@ pkgbase = amber
 	optdepends = gst-plugins-ugly: extra codec support
 	optdepends = xdg-utils: opening links and the log file from inside the app
 	optdepends = libnotify: desktop notifications
+	conflicts = amber
 	conflicts = amber-bin
+	conflicts = opentune-bin
 	options = !strip
 	options = !emptydirs
-	source = amber-1.4.0.deb::https://github.com/Pant0x/Amber-Music-Platform/releases/download/v1.4.0/Amber_1.4.0_amd64.deb
+	source = opentune-1.0.8.deb::https://github.com/Pant0x/OpenTune/releases/download/v1.0.8/OpenTune_1.0.8_amd64.deb
 	sha256sums = SKIP
 
-pkgname = amber
+pkgname = opentune

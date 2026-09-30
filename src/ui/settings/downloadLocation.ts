@@ -7,7 +7,7 @@ import {
 
 const STORAGE_KEY = "download-location";
 const CHANGE_EVENT = "download-location-change";
-const DEFAULT_LOCATION = "amber/downloads";
+const DEFAULT_LOCATION = "opentune/downloads";
 
 function isDownloadLocation(value: unknown): value is string {
   return typeof value === "string" && value.length > 0;

@@ -32,7 +32,7 @@ const MAX_ENTRIES = 500;
  */
 const MAX_BLOB_BYTES = 16 * 1024 * 1024;
 const MAX_PERSISTED_ENTRIES = 300;
-const STORAGE_KEY = "amber:artwork-resolved-v1";
+const STORAGE_KEY = "opentune:artwork-resolved-v1";
 
 const resolved = new Map<string, string>();
 /** Values that own a blob and must be revoked when evicted, and what each one weighs. */
@@ -210,7 +210,7 @@ function releaseValue(value: string): void {
  */
 export function hydrateArtworkCache(): void {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem("amber:artwork-resolved-v1");
     if (!raw) return;
     const entries: unknown = JSON.parse(raw);
     if (!Array.isArray(entries)) return;

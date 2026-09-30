@@ -3,7 +3,7 @@ import type { Track } from "../datasource/types";
 import { logInternalWarn } from "../internal/logging";
 import { getAppSetting, setAppSetting } from "../internal/appSettings";
 
-const STORAGE_KEY = "amber.play-history.v1";
+const STORAGE_KEY = "opentune.play-history.v1";
 
 /** 30 days in ms — history keeps all tracks played within a month and prunes older entries */
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
@@ -63,7 +63,7 @@ function normalize(parsed: unknown): PlayHistoryEntry[] | null {
 
 function read(): PlayHistoryEntry[] {
   if (typeof window === "undefined") return [];
-  const raw = localStorage.getItem(STORAGE_KEY);
+  const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem("amber.play-history.v1");
   if (raw === cachedRaw) return cached;
 
   cachedRaw = raw;
@@ -88,7 +88,10 @@ function read(): PlayHistoryEntry[] {
  * outside the webview, where a cleared profile cannot reach it.
  */
 export async function hydratePlayHistory(): Promise<void> {
-  const stored = normalize(await getAppSetting<unknown>(STORAGE_KEY));
+  let stored = normalize(await getAppSetting<unknown>(STORAGE_KEY));
+  if (!stored || stored.length === 0) {
+    stored = normalize(await getAppSetting<unknown>("amber.play-history.v1"));
+  }
   if (stored && stored.length > 0) {
     // Through write(), so the mirror is refreshed and anything already rendered is told.
     write(stored);

@@ -50,8 +50,9 @@ mod process_memory;
 mod discord_rpc;
 mod opus_source;
 
-// Keep the legacy service name so existing sign-in credentials survive the product rename.
-const KEYRING_SERVICE: &str = "com.amber.desktop";
+// Keep OpenTune service name with legacy fallback for migration.
+const KEYRING_SERVICE: &str = "com.opentune.desktop";
+const LEGACY_KEYRING_SERVICE: &str = "com.amber.desktop";
 
 /// Durable settings store. Also the marker the app-data migration checks for.
 const APP_SETTINGS_FILE_NAME: &str = "settings-v1.json";
@@ -1916,7 +1917,7 @@ fn load_youtube_music_cookie_entries() -> Result<Option<String>, CommandError> {
 
 /*
  * The Keychain entry backing `load_or_create_cookie_encryption_key` is scoped to this build's
- * code signature. Amber's macOS builds are ad-hoc signed (no paid Developer ID), so that
+ * code signature. OpenTune's macOS builds are ad-hoc signed (no paid Developer ID), so that
  * signature — and with it, access to the old key — changes on every single update. Before this
  * guarded against it, a stale key read as `NoEntry`, the loader minted a brand new random one,
  * and it was handed straight to AES-GCM against ciphertext only the *old* key could ever open:

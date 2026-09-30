@@ -10,19 +10,11 @@
 </p>
 
 <p align="center">
+  <a href="https://opentunex.vercel.app/"><img src="https://img.shields.io/badge/Live_Web-opentunex.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Web App"></a>
   <a href="https://github.com/Pant0x/OpenTune/releases/latest"><img src="https://img.shields.io/github/downloads/Pant0x/OpenTune/total?style=for-the-badge&color=ff0033&label=downloads" alt="Downloads"></a>
   <a href="https://github.com/Pant0x/OpenTune/releases/latest"><img src="https://img.shields.io/github/package-json/v/Pant0x/OpenTune?style=for-the-badge&color=ff3d00&label=version" alt="Version"></a>
   <a href="https://github.com/Pant0x/OpenTune/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Pant0x/OpenTune?style=for-the-badge&color=ff6900" alt="License"></a>
   <a href="https://github.com/Pant0x/OpenTune/stargazers"><img src="https://img.shields.io/github/stars/Pant0x/OpenTune?style=for-the-badge&color=ff9700&label=stars" alt="Stars"></a>
-  <a href="https://aur.archlinux.org/packages/amber"><img src="https://img.shields.io/aur/version/amber?style=for-the-badge&color=ffc300&label=AUR" alt="AUR"></a>
-</p>
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/img/Screenshot01.png" />
-    <source media="(prefers-color-scheme: light)" srcset="assets/img/Screenshot02.png" />
-    <img src="assets/img/Screenshot01.png" alt="OpenTune home view" width="900" />
-  </picture>
 </p>
 
 > [!IMPORTANT]
@@ -33,51 +25,10 @@
 
 ## About
 
-OpenTune brings YouTube Music to the desktop as its own application, not a browser tab. There is
-no official desktop client, so the goal is a fast, native-feeling one that holds up with large
-libraries.
+OpenTune brings YouTube Music to the desktop and web as a fast, native-feeling client that holds up with large libraries.
+Available as a desktop application (Windows, macOS, Linux) and as a web app on [opentunex.vercel.app](https://opentunex.vercel.app/).
 
 If you find it useful, **starring the repo** genuinely helps.
-
-<br />
-
-## Screenshots
-
-<table>
-  <tr>
-    <td width="50%"><b>Synced lyrics</b></td>
-    <td width="50%"><b>Artist page</b></td>
-  </tr>
-  <tr>
-    <td><img src="assets/img/Amber-d-1.2.PNG" alt="Synced lyrics following the current line" /></td>
-    <td><img src="assets/img/Amber-d4-1.2.PNG" alt="An artist page showing popular songs and releases" /></td>
-  </tr>
-  <tr>
-    <td><sub>Click a line to seek, nudge the timing if a match is off, and see which source the words came from.</sub></td>
-    <td><sub>Popular tracks and every release, filtered by albums, singles or EPs.</sub></td>
-  </tr>
-</table>
-
-<table>
-  <tr>
-    <td width="50%"><b>Queue</b></td>
-    <td width="50%"><b>Library</b></td>
-  </tr>
-  <tr>
-    <td><img src="assets/img/Amber-d3-1.2.PNG" alt="The queue panel open beside the home view" /></td>
-    <td><img src="assets/img/Amber-l5-1.2.PNG" alt="The library songs list, with explicit badges and the now-playing meter" /></td>
-  </tr>
-  <tr>
-    <td><sub>Separates what you added by hand from what came next on its own.</sub></td>
-    <td><sub>Marks what is liked, downloaded and explicit at a glance.</sub></td>
-  </tr>
-</table>
-
-<p align="center">
-  <img src="assets/img/Amber-set-1.2.PNG" alt="OpenTune settings, showing the library and lyrics options" width="860" />
-  <br />
-  <sub>Settings — quality, lyrics source, translation and text size, downloads and the disk cap.</sub>
-</p>
 
 <br />
 
