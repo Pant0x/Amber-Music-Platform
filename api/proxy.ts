@@ -59,6 +59,9 @@ export default async function handler(req: any, res?: any) {
           forwardHeaders[k] = v as string;
         }
       }
+      if (!forwardHeaders["accept-language"]) {
+        forwardHeaders["accept-language"] = "ar-EG,ar;q=0.9,en-US;q=0.8,en;q=0.7";
+      }
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout_ms || 25000);
@@ -140,6 +143,9 @@ export default async function handler(req: any, res?: any) {
       if (lower !== "host" && lower !== "content-length" && lower !== "connection") {
         forwardHeaders[k] = v as string;
       }
+    }
+    if (!forwardHeaders["accept-language"]) {
+      forwardHeaders["accept-language"] = "ar-EG,ar;q=0.9,en-US;q=0.8,en;q=0.7";
     }
 
     const controller = new AbortController();

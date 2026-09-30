@@ -379,6 +379,30 @@ export class LibraryController {
     }
   }
 
+  async setManualCookie(cookie: string | null): Promise<void> {
+    logInternalInfo("LibraryController.setManualCookie", { hasCookie: Boolean(cookie) });
+    if (this.dataSource.setMusicCookie) {
+      await this.dataSource.setMusicCookie(cookie);
+      if (cookie && cookie.trim().length > 0) {
+        this.setState({ status: "loading", library: null, error: null });
+        try {
+          await this.refreshAfterSignIn();
+        } catch (err) {
+          logInternalError("LibraryController.setManualCookie refresh failed", err);
+          this.setState({ status: "signed-out", error: err instanceof Error ? err.message : "Sync failed" });
+        }
+      } else {
+        this.setState({
+          status: "signed-out",
+          library: null,
+          authPrompt: null,
+          error: null,
+          sessionConfirmedAt: null,
+        });
+      }
+    }
+  }
+
   getBrowsePage(target: BrowseTarget): Promise<BrowsePage> {
     if (!this.dataSource.getBrowsePage) {
       return Promise.resolve({ title: "", shelves: [] });

@@ -3,7 +3,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { isTauri } from "@tauri-apps/api/core";
 import { cn } from "@/lib/utils";
 import { Tooltip } from "@/components/motion/tooltip";
-import { LoginIcon, SettingsIcon } from "@/ui/icons";
+import { LoginIcon, PlaylistIcon, RefreshIcon, SettingsIcon } from "@/ui/icons";
 import { logInternalError } from "../../internal/logging";
 import {
   isLinux,
@@ -314,7 +314,7 @@ export function TitleBar({
               <span className="my-0.5 h-px bg-border" aria-hidden="true" />
 
               {/* YouTube Music channel/account switcher if desktop YT session is active */}
-              {isYtSignedIn && (
+              {isYtSignedIn ? (
                 <>
                   <GoogleAccountSwitcher
                     libraryController={libraryController}
@@ -328,6 +328,33 @@ export function TitleBar({
                     label="Channel"
                   />
 
+                  <button
+                    type="button"
+                    className={ACCOUNT_PANEL_ITEM}
+                    onClick={() => {
+                      setIsAccountPanelOpen(false);
+                      window.dispatchEvent(new CustomEvent("opentune:open-connect-library-modal"));
+                    }}
+                  >
+                    <RefreshIcon size={16} aria-hidden="true" />
+                    YouTube Music Session
+                  </button>
+
+                  <span className="my-0.5 h-px bg-border" aria-hidden="true" />
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-xs font-semibold text-primary hover:bg-primary/10 transition-colors"
+                    onClick={() => {
+                      setIsAccountPanelOpen(false);
+                      window.dispatchEvent(new CustomEvent("opentune:open-connect-library-modal"));
+                    }}
+                  >
+                    <PlaylistIcon size={16} aria-hidden="true" />
+                    Connect YouTube Music
+                  </button>
                   <span className="my-0.5 h-px bg-border" aria-hidden="true" />
                 </>
               )}

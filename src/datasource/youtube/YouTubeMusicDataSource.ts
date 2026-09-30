@@ -16,6 +16,7 @@ import { clearCache, getCachedJson, setCachedJson } from "../../internal/cache";
 import { logInternalDebug, logInternalError, logInternalInfo, logInternalWarn } from "../../internal/logging";
 import { mintPoToken, warmPoToken } from "./poToken";
 import { AuthExpiredError, DataSource, type StreamData } from "../DataSource";
+import { supabase } from "../../lib/supabaseClient";
 import type {
   AccountOption,
   GoogleAccountOption,
@@ -764,15 +765,25 @@ export class YouTubeMusicDataSource extends DataSource {
   }
 
   private applyDelegationContext(client: Innertube): void {
-    if (!this.musicSerializedDelegationContext) return;
-    const session = client.session as {
-      context: {
-        user: {
-          serializedDelegationContext?: string;
+    if (this.musicSerializedDelegationContext) {
+      const session = client.session as {
+        context: {
+          user: {
+            serializedDelegationContext?: string;
+          };
         };
       };
-    };
-    session.context.user.serializedDelegationContext = this.musicSerializedDelegationContext;
+      session.context.user.serializedDelegationContext = this.musicSerializedDelegationContext;
+    }
+    if (!this.musicCookie) {
+      try {
+        const clientCtx = (client.session as unknown as { context?: { client?: { gl?: string; hl?: string } } })?.context?.client;
+        if (clientCtx) {
+          clientCtx.gl = "EG";
+          clientCtx.hl = "ar";
+        }
+      } catch {}
+    }
   }
 
   /**
@@ -3288,31 +3299,56 @@ export class YouTubeMusicDataSource extends DataSource {
   }
 
   async restoreSession(): Promise<boolean> {
-    if (!isTauri()) return false;
     logInternalInfo("YouTubeMusicDataSource.restoreSession start");
     try {
-      this.musicCookie = await invoke<string | null>("load_youtube_music_cookie");
+      if (isTauri()) {
+        this.musicCookie = await invoke<string | null>("load_youtube_music_cookie");
+        if (this.musicCookie) {
+          try {
+            if (typeof localStorage !== "undefined") {
+              localStorage.setItem("opentune_ytm_cookie", this.musicCookie);
+            }
+          } catch {}
+          if (supabase) {
+            void supabase.auth.getSession().then(({ data }) => {
+              if (data?.session?.user && this.musicCookie) {
+                void supabase.auth.updateUser({
+                  data: { yt_music_cookie: this.musicCookie },
+                }).catch(() => {});
+              }
+            }).catch(() => {});
+          }
+        }
+      } else {
+        // Web mode: load from localStorage or Supabase user profile
+        let cookie: string | null = null;
+        if (typeof localStorage !== "undefined") {
+          cookie = localStorage.getItem("opentune_ytm_cookie");
+        }
+        if (!cookie && supabase) {
+          try {
+            const { data } = await supabase.auth.getSession();
+            const remoteCookie = data?.session?.user?.user_metadata?.yt_music_cookie;
+            if (remoteCookie && typeof remoteCookie === "string") {
+              cookie = remoteCookie;
+              try {
+                localStorage.setItem("opentune_ytm_cookie", remoteCookie);
+              } catch {}
+            }
+          } catch {}
+        }
+        this.musicCookie = cookie;
+      }
+
       if (!this.musicCookie) {
         logInternalInfo("YouTubeMusicDataSource.restoreSession no stored session");
         return false;
       }
+
       logInternalInfo("YouTubeMusicDataSource.restoreSession credential loaded", {
         credentialBytes: this.musicCookie.length,
       });
-      /*
-       * Clients only — the same reasoning `refreshSession` documents: reading back a stored
-       * credential is the same person on the same channel.
-       *
-       * This used to call `resetMusicSessionSelection()`, which deletes the saved channel. It
-       * runs on every launch, so a brand account chosen in Settings survived exactly as long as
-       * the process did: on the next start the preference was gone before
-       * `findBestLibraryResponses` could read it, and the automatic probe put the user back on
-       * whichever channel holds the most library content. Wiping the selection belongs to
-       * sign-out and to a sign-in that lands on a different Google account, which both still do it.
-       *
-       * The in-memory half of that reset was a no-op here anyway: on a fresh process the account
-       * fields are already the values it assigns.
-       */
+
       this.resetMusicClients();
       await this.getMusicClient();
       logInternalInfo("YouTubeMusicDataSource.restoreSession success");
@@ -3320,6 +3356,30 @@ export class YouTubeMusicDataSource extends DataSource {
     } catch (error) {
       logInternalError("YouTubeMusicDataSource.restoreSession failed", error);
       return false;
+    }
+  }
+
+  async setMusicCookie(cookie: string | null): Promise<void> {
+    const trimmed = cookie && cookie.trim().length > 0 ? cookie.trim() : null;
+    this.musicCookie = trimmed;
+    if (typeof localStorage !== "undefined") {
+      try {
+        if (trimmed) {
+          localStorage.setItem("opentune_ytm_cookie", trimmed);
+        } else {
+          localStorage.removeItem("opentune_ytm_cookie");
+        }
+      } catch {}
+    }
+    if (supabase) {
+      void supabase.auth.updateUser({
+        data: { yt_music_cookie: trimmed },
+      }).catch(() => {});
+    }
+    this.resetMusicSessionSelection();
+    this.resetMusicClients();
+    if (trimmed) {
+      await this.getMusicClient();
     }
   }
 
@@ -3354,7 +3414,7 @@ export class YouTubeMusicDataSource extends DataSource {
   ): Promise<void> {
     if (!isTauri()) {
       if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("opentune:open-auth-modal"));
+        window.dispatchEvent(new CustomEvent("opentune:open-connect-library-modal"));
       }
       return;
     }

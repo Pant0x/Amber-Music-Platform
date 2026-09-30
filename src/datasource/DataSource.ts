@@ -99,6 +99,8 @@ export abstract class DataSource {
    * `listGoogleAccounts`) took over automatically — false means fully signed out.
    */
   signOut?(): Promise<boolean>;
+  /** Dynamically sets or updates the music session cookie (for web/cloud sync). */
+  setMusicCookie?(cookie: string | null): Promise<void>;
   /** Channels available on the signed-in account. Absent when the source has no such notion. */
   listAccounts?(): Promise<AccountOption[]>;
   selectAccount?(id: string): Promise<void>;

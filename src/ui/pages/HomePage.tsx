@@ -8,6 +8,7 @@ import { BrowseShelves } from "../components/BrowseShelves";
 import type { HomeDestinationHandlers } from "../components/HomeDestinations";
 import { useTrackContextMenu } from "../components/TrackContextMenu";
 import { AlbumGridSkeleton } from "../components/Skeleton";
+import { useAuthProfile } from "../../lib/authProfile";
 
 interface HomeMoodChip {
   id: string;
@@ -358,6 +359,7 @@ export function HomePage({
   onOpenReleases,
 }: HomePageProps) {
   useTrackContextMenu();
+  const { profile } = useAuthProfile();
   const [activeMood, setActiveMood] = useState<string>("all");
   const [moodShelves, setMoodShelves] = useState<BrowseShelf[] | null>(null);
   const [isLoadingMood, setIsLoadingMood] = useState(false);
@@ -592,17 +594,29 @@ export function HomePage({
       )}
 
       {libraryState.status === "signed-out" && (
-        <section className="flex items-center justify-between gap-4 rounded-xl bg-card/60 px-4 py-3 text-sm text-muted-foreground">
+        <section className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl bg-card/60 border border-border/40 p-4 text-sm text-muted-foreground shadow-sm">
           <div>
-            <h1 className="text-base font-semibold text-foreground">You&apos;re not signed in</h1>
-            <p>Sign in to access your history, playlists, and albums.</p>
+            <h1 className="text-base font-semibold text-foreground">
+              {profile ? "Connect your YouTube Music Library" : "You're not signed in"}
+            </h1>
+            <p className="text-xs">
+              {profile
+                ? "Sync your playlists, liked songs, and personalized feed from your OpenTune desktop app or browser."
+                : "Sign in to access your history, playlists, and albums."}
+            </p>
           </div>
           <button
             type="button"
-            onClick={() => void onSignIn()}
-            className="rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90 active:scale-95"
+            onClick={() => {
+              if (profile) {
+                window.dispatchEvent(new CustomEvent("opentune:open-connect-library-modal"));
+              } else {
+                void onSignIn();
+              }
+            }}
+            className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white transition hover:bg-primary/90 active:scale-95 shadow shrink-0"
           >
-            Sign in
+            {profile ? "Connect Library" : "Sign in"}
           </button>
         </section>
       )}

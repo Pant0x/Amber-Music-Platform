@@ -54,6 +54,7 @@ const ALBUM_ORDER_KEY = "ytc-sidebar-album-order";
 const PLAYLIST_LIKED_ORDER_MIGRATION_KEY = "ytc-sidebar-playlist-liked-order-v1";
 const ALBUM_LIKED_ORDER_MIGRATION_KEY = "ytc-sidebar-album-liked-order-v1";
 const LIBRARY_SORT_KEY = "opentune:sidebar-library-sort";
+const isWeb = typeof window !== "undefined" && !("__TAURI_INTERNALS__" in window);
 
 function loadOrderFromStorage(key: string, migrationKey: string): string[] {
   if (typeof window === "undefined") return [];
@@ -1522,16 +1523,32 @@ export function Sidebar({
                 {!shouldHideText && (
                   <span>
                     {libraryState.status === "signed-out"
-                      ? "Sign in to see your subscribed artists."
+                      ? (isWeb ? "Connect YouTube Music to see your subscribed artists." : "Sign in to see your subscribed artists.")
                       : "No subscribed artists found."}
                   </span>
                 )}
                 {libraryState.status === "signed-out" && (
-                  <GoogleSignInButton
-                    size="sm"
-                    iconOnly={shouldHideText}
-                    onClick={() => void libraryController.signIn()}
-                  />
+                  isWeb ? (
+                    <button
+                      type="button"
+                      onClick={() => window.dispatchEvent(new CustomEvent("opentune:open-connect-library-modal"))}
+                      className={cn(
+                        "inline-flex shrink-0 items-center justify-center rounded-full font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90",
+                        shouldHideText ? "size-9" : "gap-2 px-3.5 py-1.5 text-xs",
+                      )}
+                      title="Connect YouTube Music"
+                    >
+                      <UserIcon size={15} />
+                      {!shouldHideText && <span>Connect Library</span>}
+                    </button>
+                  ) : (
+                    <GoogleSignInButton
+                      size="sm"
+                      iconOnly={shouldHideText}
+                      onClick={() => void libraryController.signIn()}
+                    />
+                  )
                 )}
               </div>
             )
@@ -1672,16 +1689,32 @@ export function Sidebar({
                 {!shouldHideText && (
                   <span>
                     {libraryState.status === "signed-out"
-                      ? "Sign in to see your YouTube Music playlists."
+                      ? (isWeb ? "Connect YouTube Music to see your playlists." : "Sign in to see your YouTube Music playlists.")
                       : "No user-created playlists were found."}
                   </span>
                 )}
                 {libraryState.status === "signed-out" && (
-                  <GoogleSignInButton
-                    size="sm"
-                    iconOnly={shouldHideText}
-                    onClick={() => void libraryController.signIn()}
-                  />
+                  isWeb ? (
+                    <button
+                      type="button"
+                      onClick={() => window.dispatchEvent(new CustomEvent("opentune:open-connect-library-modal"))}
+                      className={cn(
+                        "inline-flex shrink-0 items-center justify-center rounded-full font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90",
+                        shouldHideText ? "size-9" : "gap-2 px-3.5 py-1.5 text-xs",
+                      )}
+                      title="Connect YouTube Music"
+                    >
+                      <PlaylistIcon size={15} />
+                      {!shouldHideText && <span>Connect Library</span>}
+                    </button>
+                  ) : (
+                    <GoogleSignInButton
+                      size="sm"
+                      iconOnly={shouldHideText}
+                      onClick={() => void libraryController.signIn()}
+                    />
+                  )
                 )}
                 {showPlaylistRetry && (
                   <button

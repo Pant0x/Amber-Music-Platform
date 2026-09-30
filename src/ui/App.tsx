@@ -68,6 +68,7 @@ import { useNativeWindowControls } from "./settings/windowControls";
 /** Wide enough for a 44px cover plus breathing room, matching the sidebar rail's feel. */
 const COLLAPSED_QUEUE_WIDTH = 62;
 import { Layout } from "./components/Layout";
+import { ConnectLibraryModal } from "./components/ConnectLibraryModal";
 import type { AppViewState } from "./types/tab";
 import {
   libraryController,
@@ -330,6 +331,13 @@ export default function App() {
     () => isMacOS && localStorage.getItem(KEYCHAIN_NOTICE_COMPLETE_KEY) !== "true"
   );
   const [showOnboardingWelcome, setShowOnboardingWelcome] = useState(false);
+  const [isConnectLibraryModalOpen, setIsConnectLibraryModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOpenConnectLibrary = () => setIsConnectLibraryModalOpen(true);
+    window.addEventListener("opentune:open-connect-library-modal", handleOpenConnectLibrary);
+    return () => window.removeEventListener("opentune:open-connect-library-modal", handleOpenConnectLibrary);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -1599,6 +1607,10 @@ export default function App() {
       <ZoomHudOverlay />
       <Oneko />
       <MiniWindowSync isOpen={playerUIState.isWaveMiniPlayerOpen} />
+      <ConnectLibraryModal
+        isOpen={isConnectLibraryModalOpen}
+        onClose={() => setIsConnectLibraryModalOpen(false)}
+      />
 
 {/* <ReleaseNoteDialog
         version={releaseNoteVersion}
