@@ -2936,7 +2936,9 @@ export class YouTubeMusicDataSource extends DataSource {
 
   /** Every channel on the signed-in Google account, with the active one flagged. */
   async listAccounts(): Promise<AccountOption[]> {
-    if (!this.musicCookie) return [];
+    const client = await this.getWebClient();
+    const isLoggedIn = Boolean(this.musicCookie) || client.session.logged_in;
+    if (!isLoggedIn) return [];
 
     let candidates = this.accountCandidateCache;
     if (!candidates) {
