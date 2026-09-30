@@ -38,6 +38,7 @@ import {
   FolderIcon,
   FolderOpenIcon,
   GitHubIcon,
+  GoogleIcon,
   ImageIcon,
   KeyIcon,
   LogFileIcon,
@@ -1250,6 +1251,42 @@ export function SettingsPage({
             />
 
             <div className="flex flex-col gap-3">
+              {/* Google Account Row */}
+              <div className="flex items-center justify-between gap-4 rounded-xl border border-border/40 bg-background/30 p-4">
+                <div className="flex items-center gap-3">
+                  <span className="grid size-10 place-items-center rounded-xl bg-card">
+                    <GoogleIcon size={22} />
+                  </span>
+                  <div className="flex flex-col">
+                    <strong className="text-sm font-semibold text-foreground">Google Account</strong>
+                    <span className="text-xs text-muted-foreground">
+                      {profile?.provider === "google"
+                        ? `Connected — Linked to ${profile?.email || "Google"}`
+                        : "Connect your Google account to sync your OpenTune profile"}
+                    </span>
+                  </div>
+                </div>
+
+                {profile?.provider === "google" ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-400 border border-emerald-500/30">
+                    <CheckIcon size={13} />
+                    Connected
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await signInWithOAuthPopup("google");
+                      } catch {}
+                    }}
+                    className="flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+                  >
+                    Connect
+                  </button>
+                )}
+              </div>
+
               {/* Discord Account Row */}
               <div className="flex items-center justify-between gap-4 rounded-xl border border-border/40 bg-background/30 p-4">
                 <div className="flex items-center gap-3">
@@ -1279,7 +1316,7 @@ export function SettingsPage({
                         await signInWithOAuthPopup("discord");
                       } catch {}
                     }}
-                    className="flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
                   >
                     Connect
                   </button>

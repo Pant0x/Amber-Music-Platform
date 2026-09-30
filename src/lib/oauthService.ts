@@ -262,7 +262,101 @@ export async function signInWithOAuthPopup(provider: "google" | "discord"): Prom
       }, 300_000);
     });
   } else {
-    window.open(data.url, OAUTH_POPUP_LABEL, "width=520,height=720,status=no,toolbar=no,menubar=no");
+    const popup = window.open(
+      data.url,
+      OAUTH_POPUP_LABEL,
+      "width=520,height=720,status=no,toolbar=no,menubar=no",
+    );
+
+    if (!popup) {
+      window.location.href = data.url;
+      return;
+    }
+
+    await new Promise<void>((resolve) => {
+      let resolved = false;
+
+      const finish = async () => {
+        if (resolved) return;
+        resolved = true;
+        try {
+          if (!popup.closed) popup.close();
+        } catch {}
+        if (supabase) {
+          try {
+            await supabase.auth.getSession();
+          } catch {}
+        }
+        resolve();
+      };
+
+      // 1. Listen via BroadcastChannel
+      let bc: BroadcastChannel | null = null;
+      try {
+        bc = new BroadcastChannel(OAUTH_BROADCAST_CHANNEL);
+        bc.onmessage = async (event) => {
+          if (event.data?.type === "OAUTH_SUCCESS") {
+            const hash = event.data.hash as string | undefined;
+            const search = event.data.search as string | undefined;
+            if (hash && hash.includes("access_token=") && supabase) {
+              try {
+                const params = new URLSearchParams(hash.replace(/^#/, ""));
+                const access_token = params.get("access_token");
+                const refresh_token = params.get("refresh_token");
+                if (access_token && refresh_token) {
+                  await supabase.auth.setSession({ access_token, refresh_token });
+                }
+              } catch {}
+            } else if (search && search.includes("code=") && supabase) {
+              try {
+                const params = new URLSearchParams(search);
+                const code = params.get("code");
+                if (code) {
+                  await supabase.auth.exchangeCodeForSession(code);
+                }
+              } catch {}
+            }
+            void finish();
+          }
+        };
+      } catch {}
+
+      // 2. Listen to Supabase auth state change
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        if (event === "SIGNED_IN" && session) {
+          subscription.unsubscribe();
+          void finish();
+        }
+      });
+
+      // 3. Check for popup closed by user
+      const checkInterval = setInterval(() => {
+        try {
+          if (popup.closed) {
+            clearInterval(checkInterval);
+            subscription.unsubscribe();
+            if (bc) try { bc.close(); } catch {}
+            if (!resolved) {
+              resolved = true;
+              resolve();
+            }
+          }
+        } catch {
+          clearInterval(checkInterval);
+        }
+      }, 500);
+
+      // 4. Timeout after 5 minutes
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        subscription.unsubscribe();
+        if (bc) try { bc.close(); } catch {}
+        if (!resolved) {
+          resolved = true;
+          resolve();
+        }
+      }, 300_000);
+    });
   }
 }
 

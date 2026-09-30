@@ -3353,7 +3353,9 @@ export class YouTubeMusicDataSource extends DataSource {
     onStage?: (stage: AuthStage) => void,
   ): Promise<void> {
     if (!isTauri()) {
-      window.open("https://music.youtube.com/", "_blank");
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("opentune:open-auth-modal"));
+      }
       return;
     }
     logInternalInfo("YouTubeMusicDataSource.signIn start");

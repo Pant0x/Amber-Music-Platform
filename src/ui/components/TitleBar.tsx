@@ -81,6 +81,13 @@ export function TitleBar({
       || libraryState.status === "authorizing");
   const [isAccountPanelOpen, setIsAccountPanelOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOpen = () => setIsAuthModalOpen(true);
+    window.addEventListener("opentune:open-auth-modal", handleOpen);
+    return () => window.removeEventListener("opentune:open-auth-modal", handleOpen);
+  }, []);
+
   const nativeWindowControls = useNativeWindowControls();
   const forceWindowControls = useForceWindowControls();
   // On Linux, window management belongs to the compositor. Tiling compositors (niri, sway,

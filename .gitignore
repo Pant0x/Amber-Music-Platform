@@ -79,3 +79,7 @@ APK/
 *.tsbuildinfo
 .turbo/
 .temp/
+
+# Brand source assets
+NEW Identity/
+"NEW Identity"/

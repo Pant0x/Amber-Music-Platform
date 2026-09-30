@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { isTauri } from "@tauri-apps/api/core";
 import { cn } from "@/lib/utils";
 import { supabase } from "../../lib/supabaseClient";
 import { signInWithOAuthPopup } from "../../lib/oauthService";
@@ -290,50 +291,35 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
     }
   };
 
-  const handleGoogleAuth = async () => {
+  const handleOAuth = async (provider: "google" | "discord") => {
     setBusy(true);
     setError(null);
     setSuccessMessage(null);
+
+    if (!supabase) {
+      setError("Authentication service is not configured.");
+      setBusy(false);
+      return;
+    }
 
     try {
-      await libraryController.signIn();
-      if (libraryController.getState().status === "ready") {
+      await signInWithOAuthPopup(provider);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
         onAuthSuccess?.();
         onClose();
+        if (isTauri() && libraryController.getState().status !== "ready") {
+          void libraryController.signIn().catch(() => {});
+        }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Google sign-in failed.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : `${provider === "google" ? "Google" : "Discord"} authentication failed.`,
+      );
     } finally {
       setBusy(false);
-    }
-  };
-
-  const handleOAuth = async (provider: "discord") => {
-    setBusy(true);
-    setError(null);
-    setSuccessMessage(null);
-
-    if (provider === "discord") {
-      if (!supabase) {
-        setError("Supabase client is not configured.");
-        setBusy(false);
-        return;
-      }
-      try {
-        await signInWithOAuthPopup("discord");
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          onAuthSuccess?.();
-          onClose();
-          if (libraryController.getState().status !== "ready") {
-            void libraryController.signIn().catch(() => {});
-          }
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Discord sign-in failed.");
-      } finally {
-        setBusy(false);
-      }
     }
   };
 
@@ -888,7 +874,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                   variant="outline"
                   size="md"
                   disabled={busy}
-                  onClick={() => void handleGoogleAuth()}
+                  onClick={() => void handleOAuth("google")}
                   className="w-full flex items-center justify-center gap-2 rounded-xl text-xs hover:border-white/20 transition-all"
                 >
                   <GoogleIcon size={16} />
