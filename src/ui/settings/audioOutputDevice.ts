@@ -43,6 +43,7 @@ function read(): string | null {
  * sounding.
  */
 async function push(id: string | null): Promise<void> {
+  if (!usesRustAudioEngine()) return;
   const session = usesRustAudioEngine() ? playerController.getPlayerSession() : null;
   try {
     await pushOutputDevice(id);
@@ -79,6 +80,7 @@ export function setOutputDevice(id: string | null): void {
 }
 
 export async function hydrateOutputDevice(): Promise<void> {
+  if (!usesRustAudioEngine()) return;
   await hydrateLocalJsonSetting(STORAGE_KEY, isDeviceId);
   // A fresh Rust process always opens the OS default until told otherwise, so the stored choice
   // has to be pushed down once at startup — pushOutputDevice sets the device without touching playback.

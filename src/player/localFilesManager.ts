@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, isTauri } from "@tauri-apps/api/core";
 import { useSyncExternalStore } from "react";
 import type { Track } from "../datasource/types";
 import {
@@ -79,6 +79,7 @@ let cachedScannedFolder: string | null = null;
 let scanPromise: Promise<Track[]> | null = null;
 
 export async function scanLocalMusicFolder(folderPath?: string | null): Promise<Track[]> {
+  if (!isTauri()) return [];
   const targetFolder = folderPath ?? getLocalMusicFolder();
   if (!targetFolder) {
     cachedScannedTracks = [];

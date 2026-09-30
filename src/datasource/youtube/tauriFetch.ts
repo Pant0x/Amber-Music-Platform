@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, isTauri } from "@tauri-apps/api/core";
 import { logInternalDebug, logInternalError, logInternalInfo } from "../../internal/logging";
 import { fromBase64, toBase64 } from "../../internal/base64";
 
@@ -272,18 +272,63 @@ export async function tauriFetch(input: RequestInfo | URL, init?: TauriFetchInit
   });
 
   try {
-    const proxyResponse = await invoke<ProxyHttpResponse>("proxy_http_request", {
-      input: {
-        url,
-        method,
-        headers,
-        body_base64,
-        timeout_ms: init?.timeoutMs,
-      },
-    });
+    let proxyResponse: ProxyHttpResponse;
 
-    if (!proxyResponse) {
-      throw new Error("Tauri proxy_http_request returned undefined response");
+    if (isTauri()) {
+      const resp = await invoke<ProxyHttpResponse>("proxy_http_request", {
+        input: {
+          url,
+          method,
+          headers,
+          body_base64,
+          timeout_ms: init?.timeoutMs,
+        },
+      });
+
+      if (!resp) {
+        throw new Error("Tauri proxy_http_request returned undefined response");
+      }
+      proxyResponse = resp;
+    } else {
+      try {
+        const res = await fetch("/api/proxy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            url,
+            method,
+            headers,
+            body_base64,
+            timeout_ms: init?.timeoutMs,
+          }),
+        });
+        if (res.ok) {
+          proxyResponse = await res.json();
+        } else {
+          throw new Error(`Proxy error status ${res.status}`);
+        }
+      } catch (proxyError) {
+        logInternalDebug("tauriFetch.proxyFallback to direct fetch", { error: String(proxyError) });
+        const directHeaders: Record<string, string> = { ...headers };
+        delete directHeaders["cookie"];
+        delete directHeaders["origin"];
+        delete directHeaders["referer"];
+        const directRes = await fetch(url, {
+          method,
+          headers: directHeaders,
+          body: body_base64 ? fromBase64(body_base64) : undefined,
+        });
+        const directBytes = new Uint8Array(await directRes.arrayBuffer());
+        const respHeaders: Record<string, string> = {};
+        directRes.headers.forEach((v, k) => {
+          respHeaders[k] = v;
+        });
+        proxyResponse = {
+          status: directRes.status,
+          headers: respHeaders,
+          body_base64: toBase64(directBytes),
+        };
+      }
     }
 
     if (proxyResponse.cookie) {

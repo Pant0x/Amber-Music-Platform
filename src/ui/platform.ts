@@ -34,7 +34,12 @@ export function subscribeTilingWindowManager(callback: () => void): () => void {
 
 export async function detectTilingWindowManager(): Promise<void> {
   try {
-    const { invoke } = await import("@tauri-apps/api/core");
+    const { invoke, isTauri } = await import("@tauri-apps/api/core");
+    if (!isTauri()) {
+      tilingWindowManager = false;
+      document.documentElement.toggleAttribute("data-tiling-wm", false);
+      return;
+    }
     const desktop = await invoke<string>("desktop_environment");
     tilingWindowManager = TILING_WINDOW_MANAGERS.has(desktop.trim().toLowerCase());
   } catch {
@@ -55,4 +60,18 @@ export function hasPrimaryModifierOnly(event: KeyboardEvent): boolean {
   return isMacOS
     ? event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey
     : event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey;
+}
+
+export async function safeOpenUrl(url: string): Promise<void> {
+  try {
+    const { isTauri } = await import("@tauri-apps/api/core");
+    if (isTauri()) {
+      const { openUrl } = await import("@tauri-apps/plugin-opener");
+      await openUrl(url);
+      return;
+    }
+  } catch {}
+  if (typeof window !== "undefined") {
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
 }

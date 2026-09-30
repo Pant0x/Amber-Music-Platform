@@ -1,4 +1,5 @@
 import { getVersion } from "@tauri-apps/api/app";
+import { isTauri } from "@tauri-apps/api/core";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check, type DownloadEvent, type Update } from "@tauri-apps/plugin-updater";
 import { logInternalError } from "./logging";
@@ -26,7 +27,12 @@ export interface UpdateInstallProgress {
 }
 
 export async function getInstalledVersion(): Promise<string> {
-  return getVersion();
+  if (!isTauri()) return "1.0.8";
+  try {
+    return await getVersion();
+  } catch {
+    return "1.0.8";
+  }
 }
 
 function parseVersion(version: string): number[] {
@@ -70,6 +76,7 @@ async function checkViaGithubApi(): Promise<UpdateInfo | null> {
 }
 
 export async function checkForUpdates(): Promise<UpdateInfo | null> {
+  if (!isTauri()) return null;
   const isMacOS =
     typeof navigator !== "undefined" && /Macintosh|Mac OS X/.test(navigator.userAgent);
 

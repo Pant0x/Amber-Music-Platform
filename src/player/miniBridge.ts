@@ -9,6 +9,7 @@
  */
 
 import { emit, listen } from "@tauri-apps/api/event";
+import { isTauri } from "@tauri-apps/api/core";
 import { playerController } from "./playerStore";
 import { isSyncedLyrics } from "../ui/pages/lyricsTiming";
 import {
@@ -50,6 +51,7 @@ function buildSnapshot(): MiniPlaybackSnapshot {
 }
 
 async function pushSnapshot(): Promise<void> {
+  if (!isTauri()) return;
   try {
     await emit(PLAYBACK_SNAPSHOT_EVENT, buildSnapshot());
   } catch {
@@ -58,6 +60,7 @@ async function pushSnapshot(): Promise<void> {
 }
 
 async function pushLyrics(trackId: string): Promise<void> {
+  if (!isTauri()) return;
   const track = playerController.getState().currentTrack;
   if (!track || track.id !== trackId) return;
   try {
@@ -129,7 +132,7 @@ async function handleCommand(command: MiniCommand): Promise<void> {
 let started = false;
 
 export function startMiniBridge(): void {
-  if (started || typeof window === "undefined") return;
+  if (!isTauri() || started || typeof window === "undefined") return;
   started = true;
 
   let lastTrackId: string | null = null;

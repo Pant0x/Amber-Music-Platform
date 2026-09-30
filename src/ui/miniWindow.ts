@@ -7,12 +7,14 @@
  * the window itself.
  */
 
+import { isTauri } from "@tauri-apps/api/core";
 import { WebviewWindow, getAllWebviewWindows } from "@tauri-apps/api/webviewWindow";
 import { LogicalPosition, LogicalSize, currentMonitor } from "@tauri-apps/api/window";
 import { MINI_WINDOW_LABEL } from "../mini/protocol";
 import { logInternalError } from "../internal/logging";
 
 export async function getMiniWindow(): Promise<WebviewWindow | null> {
+  if (!isTauri()) return null;
   try {
     const all = await getAllWebviewWindows();
     return all.find((window) => window.label === MINI_WINDOW_LABEL) ?? null;
@@ -22,6 +24,7 @@ export async function getMiniWindow(): Promise<WebviewWindow | null> {
 }
 
 export async function openMiniWindow(): Promise<void> {
+  if (!isTauri()) return;
   try {
     const existing = await getMiniWindow();
     if (existing) {

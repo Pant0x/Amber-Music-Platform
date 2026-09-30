@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { isTauri } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { logInternalError } from "../../internal/logging";
 import { isWindows } from "../platform";
@@ -89,6 +90,7 @@ export function setForceWindowControls(enabled: boolean) {
 }
 
 export async function applyNativeWindowControls(enabled = readNativeWindowControls()) {
+  if (!isTauri()) return;
   const actual = isWindows ? false : enabled;
   try {
     await getCurrentWindow().setDecorations(actual);
@@ -102,6 +104,7 @@ export async function applyNativeWindowControls(enabled = readNativeWindowContro
 }
 
 export async function hydrateWindowControlSettings() {
+  if (!isTauri()) return;
   if (isWindows) {
     try {
       localStorage.setItem(NATIVE_CONTROLS_STORAGE_KEY, "false");

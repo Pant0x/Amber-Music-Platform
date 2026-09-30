@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { isTauri } from "@tauri-apps/api/core";
 import {
   hydrateLocalJsonSetting,
   readLocalJsonSetting,
@@ -109,17 +110,20 @@ if (typeof window !== "undefined") {
 }
 
 export function getAudioEngineMode(): AudioEngineMode {
+  if (!isTauri()) return "iframe";
   return readMode();
 }
 
 /** True when playback does *not* go through the YouTube IFrame (native or rust engine). */
 export function usesNativeAudioEngine(): boolean {
+  if (!isTauri()) return false;
   const mode = readMode();
   return mode === "native" || mode === "rust";
 }
 
 /** True when Rust decodes and plays the audio itself, with no `<audio>` element involved. */
 export function usesRustAudioEngine(): boolean {
+  if (!isTauri()) return false;
   return readMode() === "rust";
 }
 

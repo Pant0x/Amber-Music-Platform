@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, isTauri } from "@tauri-apps/api/core";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 /*
  * Statically imported, deliberately.
@@ -3288,6 +3288,7 @@ export class YouTubeMusicDataSource extends DataSource {
   }
 
   async restoreSession(): Promise<boolean> {
+    if (!isTauri()) return false;
     logInternalInfo("YouTubeMusicDataSource.restoreSession start");
     try {
       this.musicCookie = await invoke<string | null>("load_youtube_music_cookie");
@@ -3330,6 +3331,7 @@ export class YouTubeMusicDataSource extends DataSource {
    * library resync this exists to avoid.
    */
   async refreshSession(): Promise<boolean> {
+    if (!isTauri()) return false;
     logInternalInfo("YouTubeMusicDataSource.refreshSession start");
     const cookie = await invoke<string | null>("refresh_youtube_music_cookie");
     if (!cookie) {
@@ -3350,6 +3352,10 @@ export class YouTubeMusicDataSource extends DataSource {
     onPrompt: (prompt: AuthPrompt) => void,
     onStage?: (stage: AuthStage) => void,
   ): Promise<void> {
+    if (!isTauri()) {
+      window.open("https://music.youtube.com/", "_blank");
+      return;
+    }
     logInternalInfo("YouTubeMusicDataSource.signIn start");
     onPrompt({
       verificationUrl: "https://music.youtube.com/",
@@ -3436,6 +3442,7 @@ export class YouTubeMusicDataSource extends DataSource {
    * sign-in completed, and it is not worth an error.
    */
   async cancelSignIn(): Promise<void> {
+    if (!isTauri()) return;
     const loginWindow = await WebviewWindow.getByLabel(YOUTUBE_LOGIN_WINDOW_LABEL);
     if (!loginWindow) return;
     try {
@@ -3457,6 +3464,12 @@ export class YouTubeMusicDataSource extends DataSource {
    * for whoever is now active.
    */
   async signOut(): Promise<boolean> {
+    if (!isTauri()) {
+      this.musicCookie = null;
+      this.resetMusicSessionSelection();
+      this.resetMusicClients();
+      return false;
+    }
     logInternalInfo("YouTubeMusicDataSource.signOut start");
     const fallbackCookie = await invoke<string | null>("delete_youtube_music_cookie");
     try {
@@ -3479,6 +3492,7 @@ export class YouTubeMusicDataSource extends DataSource {
   }
 
   async listGoogleAccounts(): Promise<GoogleAccountOption[]> {
+    if (!isTauri()) return [];
     const accounts = await invoke<StoredGoogleAccount[]>("list_youtube_music_accounts");
     return accounts.map((account) => ({
       id: account.slotId,
@@ -3490,6 +3504,7 @@ export class YouTubeMusicDataSource extends DataSource {
 
   /** Makes a stored Google account active. Unlike signIn, never opens a browser window. */
   async switchGoogleAccount(id: string): Promise<void> {
+    if (!isTauri()) return;
     logInternalInfo("YouTubeMusicDataSource.switchGoogleAccount start");
     const cookie = await invoke<string | null>("switch_youtube_music_account", { slotId: id });
     this.musicCookie = cookie;
@@ -3515,6 +3530,7 @@ export class YouTubeMusicDataSource extends DataSource {
    * last one, leaves nothing signed in.
    */
   async removeGoogleAccount(id: string): Promise<"unchanged" | "switched" | "signed-out"> {
+    if (!isTauri()) return "signed-out";
     logInternalInfo("YouTubeMusicDataSource.removeGoogleAccount start");
     const previousCookie = this.musicCookie;
     const newActiveCookie = await invoke<string | null>("remove_youtube_music_account", { slotId: id });

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { isTauri } from "@tauri-apps/api/core";
 import { cn } from "@/lib/utils";
 import { Tooltip } from "@/components/motion/tooltip";
 import { LoginIcon, SettingsIcon } from "@/ui/icons";
@@ -64,7 +65,7 @@ export function TitleBar({
   isMaximized: isMaximizedProp,
   isLyricsOpen = false,
 }: TitleBarProps) {
-  const appWindow = getCurrentWindow();
+  const appWindow = isTauri() ? getCurrentWindow() : null;
   const libraryState = useLibraryState();
   const account = libraryState.library?.account;
   // Confirmed by YouTube, not merely by having a library on screen — a cache with no expiry
@@ -91,8 +92,8 @@ export function TitleBar({
     isTilingWindowManager,
     () => false,
   );
-  const showCustomWindowControls = isWindows
-    || (!nativeWindowControls && (!isLinux || !tilingWindowManager || forceWindowControls));
+  const showCustomWindowControls = isTauri()
+    && (isWindows || (!nativeWindowControls && (!isLinux || !tilingWindowManager || forceWindowControls)));
   const notificationsVisible = useToolbarItemVisible("notifications");
   const downloadsVisible = useToolbarItemVisible("downloads");
   const homePointerRef = useRef<{
@@ -106,6 +107,7 @@ export function TitleBar({
   const isMax = isMaximizedProp !== undefined ? isMaximizedProp : internalIsMax;
 
   useEffect(() => {
+    if (!isTauri() || !appWindow) return;
     let active = true;
     appWindow.isMaximized().then((m) => {
       if (active) setInternalIsMax(m);
@@ -129,6 +131,7 @@ export function TitleBar({
   };
 
   const startWindowDrag = async () => {
+    if (!isTauri() || !appWindow) return;
     try {
       window.dispatchEvent(new Event("main-window-drag-started"));
       await appWindow.startDragging();
@@ -139,6 +142,7 @@ export function TitleBar({
 
 
   const handleToggleMaximize = async () => {
+    if (!isTauri() || !appWindow) return;
     try {
       const maximized = await appWindow.isMaximized();
       if (maximized) {

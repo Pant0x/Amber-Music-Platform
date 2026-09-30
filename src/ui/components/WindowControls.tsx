@@ -1,6 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, isTauri } from "@tauri-apps/api/core";
 import { cn } from "@/lib/utils";
 import { logInternalError, logInternalInfo, logInternalWarn } from "../../internal/logging";
 import {
@@ -23,7 +23,7 @@ interface WindowControlsProps {
 const WINDOW_BUTTON_BASE =
   "flex items-center justify-center text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
-export function WindowControls({ className, isMaximized: isMaxProp }: WindowControlsProps) {
+function WindowControlsDesktop({ className, isMaximized: isMaxProp }: WindowControlsProps) {
   const appWindow = getCurrentWindow();
   const nativeWindowControls = useNativeWindowControls();
   const windowsStyleWindowControls = useWindowsStyleWindowControls();
@@ -186,4 +186,11 @@ export function WindowControls({ className, isMaximized: isMaxProp }: WindowCont
       </button>
     </div>
   );
+}
+
+export function WindowControls(props: WindowControlsProps) {
+  if (!isTauri()) {
+    return null;
+  }
+  return <WindowControlsDesktop {...props} />;
 }

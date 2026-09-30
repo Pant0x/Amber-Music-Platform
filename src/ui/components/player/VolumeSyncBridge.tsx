@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { emit } from "@tauri-apps/api/event";
+import { isTauri } from "@tauri-apps/api/core";
 import { shallowEqual, usePlayerSelector } from "../../../player/playerStore";
 
 /**
@@ -19,7 +20,9 @@ export function VolumeSyncBridge() {
   );
 
   useEffect(() => {
-    void emit("player-volume-sync", { muted, volume });
+    if (isTauri()) {
+      void emit("player-volume-sync", { muted, volume });
+    }
   }, [muted, volume]);
 
   return null;

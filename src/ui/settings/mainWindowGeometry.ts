@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { isTauri } from "@tauri-apps/api/core";
 import {
   availableMonitors,
   getCurrentWindow,
@@ -92,6 +93,7 @@ async function isGeometryOnAnyMonitor(geometry: MainWindowGeometry): Promise<boo
 }
 
 async function saveCurrentMainWindowGeometry(): Promise<void> {
+  if (!isTauri()) return;
   const win = getCurrentWindow();
   const [position, size, isMaximized, isFullscreen] = await Promise.all([
     win.outerPosition(),
@@ -124,6 +126,7 @@ function clearSavedMainWindowGeometry(): void {
 }
 
 export async function hydrateMainWindowGeometry(): Promise<void> {
+  if (!isTauri()) return;
   await Promise.all([
     hydrateLocalJsonSetting(STORAGE_KEY, isMainWindowGeometry),
     hydrateLocalBooleanSetting(
@@ -142,7 +145,7 @@ export async function hydrateMainWindowGeometry(): Promise<void> {
 }
 
 export async function restoreMainWindowGeometry(): Promise<void> {
-  if (!readMainWindowGeometryPersistenceEnabled()) return;
+  if (!isTauri() || !readMainWindowGeometryPersistenceEnabled()) return;
 
   const geometry = readLocalJsonSetting(STORAGE_KEY, isMainWindowGeometry);
   if (!geometry) return;
@@ -160,6 +163,7 @@ export async function restoreMainWindowGeometry(): Promise<void> {
 }
 
 export async function persistMainWindowGeometry(): Promise<() => void> {
+  if (!isTauri()) return () => {};
   const win = getCurrentWindow();
   let saveTimer: number | null = null;
 

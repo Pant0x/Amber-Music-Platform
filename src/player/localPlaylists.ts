@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, isTauri } from "@tauri-apps/api/core";
 import type { Playlist, Track, TrackPage } from "../datasource/types";
 import { getAppSetting, setAppSetting } from "../internal/appSettings";
 import playlistPlaceholder from "../../assets/img/playlistplaceholder.svg";
@@ -441,6 +441,7 @@ export function notifyLocalPlaylistsChanged(): void {
 }
 
 export function syncLocalAudioWatcher(): void {
+  if (!isTauri()) return;
   const paths = Array.from(new Set(readLocalPlaylists().flatMap((playlist) => playlist.paths)));
   void invoke("local_audio_watch", { paths }).catch(() => {
     // Watching is a convenience; a failure must not stop playlists from working.

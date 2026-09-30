@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { isTauri } from "@tauri-apps/api/core";
 import { cn } from "@/lib/utils";
 import { CheckActiveIcon, LinkIcon } from "@/ui/icons";
 import { logInternalWarn } from "../../internal/logging";
@@ -57,6 +58,10 @@ export function ExternalLinkButton({
   };
 
   const open = async () => {
+    if (!isTauri()) {
+      window.open(url, "_blank", "noopener,noreferrer");
+      return;
+    }
     try {
       await openUrl(url);
       // Deliberately no success state: the browser coming forward is the feedback, and a

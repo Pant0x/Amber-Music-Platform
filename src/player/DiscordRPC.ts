@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, isTauri } from "@tauri-apps/api/core";
 import { logInternalDebug, logInternalWarn } from "../internal/logging";
 import {
   getDiscordPresenceEnabled,
@@ -97,6 +97,7 @@ export class DiscordRpcService {
    * update without anything having to notify this service.
    */
   private static get isEnabled(): boolean {
+    if (!isTauri()) return false;
     return getDiscordPresenceEnabled();
   }
 
@@ -117,6 +118,7 @@ export class DiscordRpcService {
    * The actual connection happens on the Rust backend
    */
   static async init(): Promise<void> {
+    if (!isTauri()) return;
     if (this.isInitialized && !this.isShuttingDown) {
       logInternalDebug("Discord.init", { message: "Already initialized" });
       return;
@@ -150,6 +152,7 @@ export class DiscordRpcService {
    */
   static async setEnabled(enabled: boolean): Promise<void> {
     setDiscordPresenceEnabled(enabled);
+    if (!isTauri()) return;
     if (enabled) {
       try {
         await invoke("discord_rpc_init");
@@ -282,6 +285,7 @@ export class DiscordRpcService {
    * Clear Discord presence (show as idle)
    */
   static async clearPresence(): Promise<void> {
+    if (!isTauri()) return;
     try {
       logInternalDebug("Discord.clearPresence", {});
       await invoke("discord_rpc_clear");

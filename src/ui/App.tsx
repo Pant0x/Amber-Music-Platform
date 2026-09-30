@@ -2,7 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom";
 import { MotionConfig } from "motion/react";
 import { cn } from "@/lib/utils";
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, isTauri } from "@tauri-apps/api/core";
 import type { Album, Artist, Playlist, SearchResults, Track } from "../datasource/types";
 import { looksLikeYouTubeLink } from "../datasource/youtube/links";
 import { useDisableContextMenu } from "./hooks/useDisableContextMenu";
@@ -192,6 +192,7 @@ function clearLocalOnboardingComplete(): void {
 }
 
 async function hasStoredYoutubeSession(): Promise<boolean> {
+  if (!isTauri()) return false;
   // The cookie is the session. This used to also consult an OAuth credential, which nothing in
   // the app has ever written — a branch that could only ever be false, dressed as a second way
   // of being signed in.
@@ -229,6 +230,7 @@ export default function App() {
   // The window is transparent so the app root can round its own corners. When the window
   // is maximised or fullscreen those corners would expose the desktop, so drop the radius.
   useEffect(() => {
+    if (!isTauri()) return;
     const appWindow = getCurrentWindow();
     let disposed = false;
 
@@ -265,6 +267,7 @@ export default function App() {
   // Full-screen lyrics is real OS fullscreen, not just a wider layout — the whole point is
   // the window chrome getting out of the way too.
   useEffect(() => {
+    if (!isTauri()) return;
     const win = getCurrentWindow();
     const syncFullscreen = async () => {
       try {
@@ -572,6 +575,7 @@ export default function App() {
   }, [currentView, persistAppSession]);
 
   useEffect(() => {
+    if (!isTauri()) return;
     const unlistenPromise = listen("main-window-recovery-reload", persistAppSession);
     return () => {
       void unlistenPromise.then((unlisten) => unlisten());
@@ -579,6 +583,7 @@ export default function App() {
   }, [persistAppSession]);
 
   useEffect(() => {
+    if (!isTauri()) return;
     let unlisten: (() => void) | null = null;
     void getCurrentWindow().onCloseRequested(() => {
       persistAppSession();
@@ -591,6 +596,7 @@ export default function App() {
   }, [persistAppSession]);
 
   useEffect(() => {
+    if (!isTauri()) return;
     const unlistenPromise = listen("os-close-requested", persistAppSession);
     return () => {
       void unlistenPromise.then((unlisten) => unlisten());

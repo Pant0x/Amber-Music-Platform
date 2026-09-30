@@ -21,6 +21,7 @@ import { hydrateOutputDevice } from "./ui/settings/audioOutputDevice";
 import { hydrateYouTubeAccountSettings } from "./ui/settings/youtubeAccount";
 import { notifyLocalPlaylistsChanged, syncLocalAudioWatcher } from "./player/localPlaylists";
 import { listen } from "@tauri-apps/api/event";
+import { isTauri } from "@tauri-apps/api/core";
 import { hydrateDiscordSettings } from "./ui/settings/discord";
 import { hydrateSidebarSettings } from "./ui/settings/sidebarMode";
 import { hydrateKeyboardShortcuts } from "./ui/settings/keyboardShortcuts";
@@ -146,10 +147,12 @@ if (isOAuthPopup()) {
     </React.StrictMode>,
   );
 
-  syncLocalAudioWatcher();
-  void listen("local-audio-changed", () => notifyLocalPlaylistsChanged());
-  // Feeds the external mini player window (snapshots out, transport commands in).
-  startMiniBridge();
+  if (isTauri()) {
+    syncLocalAudioWatcher();
+    void listen("local-audio-changed", () => notifyLocalPlaylistsChanged());
+    // Feeds the external mini player window (snapshots out, transport commands in).
+    startMiniBridge();
+  }
 }
 
 
