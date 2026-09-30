@@ -426,8 +426,8 @@ Defense in depth that *is* in place:
 "plugins": { "updater": {
   "pubkey": "<minisign public key>",
   "endpoints": [
-    "https://github.com/Pant0x/Amber-Music-Platform/releases/latest/download/latest.json",
-    "https://raw.githubusercontent.com/Pant0x/Amber-Music-Platform/updater-channel/latest.json"
+    "https://github.com/Pant0x/OpenTune/releases/latest/download/latest.json",
+    "https://raw.githubusercontent.com/Pant0x/OpenTune/updater-channel/latest.json"
   ]}}
 ```
 

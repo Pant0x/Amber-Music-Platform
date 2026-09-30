@@ -6016,7 +6016,7 @@ export class YouTubeMusicDataSource extends DataSource {
   private getLyricsRequestHeaders(): Record<string, string> {
     return {
       Accept: "application/json",
-      "User-Agent": "AmberMusic/1.0.0 (https://github.com/Pant0x/Amber-Music-Platform)",
+      "User-Agent": "OpenTune/1.0.0 (https://github.com/Pant0x/OpenTune)",
     };
   }
 
