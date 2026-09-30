@@ -48,11 +48,13 @@ function subscribe(callback: () => void) {
 }
 
 function readWindowsStyleWindowControls() {
+  if (isWindows) return true;
   ensureInAppControlsDefault();
   return readBooleanSetting(WINDOWS_STYLE_STORAGE_KEY, isWindows);
 }
 
 function readNativeWindowControls() {
+  if (isWindows) return false;
   ensureInAppControlsDefault();
   return readLocalBooleanSetting(NATIVE_CONTROLS_STORAGE_KEY, false);
 }
@@ -73,6 +75,11 @@ export function setWindowsStyleWindowControls(enabled: boolean) {
 }
 
 export function setNativeWindowControls(enabled: boolean) {
+  if (isWindows) {
+    writeBooleanSetting(NATIVE_CONTROLS_STORAGE_KEY, false);
+    void applyNativeWindowControls(false);
+    return;
+  }
   writeBooleanSetting(NATIVE_CONTROLS_STORAGE_KEY, enabled);
   void applyNativeWindowControls(enabled);
 }
@@ -82,9 +89,10 @@ export function setForceWindowControls(enabled: boolean) {
 }
 
 export async function applyNativeWindowControls(enabled = readNativeWindowControls()) {
+  const actual = isWindows ? false : enabled;
   try {
-    await getCurrentWindow().setDecorations(enabled);
-    document.documentElement.toggleAttribute("data-native-window-controls", enabled);
+    await getCurrentWindow().setDecorations(actual);
+    document.documentElement.toggleAttribute("data-native-window-controls", actual);
   } catch (error) {
     document.documentElement.toggleAttribute("data-native-window-controls", false);
     logInternalError("windowControls.applyNativeWindowControls failed", error);
@@ -94,6 +102,16 @@ export async function applyNativeWindowControls(enabled = readNativeWindowContro
 }
 
 export async function hydrateWindowControlSettings() {
+  if (isWindows) {
+    try {
+      localStorage.setItem(NATIVE_CONTROLS_STORAGE_KEY, "false");
+      localStorage.setItem(WINDOWS_STYLE_STORAGE_KEY, "true");
+    } catch {}
+    void writeBooleanSetting(NATIVE_CONTROLS_STORAGE_KEY, false);
+    void writeBooleanSetting(WINDOWS_STYLE_STORAGE_KEY, true);
+    await applyNativeWindowControls(false);
+    return;
+  }
   ensureInAppControlsDefault();
   await Promise.all([
     hydrateLocalBooleanSetting(WINDOWS_STYLE_STORAGE_KEY, isWindows, CHANGE_EVENT),

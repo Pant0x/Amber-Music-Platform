@@ -6,6 +6,7 @@ import { LoginIcon, SettingsIcon } from "@/ui/icons";
 import { logInternalError } from "../../internal/logging";
 import {
   isLinux,
+  isWindows,
   isTilingWindowManager,
   subscribeTilingWindowManager,
 } from "../platform";
@@ -90,8 +91,8 @@ export function TitleBar({
     isTilingWindowManager,
     () => false,
   );
-  const showCustomWindowControls = !nativeWindowControls
-    && (!isLinux || !tilingWindowManager || forceWindowControls);
+  const showCustomWindowControls = isWindows
+    || (!nativeWindowControls && (!isLinux || !tilingWindowManager || forceWindowControls));
   const notificationsVisible = useToolbarItemVisible("notifications");
   const downloadsVisible = useToolbarItemVisible("downloads");
   const homePointerRef = useRef<{

@@ -5,7 +5,9 @@ export const isLinux =
   typeof navigator !== "undefined" && /Linux/.test(navigator.userAgent);
 
 export const isWindows =
-  typeof navigator !== "undefined" && /Windows NT/.test(navigator.userAgent);
+  typeof navigator !== "undefined"
+  && (/Windows NT|Windows|Win32|Win64/.test(navigator.userAgent)
+    || (typeof navigator.platform === "string" && /Win/.test(navigator.platform)));
 
 /**
  * Compositors that tile windows and handle close/minimize/maximize themselves, so an

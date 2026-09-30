@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { logInternalError, logInternalInfo, logInternalWarn } from "../../internal/logging";
 import {
   isLinux,
+  isWindows,
   isTilingWindowManager,
   subscribeTilingWindowManager,
 } from "../platform";
@@ -35,7 +36,7 @@ export function WindowControls({ className, isMaximized: isMaxProp }: WindowCont
   );
 
   const showCustomWindowControls =
-    !nativeWindowControls && (!isLinux || !tilingWindowManager || forceWindowControls);
+    isWindows || (!nativeWindowControls && (!isLinux || !tilingWindowManager || forceWindowControls));
 
   const [internalIsMax, setInternalIsMax] = useState(false);
   const isMax = isMaxProp !== undefined ? isMaxProp : internalIsMax;
@@ -117,7 +118,7 @@ export function WindowControls({ className, isMaximized: isMaxProp }: WindowCont
   return (
     <div
       className={cn(
-        "flex shrink-0 items-center pointer-events-auto",
+        "flex shrink-0 items-center pointer-events-auto z-20",
         windowsStyleWindowControls ? "gap-0 h-full" : "gap-1.5 px-3",
         className,
       )}
@@ -129,7 +130,7 @@ export function WindowControls({ className, isMaximized: isMaxProp }: WindowCont
         className={cn(
           WINDOW_BUTTON_BASE,
           windowsStyleWindowControls
-            ? "h-full w-12 hover:bg-white/10 text-muted-foreground hover:text-foreground cursor-pointer"
+            ? "h-full w-12 hover:bg-white/10 active:bg-white/15 text-muted-foreground hover:text-foreground cursor-pointer"
             : "size-3 rounded-full bg-muted-foreground/40 hover:bg-muted-foreground cursor-pointer",
         )}
         onClick={() => void handleMinimize()}
@@ -147,7 +148,7 @@ export function WindowControls({ className, isMaximized: isMaxProp }: WindowCont
         className={cn(
           WINDOW_BUTTON_BASE,
           windowsStyleWindowControls
-            ? "h-full w-12 hover:bg-white/10 text-muted-foreground hover:text-foreground cursor-pointer"
+            ? "h-full w-12 hover:bg-white/10 active:bg-white/15 text-muted-foreground hover:text-foreground cursor-pointer"
             : "size-3 rounded-full bg-muted-foreground/40 hover:bg-muted-foreground cursor-pointer",
         )}
         onClick={() => void handleToggleMaximize()}
@@ -172,7 +173,7 @@ export function WindowControls({ className, isMaximized: isMaxProp }: WindowCont
         className={cn(
           WINDOW_BUTTON_BASE,
           windowsStyleWindowControls
-            ? "h-full w-12 hover:bg-destructive hover:text-destructive-foreground text-muted-foreground cursor-pointer transition-colors"
+            ? "h-full w-12 hover:bg-[#e81123] active:bg-[#c4101f] hover:text-white active:text-white text-muted-foreground cursor-pointer transition-colors"
             : "size-3 rounded-full bg-muted-foreground/40 hover:bg-primary cursor-pointer",
         )}
         onClick={handleClose}

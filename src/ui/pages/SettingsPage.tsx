@@ -200,7 +200,7 @@ import { useLocalMusicFolder, setLocalMusicFolder } from "../../player/localFile
 import { DiscordRpcService } from "../../player/DiscordRPC";
 import { useDiscordPresenceEnabled } from "../settings/discord";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { isLinux, isTilingWindowManager, subscribeTilingWindowManager } from "../platform";
+import { isLinux, isWindows, isTilingWindowManager, subscribeTilingWindowManager } from "../platform";
 import { GITHUB_NEW_ISSUE_URL, GITHUB_REPOSITORY_URL } from "../links";
 import { AccountAvatar, AccountSwitcher, AddGoogleAccountButton, GoogleAccountSwitcher } from "../components/AccountSwitcher";
 import {
@@ -705,10 +705,11 @@ export function SettingsPage({
   // "Native" and "Windows-style" used to be two separate switches, one of which only meant
   // anything when the other was off. Collapsing them into one three-way pick removes the
   // combination that did nothing (native + windows-style both on).
-  const windowControlStyle: WindowControlStyle = nativeWindowControls
+  const windowControlStyle: WindowControlStyle = !isWindows && nativeWindowControls
     ? "native"
     : windowsStyleWindowControls ? "windows" : "macos";
   const handleWindowControlStyleChange = (style: WindowControlStyle) => {
+    if (isWindows && style === "native") return;
     const goingNative = style === "native";
     if (goingNative !== nativeWindowControls) {
       setNativeWindowControls(goingNative);
@@ -1968,9 +1969,9 @@ export function SettingsPage({
                     variant="segment"
                   >
                     <TabsList>
-                      <TabsTrigger value="macos">macOS</TabsTrigger>
                       <TabsTrigger value="windows">Windows</TabsTrigger>
-                      <TabsTrigger value="native">OS native</TabsTrigger>
+                      <TabsTrigger value="macos">macOS</TabsTrigger>
+                      {!isWindows && <TabsTrigger value="native">OS native</TabsTrigger>}
                     </TabsList>
                   </Tabs>
                 </div>

@@ -1,9 +1,8 @@
-import { memo, useMemo } from "react";
+import { memo, useMemo, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useArtworkDominantColor } from "../hooks/useArtworkDominantColor";
 import { useCoverAmbienceEnabled } from "../settings/coverAmbience";
 import { usePotatoPcMode, useReduceMotion } from "../settings/renderEffects";
-import { usePlayerSelector } from "../../player/playerStore";
 
 interface CoverAmbienceCanvasProps {
   artworkUrl?: string | null;
@@ -20,7 +19,32 @@ export const CoverAmbienceCanvas = memo(function CoverAmbienceCanvas({
   const reduceMotion = useReduceMotion();
   const potatoMode = usePotatoPcMode();
   const dominant = useArtworkDominantColor(artworkUrl);
-  const isPlaying = usePlayerSelector((player) => player.status === "playing");
+
+  // Keep displayed artwork stable across fast swaps (e.g. YouTube thumbnail -> Spotify HD cover)
+  // to avoid blank flashes / DOM unmount flicker.
+  const [currentArtwork, setCurrentArtwork] = useState<string | null>(artworkUrl ?? null);
+
+  useEffect(() => {
+    if (!artworkUrl) {
+      setCurrentArtwork(null);
+      return;
+    }
+    if (artworkUrl === currentArtwork) return;
+
+    let active = true;
+    const img = new Image();
+    img.src = artworkUrl;
+    img.onload = () => {
+      if (active) setCurrentArtwork(artworkUrl);
+    };
+    img.onerror = () => {
+      if (active) setCurrentArtwork(artworkUrl);
+    };
+
+    return () => {
+      active = false;
+    };
+  }, [artworkUrl, currentArtwork]);
 
   const colors = useMemo(() => {
     const rgb = dominant.rgb || { r: 50, g: 30, b: 65 };
@@ -40,7 +64,7 @@ export const CoverAmbienceCanvas = memo(function CoverAmbienceCanvas({
     };
     const pDark = palette?.dark || {
       r: Math.max(10, Math.round(r * 0.35)),
-      g: Math.max(10, Math.round(g * 0.35)),
+      g: Math.max(10, Math.round(r * 0.35)),
       b: Math.max(15, Math.round(b * 0.4)),
     };
 
@@ -59,24 +83,24 @@ export const CoverAmbienceCanvas = memo(function CoverAmbienceCanvas({
     <div
       className={cn(
         "pointer-events-none absolute inset-0 overflow-hidden select-none bg-black",
+        "[transform:translate3d(0,0,0)] [backface-visibility:hidden] [contain:layout_paint]",
         className,
       )}
       aria-hidden="true"
     >
       {/* Base blurred artwork backdrop */}
-      {artworkUrl && (
+      {currentArtwork && (
         <div
-          key={artworkUrl}
           className={cn(
-            "absolute -inset-[35%] opacity-85 blur-[70px] saturate-[2.2] scale-135 transition-all duration-1000",
+            "absolute -inset-[35%] opacity-85 blur-[70px] saturate-[2.2] scale-135 [transform:translate3d(0,0,0)] [backface-visibility:hidden]",
             shouldAnimate && "lyrics-drift",
           )}
         >
           <img
-            src={artworkUrl}
+            src={currentArtwork}
             alt=""
-            className="size-full object-cover"
-            loading="lazy"
+            className="size-full object-cover transition-opacity duration-700 ease-in-out"
+            loading="eager"
             decoding="async"
           />
         </div>
@@ -85,15 +109,12 @@ export const CoverAmbienceCanvas = memo(function CoverAmbienceCanvas({
       {/* Dynamic Ambient Mesh Blobs (Cover Ambience) */}
       {isEnabled && (
         <div
-          className={cn(
-            "absolute inset-0 filter blur-[65px] saturate-[2.8] opacity-100 transition-transform duration-700 ease-out",
-            isPlaying && shouldAnimate && "ambience-pulse-active",
-          )}
+          className="absolute inset-0 filter blur-[65px] saturate-[2.4] opacity-95 [transform:translate3d(0,0,0)] [backface-visibility:hidden]"
         >
           {/* Top-Left Orb */}
           <div
             className={cn(
-              "absolute -top-[25%] -left-[20%] size-[80vw] max-w-[900px] max-h-[900px] rounded-full transition-colors duration-1000",
+              "absolute -top-[25%] -left-[20%] size-[80vw] max-w-[900px] max-h-[900px] rounded-full [transform:translate3d(0,0,0)] [backface-visibility:hidden]",
               shouldAnimate && "ambience-blob-1",
             )}
             style={{
@@ -104,7 +125,7 @@ export const CoverAmbienceCanvas = memo(function CoverAmbienceCanvas({
           {/* Top-Right Orb */}
           <div
             className={cn(
-              "absolute -top-[20%] -right-[25%] size-[75vw] max-w-[850px] max-h-[850px] rounded-full transition-colors duration-1000",
+              "absolute -top-[20%] -right-[25%] size-[75vw] max-w-[850px] max-h-[850px] rounded-full [transform:translate3d(0,0,0)] [backface-visibility:hidden]",
               shouldAnimate && "ambience-blob-2",
             )}
             style={{
@@ -115,7 +136,7 @@ export const CoverAmbienceCanvas = memo(function CoverAmbienceCanvas({
           {/* Bottom-Left Orb */}
           <div
             className={cn(
-              "absolute -bottom-[25%] -left-[15%] size-[75vw] max-w-[850px] max-h-[850px] rounded-full transition-colors duration-1000",
+              "absolute -bottom-[25%] -left-[15%] size-[75vw] max-w-[850px] max-h-[850px] rounded-full [transform:translate3d(0,0,0)] [backface-visibility:hidden]",
               shouldAnimate && "ambience-blob-3",
             )}
             style={{
@@ -126,7 +147,7 @@ export const CoverAmbienceCanvas = memo(function CoverAmbienceCanvas({
           {/* Bottom-Right Orb */}
           <div
             className={cn(
-              "absolute -bottom-[20%] -right-[20%] size-[80vw] max-w-[900px] max-h-[900px] rounded-full transition-colors duration-1000",
+              "absolute -bottom-[20%] -right-[20%] size-[80vw] max-w-[900px] max-h-[900px] rounded-full [transform:translate3d(0,0,0)] [backface-visibility:hidden]",
               shouldAnimate && "ambience-blob-4",
             )}
             style={{
