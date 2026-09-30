@@ -3338,6 +3338,33 @@ export class YouTubeMusicDataSource extends DataSource {
           } catch {}
         }
         this.musicCookie = cookie;
+
+        if (!cookie) {
+          // Check for stored OAuth tokens
+          let oauthTokens: any = null;
+          try {
+            const raw = localStorage.getItem("opentune_ytm_oauth");
+            if (raw) oauthTokens = JSON.parse(raw);
+          } catch {}
+          if (!oauthTokens && supabase) {
+            try {
+              const { data } = await supabase.auth.getSession();
+              oauthTokens = data?.session?.user?.user_metadata?.yt_music_oauth;
+            } catch {}
+          }
+          if (oauthTokens) {
+            try {
+              const client = await this.getMusicClient();
+              await client.session.oauth.init(oauthTokens);
+              logInternalInfo("YouTubeMusicDataSource.restoreSession oauth restored");
+              return true;
+            } catch (oauthErr) {
+              logInternalWarn("YouTubeMusicDataSource.restoreSession oauth failed", {
+                error: oauthErr instanceof Error ? oauthErr.message : String(oauthErr),
+              });
+            }
+          }
+        }
       }
 
       if (!this.musicCookie) {
@@ -3413,10 +3440,54 @@ export class YouTubeMusicDataSource extends DataSource {
     onStage?: (stage: AuthStage) => void,
   ): Promise<void> {
     if (!isTauri()) {
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("opentune:open-connect-library-modal"));
-      }
-      return;
+      logInternalInfo("YouTubeMusicDataSource.signIn web oauth start");
+      const client = await this.getMusicClient();
+      return new Promise<void>((resolve, reject) => {
+        client.session.once("auth", async (data: any) => {
+          logInternalInfo("YouTubeMusicDataSource.signIn web oauth success", data);
+          try {
+            if (data?.credentials && typeof localStorage !== "undefined") {
+              localStorage.setItem("opentune_ytm_oauth", JSON.stringify(data.credentials));
+            }
+            if (supabase && data?.credentials) {
+              void supabase.auth.updateUser({
+                data: { yt_music_oauth: data.credentials },
+              }).catch(() => {});
+            }
+          } catch {}
+          this.resetMusicClients();
+          await this.getMusicClient();
+          resolve();
+        });
+
+        client.session.once("auth-error", (err: any) => {
+          logInternalError("YouTubeMusicDataSource.signIn web oauth error", err);
+          reject(err);
+        });
+
+        client.session.once("auth-pending", (data: any) => {
+          logInternalInfo("YouTubeMusicDataSource.signIn web auth-pending", data);
+          const prompt: AuthPrompt = {
+            verificationUrl: data.verification_url || "https://www.google.com/device",
+            userCode: data.user_code,
+            expiresInSec: data.expires_in || 1800,
+          };
+          onPrompt(prompt);
+          onStage?.("browser");
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(
+              new CustomEvent("opentune:google-device-code", {
+                detail: prompt,
+              }),
+            );
+          }
+        });
+
+        client.session.signIn().catch((err: any) => {
+          logInternalError("YouTubeMusicDataSource.signIn web session.signIn error", err);
+          reject(err);
+        });
+      });
     }
     logInternalInfo("YouTubeMusicDataSource.signIn start");
     onPrompt({
@@ -3684,11 +3755,11 @@ export class YouTubeMusicDataSource extends DataSource {
       hasCookie: Boolean(this.musicCookie),
       accountIndex: this.musicAccountIndex,
     });
-    if (!this.musicCookie) {
+    let client = await this.getMusicClient();
+    const isLoggedIn = Boolean(this.musicCookie) || client.session.logged_in;
+    if (!isLoggedIn) {
       throw new Error("Sign in is required to load the YouTube Music library.");
     }
-
-    let client = await this.getMusicClient();
     const bestLibrary = await this.findBestLibraryResponses(client);
     client = bestLibrary.client;
     const { libraryLanding, historyResponse } = bestLibrary;
