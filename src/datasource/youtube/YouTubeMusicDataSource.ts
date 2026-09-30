@@ -561,6 +561,23 @@ export class YouTubeMusicDataSource extends DataSource {
       ...this.getSessionOptions(retrievePlayer),
       client_type: ClientType.MUSIC,
     });
+    if (!isTauri() && !this.musicCookie) {
+      try {
+        let oauthTokens: any = null;
+        if (typeof localStorage !== "undefined") {
+          const raw = localStorage.getItem("opentune_ytm_oauth");
+          if (raw) oauthTokens = JSON.parse(raw);
+        }
+        if (oauthTokens) {
+          await client.session.oauth.init(oauthTokens);
+          logInternalInfo("YouTubeMusicDataSource.createMusicClient oauth restored");
+        }
+      } catch (err) {
+        logInternalWarn("YouTubeMusicDataSource.createMusicClient oauth init error", {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
     await this.refreshMusicClientMetadata(client);
     this.applyDelegationContext(client);
     return client;
@@ -580,10 +597,25 @@ export class YouTubeMusicDataSource extends DataSource {
       logInternalInfo("YouTubeMusicDataSource.getWebClient creating client");
       // No player needed: this client only enumerates accounts and resolves like endpoints,
       // neither of which touches stream URLs, and retrieving it downloads the player script.
-      this.webClientPromise = Innertube.create({
-        ...this.getSessionOptions(false),
-        client_type: ClientType.WEB,
-      });
+      this.webClientPromise = (async () => {
+        const client = await Innertube.create({
+          ...this.getSessionOptions(false),
+          client_type: ClientType.WEB,
+        });
+        if (!isTauri() && !this.musicCookie) {
+          try {
+            let oauthTokens: any = null;
+            if (typeof localStorage !== "undefined") {
+              const raw = localStorage.getItem("opentune_ytm_oauth");
+              if (raw) oauthTokens = JSON.parse(raw);
+            }
+            if (oauthTokens) {
+              await client.session.oauth.init(oauthTokens);
+            }
+          } catch {}
+        }
+        return client;
+      })();
     }
 
     return this.webClientPromise;
@@ -3457,8 +3489,7 @@ export class YouTubeMusicDataSource extends DataSource {
               }).catch(() => {});
             }
           } catch {}
-          this.resetMusicClients();
-          await this.getMusicClient();
+          this.applyDelegationContext(client);
           resolve();
         });
 

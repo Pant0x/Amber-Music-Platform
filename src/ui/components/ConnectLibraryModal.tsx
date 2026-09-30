@@ -25,8 +25,8 @@ export function ConnectLibraryModal({ isOpen, onClose }: ConnectLibraryModalProp
     userCode: string;
     expiresInSec: number;
   } | null>(null);
-  const [isCopied, setIsCopied] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
+  const popupRef = useRef<Window | null>(null);
 
   const isConnected = libraryState.status === "ready" && Boolean(libraryState.library?.account);
 
@@ -63,9 +63,20 @@ export function ConnectLibraryModal({ isOpen, onClose }: ConnectLibraryModalProp
       }>;
       if (custom.detail) {
         setGooglePrompt(custom.detail);
-        if (custom.detail.userCode && typeof navigator !== "undefined" && navigator.clipboard) {
-          navigator.clipboard.writeText(custom.detail.userCode).catch(() => {});
-          setIsCopied(true);
+        const cleanCode = custom.detail.userCode.replace(/\s+/g, "");
+        const targetUrl = `https://www.google.com/device?user_code=${encodeURIComponent(cleanCode)}`;
+
+        if (typeof navigator !== "undefined" && navigator.clipboard) {
+          navigator.clipboard.writeText(cleanCode).catch(() => {});
+        }
+
+        // Direct our pre-opened popup to Google!
+        if (popupRef.current && !popupRef.current.closed) {
+          popupRef.current.location.href = targetUrl;
+        } else {
+          try {
+            window.open(targetUrl, "_blank");
+          } catch {}
         }
       }
     };
@@ -78,15 +89,80 @@ export function ConnectLibraryModal({ isOpen, onClose }: ConnectLibraryModalProp
     setError(null);
     setSuccess(null);
     setGooglePrompt(null);
-    setIsCopied(false);
+
+    // Open popup synchronously during the user click event to prevent browser popup blockers
+    try {
+      const width = 500;
+      const height = 650;
+      const left = Math.max(0, Math.round(window.screenX + (window.outerWidth - width) / 2));
+      const top = Math.max(0, Math.round(window.screenY + (window.outerHeight - height) / 2));
+      const popup = window.open(
+        "about:blank",
+        "opentune_google_auth",
+        `width=${width},height=${height},left=${left},top=${top},status=no,menubar=no,toolbar=no,location=yes`,
+      );
+      if (popup) {
+        popupRef.current = popup;
+        popup.document.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>Google Sign In - OpenTune</title>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <style>
+                body {
+                  background: #0f0f10;
+                  color: #f1f1f1;
+                  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                  height: 100vh;
+                  margin: 0;
+                  text-align: center;
+                  padding: 24px;
+                  box-sizing: border-box;
+                }
+                .spinner {
+                  width: 38px;
+                  height: 38px;
+                  border: 3px solid rgba(255,255,255,0.12);
+                  border-top-color: #ff0033;
+                  border-radius: 50%;
+                  animation: spin 0.8s linear infinite;
+                  margin-bottom: 20px;
+                }
+                @keyframes spin { to { transform: rotate(360deg); } }
+                h2 { font-size: 18px; margin: 0 0 8px 0; font-weight: 600; }
+                p { color: #888; font-size: 13px; margin: 0; line-height: 1.4; }
+              </style>
+            </head>
+            <body>
+              <div class="spinner"></div>
+              <h2>Connecting to Google...</h2>
+              <p>Opening account authorization window</p>
+            </body>
+          </html>
+        `);
+      }
+    } catch {}
 
     try {
       await libraryController.signIn();
+      if (popupRef.current && !popupRef.current.closed) {
+        popupRef.current.close();
+        popupRef.current = null;
+      }
       setSuccess("Successfully connected to YouTube Music with Google!");
       setTimeout(() => {
         onClose();
       }, 1200);
     } catch (err) {
+      if (popupRef.current && !popupRef.current.closed) {
+        popupRef.current.close();
+        popupRef.current = null;
+      }
       setError(err instanceof Error ? err.message : "Google sign-in failed.");
     } finally {
       setIsSyncing(false);
@@ -96,11 +172,15 @@ export function ConnectLibraryModal({ isOpen, onClose }: ConnectLibraryModalProp
 
   const handleOpenGoogle = () => {
     if (googlePrompt) {
+      const cleanCode = googlePrompt.userCode.replace(/\s+/g, "");
+      const url = `https://www.google.com/device?user_code=${encodeURIComponent(cleanCode)}`;
       if (typeof navigator !== "undefined" && navigator.clipboard) {
-        navigator.clipboard.writeText(googlePrompt.userCode).catch(() => {});
-        setIsCopied(true);
+        navigator.clipboard.writeText(cleanCode).catch(() => {});
       }
-      window.open(googlePrompt.verificationUrl, "_blank");
+      const popup = window.open(url, "opentune_google_auth", "width=500,height=650");
+      if (popup) {
+        popupRef.current = popup;
+      }
     }
   };
 
@@ -281,24 +361,19 @@ export function ConnectLibraryModal({ isOpen, onClose }: ConnectLibraryModalProp
             <div className="flex flex-col gap-5">
               {/* Active Google Prompt Flow */}
               {googlePrompt ? (
-                <div className="rounded-2xl border border-primary/40 bg-primary/10 p-5 flex flex-col items-center gap-3 text-center animate-in fade-in zoom-in-95 duration-200">
+                <div className="rounded-2xl border border-primary/30 bg-primary/10 p-5 flex flex-col items-center gap-3 text-center animate-in fade-in zoom-in-95 duration-200">
                   <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
                     <GoogleIcon size={16} />
                     <span>Authorize with Google</span>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Enter this code on Google to link your YouTube Music library:
+                  <p className="text-xs text-muted-foreground leading-relaxed max-w-sm">
+                    A Google window has opened. Simply choose your account and click <strong className="text-foreground">Allow</strong> to connect.
                   </p>
-                  <div className="flex items-center gap-2 rounded-2xl bg-background/90 border border-primary/30 px-6 py-3 shadow-inner">
-                    <span className="font-mono text-2xl font-black tracking-widest text-primary select-all">
-                      {googlePrompt.userCode}
-                    </span>
+                  <div className="flex items-center gap-2 rounded-xl bg-background/80 border border-primary/25 px-4 py-2 text-xs">
+                    <span className="text-muted-foreground">Verification code:</span>
+                    <span className="font-mono font-bold tracking-wider text-primary">{googlePrompt.userCode}</span>
+                    <span className="text-[10px] text-emerald-400 font-medium">✓ Auto-filled</span>
                   </div>
-                  {isCopied && (
-                    <span className="text-[11px] text-emerald-400 font-medium">
-                      ✓ Code copied to clipboard!
-                    </span>
-                  )}
                   <Button
                     type="button"
                     variant="primary"
@@ -306,7 +381,7 @@ export function ConnectLibraryModal({ isOpen, onClose }: ConnectLibraryModalProp
                     onClick={handleOpenGoogle}
                     className="w-full rounded-xl text-xs font-semibold py-2.5 mt-1"
                   >
-                    Open Google &amp; Enter Code
+                    Open Google Sign-in Window
                   </Button>
                   <div className="flex items-center gap-2 pt-1 text-[11px] text-muted-foreground">
                     <Loader variant="spinner" size={13} />
