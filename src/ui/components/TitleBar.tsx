@@ -16,6 +16,7 @@ import {
   useNativeWindowControls,
 } from "../settings/windowControls";
 import { libraryController, useLibraryState } from "../../player/playerStore";
+import { useAuthProfile } from "../../lib/authProfile";
 import { AccountAvatar, AccountSwitcher, GoogleAccountSwitcher } from "./AccountSwitcher";
 import { DownloadsPanel } from "./DownloadsPanel";
 import { FloatingPanel } from "./FloatingPanel";
@@ -68,17 +69,21 @@ export function TitleBar({
   const appWindow = isTauri() ? getCurrentWindow() : null;
   const libraryState = useLibraryState();
   const account = libraryState.library?.account;
-  // Confirmed by YouTube, not merely by having a library on screen — a cache with no expiry
-  // will happily supply one long after the session behind it stopped working.
-  const isSignedIn = libraryState.status === "ready"
+  const { profile, signOut: authSignOut } = useAuthProfile();
+
+  const isYtSignedIn = libraryState.status === "ready"
     && Boolean(account)
     && libraryState.sessionConfirmedAt !== null;
-  // Startup restores the session before it can say whether there is one — "Not signed in" is
-  // the wrong answer while that is still happening.
+  const isSignedIn = Boolean(profile) || isYtSignedIn;
+
   const isConnecting = !isSignedIn
     && (libraryState.status === "restoring"
       || libraryState.status === "loading"
       || libraryState.status === "authorizing");
+
+  const userAvatarUrl = profile?.avatarUrl || (isYtSignedIn ? account?.artworkUrl : undefined);
+  const userDisplayName = profile?.username || account?.name || "OpenTune User";
+  const userSubtitle = profile?.email || (isYtSignedIn ? "YouTube Music" : "OpenTune Account");
   const [isAccountPanelOpen, setIsAccountPanelOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
@@ -271,13 +276,13 @@ export function TitleBar({
           side="bottom"
           className="w-64"
           trigger={
-            <Tooltip side="bottom" content={isSignedIn ? account?.name || "Account" : "Sign in"}>
+            <Tooltip side="bottom" content={isSignedIn ? userDisplayName : "Sign in"}>
               <button
                 type="button"
                 onClick={() => setIsAccountPanelOpen((open) => !open)}
                 aria-haspopup="menu"
                 aria-expanded={isAccountPanelOpen}
-                aria-label={isSignedIn ? `Account: ${account?.name || "YouTube Music"}` : "Sign in"}
+                aria-label={isSignedIn ? `Account: ${userDisplayName}` : "Sign in"}
                 className={cn(
                   "ml-0.5 grid size-7 place-items-center rounded-full transition-shadow",
                   "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
@@ -285,7 +290,7 @@ export function TitleBar({
                 )}
               >
                 <AccountAvatar
-                  artworkUrl={isSignedIn ? account?.artworkUrl : undefined}
+                  artworkUrl={isSignedIn ? userAvatarUrl : undefined}
                   className="size-7"
                   iconSize={15}
                 />
@@ -295,36 +300,37 @@ export function TitleBar({
         >
           {isSignedIn ? (
             <div className="flex flex-col gap-1">
-              {/* YouTube Music Account */}
+              {/* Account profile */}
               <div className="flex items-center gap-2.5 px-1 py-1.5">
-                <AccountAvatar artworkUrl={account?.artworkUrl} className="size-9" iconSize={18} />
+                <AccountAvatar artworkUrl={userAvatarUrl} className="size-9" iconSize={18} />
                 <span className="flex min-w-0 flex-col">
                   <span className="truncate text-sm font-medium text-foreground">
-                    {account?.name || "YouTube Music"}
+                    {userDisplayName}
                   </span>
-                  <span className="truncate text-xs text-muted-foreground">YouTube Music</span>
+                  <span className="truncate text-xs text-muted-foreground">{userSubtitle}</span>
                 </span>
               </div>
 
               <span className="my-0.5 h-px bg-border" aria-hidden="true" />
 
-              {/* Separate Google logins first, channels within the active one after — labeled
-                  so the two are never mistaken for one undifferentiated list. This is a quick
-                  switcher, not where accounts are added or removed, so a section (label
-                  included) renders nothing at all when there is only one option in it. */}
-              <GoogleAccountSwitcher
-                libraryController={libraryController}
-                onSwitched={() => setIsAccountPanelOpen(false)}
-                label="Account"
-              />
+              {/* YouTube Music channel/account switcher if desktop YT session is active */}
+              {isYtSignedIn && (
+                <>
+                  <GoogleAccountSwitcher
+                    libraryController={libraryController}
+                    onSwitched={() => setIsAccountPanelOpen(false)}
+                    label="Account"
+                  />
 
-              <AccountSwitcher
-                libraryController={libraryController}
-                onSwitched={() => setIsAccountPanelOpen(false)}
-                label="Channel"
-              />
+                  <AccountSwitcher
+                    libraryController={libraryController}
+                    onSwitched={() => setIsAccountPanelOpen(false)}
+                    label="Channel"
+                  />
 
-              <span className="my-0.5 h-px bg-border" aria-hidden="true" />
+                  <span className="my-0.5 h-px bg-border" aria-hidden="true" />
+                </>
+              )}
 
               <button
                 type="button"
@@ -343,6 +349,7 @@ export function TitleBar({
                 className={ACCOUNT_PANEL_ITEM}
                 onClick={() => {
                   setIsAccountPanelOpen(false);
+                  void authSignOut();
                   void libraryController.signOut();
                 }}
               >

@@ -78,16 +78,22 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
     return () => window.removeEventListener("keydown", handleEscape);
   }, [isOpen, onClose]);
 
-  // Listen for Supabase password recovery event
+  // Listen for Supabase auth events (password recovery, sign in)
   useEffect(() => {
     if (!supabase) return;
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") {
         setMode("reset_otp");
+      } else if (event === "SIGNED_IN" && session) {
+        onAuthSuccess?.();
+        onClose();
+        if (isTauri() && libraryController.getState().status !== "ready") {
+          void libraryController.signIn().catch(() => {});
+        }
       }
     });
     return () => subscription.unsubscribe();
-  }, []);
+  }, [onAuthSuccess, onClose]);
 
   // Prevent body scroll
   useEffect(() => {
@@ -304,7 +310,16 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
 
     try {
       await signInWithOAuthPopup(provider);
-      const { data: { session } } = await supabase.auth.getSession();
+      let session = null;
+      for (let i = 0; i < 4; i++) {
+        const { data } = await supabase.auth.getSession();
+        if (data?.session) {
+          session = data.session;
+          break;
+        }
+        await new Promise((r) => setTimeout(r, 200));
+      }
+
       if (session) {
         onAuthSuccess?.();
         onClose();

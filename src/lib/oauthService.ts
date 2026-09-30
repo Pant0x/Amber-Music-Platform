@@ -40,33 +40,36 @@ export function isOAuthPopup(): boolean {
     } catch {}
   }
 
-  // 3. Fallback: if URL contains oauth tokens/code and window is not main
+  // 3. URL contains oauth tokens/code
   if (
     typeof window !== "undefined" &&
     (window.location.hash.includes("access_token=") ||
       window.location.search.includes("code="))
   ) {
-    try {
-      if (isTauriEnvironment()) {
+    if (isTauriEnvironment()) {
+      try {
         const currentWin = getCurrentWebviewWindow();
         if (currentWin.label !== "main") {
           return true;
         }
-      }
-    } catch {}
-    try {
-      const internals = (window as unknown as {
-        __TAURI_INTERNALS__?: {
-          metadata?: {
-            currentWindow?: { label?: string };
+      } catch {}
+      try {
+        const internals = (window as unknown as {
+          __TAURI_INTERNALS__?: {
+            metadata?: {
+              currentWindow?: { label?: string };
+            };
           };
-        };
-      }).__TAURI_INTERNALS__;
-      const winLabel = internals?.metadata?.currentWindow?.label;
-      if (winLabel && winLabel !== "main") {
-        return true;
-      }
-    } catch {}
+        }).__TAURI_INTERNALS__;
+        const winLabel = internals?.metadata?.currentWindow?.label;
+        if (winLabel && winLabel !== "main") {
+          return true;
+        }
+      } catch {}
+    } else {
+      // In web, any page landing with access_token or code is the OAuth redirect target
+      return true;
+    }
   }
 
   return false;
@@ -92,7 +95,9 @@ export async function handleOAuthPopupRedirect(): Promise<boolean> {
         if (access_token && refresh_token) {
           await supabase.auth.setSession({ access_token, refresh_token });
         }
-      } catch {}
+      } catch (err) {
+        console.error("Popup setSession error:", err);
+      }
     } else if (search && search.includes("code=") && supabase) {
       try {
         const params = new URLSearchParams(search);
@@ -100,14 +105,26 @@ export async function handleOAuthPopupRedirect(): Promise<boolean> {
         if (code) {
           await supabase.auth.exchangeCodeForSession(code);
         }
-      } catch {}
+      } catch (err) {
+        console.error("Popup exchangeCodeForSession error:", err);
+      }
     }
 
     // Broadcast completion to the main window
     try {
       const bc = new BroadcastChannel(OAUTH_BROADCAST_CHANNEL);
       bc.postMessage({ type: "OAUTH_SUCCESS", hash, search });
-      bc.close();
+      // Keep channel open briefly so message can be consumed before context termination
+      setTimeout(() => {
+        try { bc.close(); } catch {}
+      }, 3000);
+    } catch {}
+
+    // Fallback: window.opener postMessage if available
+    try {
+      if (window.opener && typeof window.opener.postMessage === "function") {
+        window.opener.postMessage({ type: "OAUTH_SUCCESS", hash, search }, "*");
+      }
     } catch {}
 
     const hasTokensOrCode =
@@ -126,9 +143,15 @@ export async function handleOAuthPopupRedirect(): Promise<boolean> {
           await currentWin.close();
         } catch {
           window.close();
+          // Fallback if window.close was ignored by browser (e.g. full-page redirect)
+          setTimeout(() => {
+            if (typeof window !== "undefined" && !window.closed) {
+              window.location.replace(window.location.origin);
+            }
+          }, 600);
         }
       }
-    }, hasTokensOrCode ? 300 : 500);
+    }, hasTokensOrCode ? 400 : 600);
 
     return true;
   } catch {
@@ -186,7 +209,7 @@ export async function signInWithOAuthPopup(provider: "google" | "discord"): Prom
     await new Promise<void>((resolve) => {
       let resolved = false;
 
-      const finish = async () => {
+      const finish = async (hash?: string, search?: string) => {
         if (resolved) return;
         resolved = true;
         try {
@@ -197,6 +220,22 @@ export async function signInWithOAuthPopup(provider: "google" | "discord"): Prom
           } catch {}
         }
         if (supabase) {
+          try {
+            if (hash && hash.includes("access_token=")) {
+              const params = new URLSearchParams(hash.replace(/^#/, ""));
+              const access_token = params.get("access_token");
+              const refresh_token = params.get("refresh_token");
+              if (access_token && refresh_token) {
+                await supabase.auth.setSession({ access_token, refresh_token });
+              }
+            } else if (search && search.includes("code=")) {
+              const params = new URLSearchParams(search);
+              const code = params.get("code");
+              if (code) {
+                await supabase.auth.exchangeCodeForSession(code);
+              }
+            }
+          } catch {}
           try {
             await supabase.auth.getSession();
           } catch {}
@@ -212,25 +251,7 @@ export async function signInWithOAuthPopup(provider: "google" | "discord"): Prom
           if (event.data?.type === "OAUTH_SUCCESS") {
             const hash = event.data.hash as string | undefined;
             const search = event.data.search as string | undefined;
-            if (hash && hash.includes("access_token=") && supabase) {
-              try {
-                const params = new URLSearchParams(hash.replace(/^#/, ""));
-                const access_token = params.get("access_token");
-                const refresh_token = params.get("refresh_token");
-                if (access_token && refresh_token) {
-                  await supabase.auth.setSession({ access_token, refresh_token });
-                }
-              } catch {}
-            } else if (search && search.includes("code=") && supabase) {
-              try {
-                const params = new URLSearchParams(search);
-                const code = params.get("code");
-                if (code) {
-                  await supabase.auth.exchangeCodeForSession(code);
-                }
-              } catch {}
-            }
-            void finish();
+            await finish(hash, search);
           }
         };
       } catch {}
@@ -276,13 +297,29 @@ export async function signInWithOAuthPopup(provider: "google" | "discord"): Prom
     await new Promise<void>((resolve) => {
       let resolved = false;
 
-      const finish = async () => {
+      const finish = async (hash?: string, search?: string) => {
         if (resolved) return;
         resolved = true;
         try {
           if (!popup.closed) popup.close();
         } catch {}
         if (supabase) {
+          try {
+            if (hash && hash.includes("access_token=")) {
+              const params = new URLSearchParams(hash.replace(/^#/, ""));
+              const access_token = params.get("access_token");
+              const refresh_token = params.get("refresh_token");
+              if (access_token && refresh_token) {
+                await supabase.auth.setSession({ access_token, refresh_token });
+              }
+            } else if (search && search.includes("code=")) {
+              const params = new URLSearchParams(search);
+              const code = params.get("code");
+              if (code) {
+                await supabase.auth.exchangeCodeForSession(code);
+              }
+            }
+          } catch {}
           try {
             await supabase.auth.getSession();
           } catch {}
@@ -298,30 +335,22 @@ export async function signInWithOAuthPopup(provider: "google" | "discord"): Prom
           if (event.data?.type === "OAUTH_SUCCESS") {
             const hash = event.data.hash as string | undefined;
             const search = event.data.search as string | undefined;
-            if (hash && hash.includes("access_token=") && supabase) {
-              try {
-                const params = new URLSearchParams(hash.replace(/^#/, ""));
-                const access_token = params.get("access_token");
-                const refresh_token = params.get("refresh_token");
-                if (access_token && refresh_token) {
-                  await supabase.auth.setSession({ access_token, refresh_token });
-                }
-              } catch {}
-            } else if (search && search.includes("code=") && supabase) {
-              try {
-                const params = new URLSearchParams(search);
-                const code = params.get("code");
-                if (code) {
-                  await supabase.auth.exchangeCodeForSession(code);
-                }
-              } catch {}
-            }
-            void finish();
+            await finish(hash, search);
           }
         };
       } catch {}
 
-      // 2. Listen to Supabase auth state change
+      // 2. Listen via window postMessage (window.opener fallback)
+      const handleWindowMessage = async (event: MessageEvent) => {
+        if (event.data?.type === "OAUTH_SUCCESS") {
+          const hash = event.data.hash as string | undefined;
+          const search = event.data.search as string | undefined;
+          await finish(hash, search);
+        }
+      };
+      window.addEventListener("message", handleWindowMessage);
+
+      // 3. Listen to Supabase auth state change
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
         if (event === "SIGNED_IN" && session) {
           subscription.unsubscribe();
@@ -329,14 +358,27 @@ export async function signInWithOAuthPopup(provider: "google" | "discord"): Prom
         }
       });
 
-      // 3. Check for popup closed by user
-      const checkInterval = setInterval(() => {
+      // 4. Check for popup closed by user or window.close()
+      const checkInterval = setInterval(async () => {
         try {
           if (popup.closed) {
             clearInterval(checkInterval);
+            window.removeEventListener("message", handleWindowMessage);
             subscription.unsubscribe();
             if (bc) try { bc.close(); } catch {}
+
+            // Give a tiny moment for storage sync if popup hydrated session
             if (!resolved) {
+              if (supabase) {
+                try {
+                  const { data } = await supabase.auth.getSession();
+                  if (data?.session) {
+                    resolved = true;
+                    resolve();
+                    return;
+                  }
+                } catch {}
+              }
               resolved = true;
               resolve();
             }
@@ -346,9 +388,10 @@ export async function signInWithOAuthPopup(provider: "google" | "discord"): Prom
         }
       }, 500);
 
-      // 4. Timeout after 5 minutes
+      // 5. Timeout after 5 minutes
       setTimeout(() => {
         clearInterval(checkInterval);
+        window.removeEventListener("message", handleWindowMessage);
         subscription.unsubscribe();
         if (bc) try { bc.close(); } catch {}
         if (!resolved) {
