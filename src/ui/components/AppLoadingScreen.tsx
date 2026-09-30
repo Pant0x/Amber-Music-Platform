@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
-import loadingVideo from "../../../assets/img/Loading.mp4";
+import openTuneText from "../../../assets/img/opentune-text.png";
 
 /*
  * The accent bloom, as a gradient rather than a blurred circle.
@@ -54,19 +54,14 @@ export function AppLoadingScreen({ isLeaving }: AppLoadingScreenProps) {
       />
 
       <div className="relative flex flex-col items-center gap-5">
-        <motion.video
+        <motion.img
           initial={{ opacity: 0, scale: 0.92 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ type: "spring", stiffness: 260, damping: 24 }}
-          className="size-28 rounded-2xl object-cover drop-shadow-2xl"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-        >
-          <source src={loadingVideo} type="video/mp4" />
-        </motion.video>
+          className="h-10 w-auto object-contain drop-shadow-2xl select-none"
+          src={openTuneText}
+          alt="OpenTune"
+        />
 
       <div className="flex items-end gap-4">
        {/*  <AudioLoader /> */}  <strong className="text-sm font-medium text-foreground">{loadingLine}</strong>

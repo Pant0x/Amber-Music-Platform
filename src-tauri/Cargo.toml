@@ -1,7 +1,7 @@
 [package]
 name = "amber"
 version = "1.0.3"
-description = "Amber - a desktop music client"
+description = "OpenTune - a desktop music client"
 authors = ["Panto"]
 edition = "2021"
 

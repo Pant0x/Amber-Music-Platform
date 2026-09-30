@@ -127,10 +127,10 @@ impl DiscordRpcManager {
             assets_map.insert("large_text".to_string(), json!(data.album));
         }
         assets_map.insert("small_image".to_string(), json!(AMBER_LOGO_ASSET_KEY));
-        assets_map.insert("small_text".to_string(), json!("Amber"));
+        assets_map.insert("small_text".to_string(), json!("OpenTune"));
 
         let mut activity = json!({
-            "name": "Amber",
+            "name": "OpenTune",
             "type": 2, // LISTENING
             "details": data.title,
             "state": state_str,
@@ -352,10 +352,10 @@ impl DiscordRpcManager {
                                 assets_map.insert("large_text".to_string(), json!(data.album));
                             }
                             assets_map.insert("small_image".to_string(), json!(AMBER_LOGO_ASSET_KEY));
-                            assets_map.insert("small_text".to_string(), json!("Amber"));
+                            assets_map.insert("small_text".to_string(), json!("OpenTune"));
 
                             let activity = json!({
-                                "name": "Amber",
+                                "name": "OpenTune",
                                 "type": 2, // LISTENING
                                 "details": data.title,
                                 "state": state_str,
